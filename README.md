@@ -17,4 +17,5 @@ Then open `http://localhost:8000`.
 - `index.html` — standalone resume page markup
 - `assets/styles.css` — downloaded compiled site styles
 - `assets/overrides.css` — local font, scroll, and small polish overrides
+- `assets/phillip-onofua-resume.pdf` — resume-only PDF extracted from the application packet
 - `assets/phillip.jpg` — profile image used in the layout
