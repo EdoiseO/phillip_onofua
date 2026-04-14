@@ -1,6 +1,6 @@
-# Phillip Onofua Resume Site
+# Phillip Onofua Portfolio
 
-A standalone resume-style website updated from the details in `Onofua Documents - Phillip_Onofua_Application.pdf`.
+A standalone portfolio website for Phillip Onofua.
 
 ## Run locally
 
@@ -14,8 +14,8 @@ Then open `http://localhost:8000`.
 
 ## Files
 
-- `index.html` — standalone resume page markup
+- `index.html` — standalone portfolio page markup
 - `assets/styles.css` — downloaded compiled site styles
 - `assets/overrides.css` — local font, scroll, and small polish overrides
-- `assets/phillip-onofua-resume.pdf` — resume-only PDF extracted from the application packet
+- `assets/phillip-onofua-resume.pdf` — downloadable resume PDF
 - `assets/phillip.jpg` — profile image used in the layout
