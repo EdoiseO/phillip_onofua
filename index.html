@@ -3,8 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Phillip Onofua — Software Developer</title>
   <meta name="description" content="Computer Programming and Analysis student building full-stack web and mobile apps with React, Next.js, TypeScript, C#, and cloud platforms." />
+  <script>
+    (() => {
+      let storedTheme = null;
+      try {
+        storedTheme = window.localStorage.getItem("theme");
+      } catch (error) {
+        storedTheme = null;
+      }
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = storedTheme || (systemPrefersDark ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
   <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
   <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
@@ -24,13 +38,32 @@
 <p class="text-xs text-stone-500">Software Developer · Full-Stack · Student Builder</p>
 </div>
 </div>
-<nav class="flex flex-wrap items-center gap-4 text-xs text-stone-500 sm:text-sm" aria-label="Primary navigation">
+<div class="header-actions flex flex-wrap items-center gap-3 sm:justify-end">
+<nav class="header-nav flex flex-wrap items-center gap-4 text-xs text-stone-500 sm:text-sm" aria-label="Primary navigation">
 <a href="#about" class="hover:text-stone-900">About</a>
 <a href="#skills" class="hover:text-stone-900">Skills</a>
 <a href="#projects" class="hover:text-stone-900">Projects</a>
 <a href="#education" class="hover:text-stone-900">Education</a>
 <a href="#contact" class="hover:text-stone-900">Contact</a>
 </nav>
+<button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
+<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
+<circle cx="12" cy="12" r="4"></circle>
+<path d="M12 2v2"></path>
+<path d="M12 20v2"></path>
+<path d="m4.93 4.93 1.41 1.41"></path>
+<path d="m17.66 17.66 1.41 1.41"></path>
+<path d="M2 12h2"></path>
+<path d="M20 12h2"></path>
+<path d="m6.34 17.66-1.41 1.41"></path>
+<path d="m19.07 4.93-1.41 1.41"></path>
+</svg>
+<span class="theme-toggle__label" data-theme-label>Dark mode</span>
+</button>
+</div>
 </div>
 </header>
 <section class="mt-6 grid gap-8 md:mt-8 md:grid-cols-[minmax(0,3fr),minmax(0,2fr)] md:items-start">
@@ -289,7 +322,7 @@
 <div>
 <h2 class="text-xs font-medium uppercase tracking-[0.25em] text-emerald-700">Contact</h2>
 <p class="mt-3 text-base font-semibold tracking-tight sm:text-lg">Open to software developer internships and collaborative opportunities.</p>
-<p class="mt-3 text-sm leading-relaxed text-emerald-950/80">If you&#x27;re looking for a student developer who enjoys full-stack product work, learning fast, and contributing to team delivery, I&#x27;d love to connect.</p>
+<p class="mt-3 text-sm leading-relaxed text-stone-600">If you&#x27;re looking for a student developer who enjoys full-stack product work, learning fast, and contributing to team delivery, I&#x27;d love to connect.</p>
 </div>
 <div class="space-y-3 text-sm text-stone-800">
 <a href="mailto:philliponofua@gmail.com" class="inline-flex w-full items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-white px-4 py-3 text-sm font-medium hover:border-emerald-500">
@@ -330,5 +363,60 @@
 </footer>
 </div>
 </main>
+<script>
+  (() => {
+    const root = document.documentElement;
+    const toggle = document.getElementById("theme-toggle");
+    const label = toggle?.querySelector("[data-theme-label]");
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const getStoredTheme = () => {
+      try {
+        return window.localStorage.getItem("theme");
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const getActiveTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
+
+    const syncToggle = (theme) => {
+      const isDark = theme === "dark";
+      toggle?.setAttribute("aria-pressed", String(isDark));
+      toggle?.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+      if (label) {
+        label.textContent = isDark ? "Light mode" : "Dark mode";
+      }
+    };
+
+    const applyTheme = (theme, persist = true) => {
+      root.dataset.theme = theme;
+      if (persist) {
+        try {
+          window.localStorage.setItem("theme", theme);
+        } catch (error) {
+        }
+      }
+      syncToggle(theme);
+    };
+
+    syncToggle(getActiveTheme());
+
+    toggle?.addEventListener("click", () => {
+      applyTheme(getActiveTheme() === "dark" ? "light" : "dark");
+    });
+
+    const handleSystemThemeChange = (event) => {
+      if (!getStoredTheme()) {
+        applyTheme(event.matches ? "dark" : "light", false);
+      }
+    };
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleSystemThemeChange);
+    } else {
+      mediaQuery.addListener(handleSystemThemeChange);
+    }
+  })();
+</script>
 </body>
 </html>
