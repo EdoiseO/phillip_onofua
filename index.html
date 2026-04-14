@@ -41,7 +41,7 @@
 <div class="header-actions flex flex-wrap items-center gap-3 sm:justify-end">
 <nav class="header-nav flex flex-wrap items-center gap-4 text-xs text-stone-500 sm:text-sm" aria-label="Primary navigation">
 <a href="#about" class="hover:text-stone-900">About</a>
-<a href="#skills" class="hover:text-stone-900">Skills</a>
+<a href="#about" id="skills-nav-link" data-mobile-target="#skills" class="hover:text-stone-900">Skills</a>
 <a href="#projects" class="hover:text-stone-900">Projects</a>
 <a href="#education" class="hover:text-stone-900">Education</a>
 <a href="#contact" class="hover:text-stone-900">Contact</a>
@@ -366,6 +366,8 @@
 <script>
   (() => {
     const root = document.documentElement;
+    const header = document.querySelector("header");
+    const skillsNavLink = document.getElementById("skills-nav-link");
     const toggle = document.getElementById("theme-toggle");
     const label = toggle?.querySelector("[data-theme-label]");
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -378,6 +380,11 @@
     };
 
     const getActiveTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
+
+    const setScrollOffset = () => {
+      const headerHeight = header?.offsetHeight ?? 0;
+      root.style.setProperty("--scroll-offset", `${headerHeight + 16}px`);
+    };
 
     const syncToggle = (theme) => {
       const isDark = theme === "dark";
@@ -400,10 +407,30 @@
     };
 
     syncToggle(getActiveTheme());
+    setScrollOffset();
 
     toggle?.addEventListener("click", () => {
       applyTheme(getActiveTheme() === "dark" ? "light" : "dark");
     });
+
+    skillsNavLink?.addEventListener("click", (event) => {
+      if (!window.matchMedia("(max-width: 767px)").matches) {
+        return;
+      }
+
+      const targetSelector = skillsNavLink.dataset.mobileTarget;
+      const target = targetSelector ? document.querySelector(targetSelector) : null;
+      if (!target) {
+        return;
+      }
+
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", targetSelector);
+    });
+
+    window.addEventListener("load", setScrollOffset);
+    window.addEventListener("resize", setScrollOffset);
 
     const handleSystemThemeChange = (event) => {
       if (!getStoredTheme()) {
