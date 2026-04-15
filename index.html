@@ -437,6 +437,8 @@
       const longestPhrase = phrases.reduce((longest, phrase) => phrase.length > longest.length ? phrase : longest, phrases[0]);
       sizer.textContent = longestPhrase;
       currentPhrase.innerHTML = buildAnimatedCharacters(phrases[0]);
+      currentPhrase.setAttribute("aria-hidden", "false");
+      nextPhrase.setAttribute("aria-hidden", "true");
 
       if (phrases.length < 2 || reducedMotionQuery.matches) {
         return;
@@ -459,13 +461,15 @@
 
         window.setTimeout(() => {
           activePhraseElement.classList.remove("is-leaving");
+          activePhraseElement.setAttribute("aria-hidden", "true");
           activePhraseElement.innerHTML = "";
           standbyPhraseElement.classList.remove("is-entering");
           standbyPhraseElement.classList.add("is-active");
+          standbyPhraseElement.setAttribute("aria-hidden", "false");
           activeIndex = nextIndex;
           [activePhraseElement, standbyPhraseElement] = [standbyPhraseElement, activePhraseElement];
+          window.setTimeout(rotatePhrase, changeInterval);
         }, settleDuration);
-        window.setTimeout(rotatePhrase, changeInterval);
       };
 
       window.setTimeout(rotatePhrase, changeInterval);
