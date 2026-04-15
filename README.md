@@ -18,4 +18,4 @@ Then open `http://localhost:8000`.
 - `assets/styles.css` — downloaded compiled site styles
 - `assets/overrides.css` — local font, scroll, and small polish overrides
 - `assets/phillip-onofua-resume.pdf` — downloadable resume PDF
-- `assets/phillip.jpg` — profile image used in the layout
+- `assets/profile-photo.jpg` — profile image used in the layout

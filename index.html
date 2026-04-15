@@ -22,7 +22,7 @@
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
   <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
   <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
-  <link rel="preload" href="assets/phillip.jpg" as="image" />
+  <link rel="preload" href="assets/profile-photo.jpg" as="image" />
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="stylesheet" href="assets/overrides.css" />
 </head>
@@ -32,10 +32,10 @@
 <header class="sticky top-0 z-20 mb-6 border-b border-stone-200 bg-stone-100/95 py-3 backdrop-blur-sm">
 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 <div class="flex items-center gap-3">
-<img alt="Profile placeholder" width="40" height="40" class="h-10 w-10 rounded-full border border-stone-300 object-cover bg-stone-100" src="assets/placeholder.svg"/>
+<img alt="Phillip Onofua portrait" width="40" height="40" class="h-10 w-10 rounded-full border border-stone-300 object-cover bg-stone-100" src="assets/profile-photo.jpg"/>
 <div class="leading-tight">
 <div class="text-sm font-semibold tracking-tight">Phillip Onofua</div>
-<p class="text-xs text-stone-500">Software Developer · Full-Stack · Student Builder</p>
+<p class="text-xs text-stone-500">Software Engineer · Full-Stack Developer</p>
 </div>
 </div>
 <div class="header-actions flex flex-wrap items-center gap-3 sm:justify-end">
@@ -69,7 +69,14 @@
 <section class="mt-6 grid gap-8 md:mt-8 md:grid-cols-[minmax(0,3fr),minmax(0,2fr)] md:items-start">
 <div>
 <p class="text-[11px] font-medium uppercase tracking-[0.25em] text-emerald-600">Portfolio · Phillip Onofua</p>
-<h1 class="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Building <span class="text-emerald-700">full-stack apps</span> for web and mobile.</h1>
+<h1 class="hero-heading mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+<span class="hero-heading__intro">Building <span class="text-emerald-700">full-stack apps</span> for</span>
+<span class="hero-rotator-line"><span class="hero-rotator" data-hero-rotator data-phrases="web and mobile.|real-world apps.|scalable systems.|team-driven delivery.">
+<span class="hero-rotator__sizer" data-rotator-sizer aria-hidden="true"></span>
+<span class="hero-rotator__phrase hero-rotator__phrase--current is-active" data-rotator-current>web and mobile.</span>
+<span class="hero-rotator__phrase hero-rotator__phrase--next" data-rotator-next aria-hidden="true"></span>
+</span></span>
+</h1>
 <p class="mt-4 max-w-xl text-sm leading-relaxed text-stone-600 sm:text-base">I&#x27;m a Computer Programming and Analysis student at George Brown Polytechnic with practical experience building full-stack applications using React, Next.js, TypeScript, C#, and cloud platforms. I enjoy systems architecture, collaborative development, and shipping thoughtful digital products.</p>
 <div class="mt-6 flex flex-wrap items-center gap-3">
 <a href="#contact" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500">
@@ -112,16 +119,16 @@
 </div>
 <div class="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
 <div class="flex items-center gap-3">
-<img alt="Profile placeholder" width="60" height="60" class="h-14 w-14 rounded-xl border border-stone-200 object-cover bg-stone-100" src="assets/placeholder.svg"/>
+<img alt="Phillip Onofua portrait" width="60" height="60" class="h-14 w-14 rounded-xl border border-stone-200 object-cover bg-stone-100" src="assets/profile-photo.jpg"/>
 <div class="space-y-0.5">
 <p class="text-sm font-semibold">Phillip Onofua</p>
-<p class="text-xs text-stone-500">Software Developer · Full-Stack · Student Builder</p>
+<p class="text-xs text-stone-500">Software Engineer · Full-Stack Developer</p>
 </div>
 </div>
 <div class="flex items-center justify-between gap-3 pt-1">
 <div>
 <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-stone-400">Snapshot</p>
-<p class="mt-1 text-sm text-stone-800">Builder · Collaborator · Systems-focused</p>
+<p class="mt-1 text-sm text-stone-800">Developer · Collaborator · Systems-focused</p>
 </div>
 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code h-5 w-5" aria-hidden="true">
@@ -284,7 +291,7 @@
 <div class="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2">
 <article class="group flex flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-emerald-500 hover:shadow-md">
 <h3 class="text-sm font-semibold text-stone-900">George Brown Polytechnic</h3>
-<p class="mt-1 text-xs font-medium text-emerald-700">Computer Programming and Analysis (T177) · Expected Graduation 2027</p>
+<p class="mt-1 text-xs font-medium text-emerald-700">Computer Programming and Analysis · Expected Graduation 2027</p>
 <p class="mt-3 text-xs leading-relaxed text-stone-600">Currently in second year, building real-world applications while applying classroom concepts in object-oriented programming, web development, database design, software engineering, and data structures.</p>
 <div class="mt-4 flex flex-wrap gap-2 text-[11px] text-stone-600">
 <span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Toronto</span>
@@ -294,7 +301,7 @@
 </article>
 <article class="group flex flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-emerald-500 hover:shadow-md">
 <h3 class="text-sm font-semibold text-stone-900">Coursework Highlights</h3>
-<p class="mt-1 text-xs font-medium text-emerald-700">Official George Brown T177 subject areas</p>
+<p class="mt-1 text-xs font-medium text-emerald-700">Official George Brown subject areas</p>
 <p class="mt-3 text-xs leading-relaxed text-stone-600">Coursework includes IT Essentials, Communicating Across Contexts, Fundamentals of Computing Logic, Introduction to Data Management, Database Management, Object-Oriented Programming, Introduction to Full Stack Development, Advanced Web Programming, Web Application Development, Application Development using Java, Software Quality Assurance, System Analysis, Design and Testing, Agile Software Development, Open Source Development, Data Structures and Algorithms, Mobile Application Development, DevOps, Applied Data Science, Applied Machine Learning, and Introduction to Cyber Security.</p>
 <div class="mt-4 flex flex-wrap gap-2 text-[11px] text-stone-600">
 <span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">OOP</span>
@@ -367,10 +374,12 @@
   (() => {
     const root = document.documentElement;
     const header = document.querySelector("header");
+    const heroRotator = document.querySelector("[data-hero-rotator]");
     const skillsNavLink = document.getElementById("skills-nav-link");
     const toggle = document.getElementById("theme-toggle");
     const label = toggle?.querySelector("[data-theme-label]");
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const getStoredTheme = () => {
       try {
         return window.localStorage.getItem("theme");
@@ -384,6 +393,82 @@
     const setScrollOffset = () => {
       const headerHeight = header?.offsetHeight ?? 0;
       root.style.setProperty("--scroll-offset", `${headerHeight + 16}px`);
+    };
+
+    const enterDuration = 620;
+    const leaveDuration = 520;
+    const charStagger = 34;
+    const changeInterval = 5200;
+
+    const escapeHtml = (value) => value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+
+    const buildAnimatedCharacters = (phrase) => {
+      const characters = Array.from(phrase);
+      return characters
+        .map((character, index) => {
+          const content = character === " " ? "&nbsp;" : escapeHtml(character);
+          return `<span class="hero-rotator__character" style="--char-delay-index:${characters.length - index - 1};">${content}</span>`;
+        })
+        .join("");
+    };
+
+    const initializeHeroRotator = () => {
+      if (!heroRotator) {
+        return;
+      }
+
+      const phrases = (heroRotator.dataset.phrases || "")
+        .split("|")
+        .map((phrase) => phrase.trim())
+        .filter(Boolean);
+      const sizer = heroRotator.querySelector("[data-rotator-sizer]");
+      const currentPhrase = heroRotator.querySelector("[data-rotator-current]");
+      const nextPhrase = heroRotator.querySelector("[data-rotator-next]");
+
+      if (!sizer || !currentPhrase || !nextPhrase || phrases.length === 0) {
+        return;
+      }
+
+      const longestPhrase = phrases.reduce((longest, phrase) => phrase.length > longest.length ? phrase : longest, phrases[0]);
+      sizer.textContent = longestPhrase;
+      currentPhrase.innerHTML = buildAnimatedCharacters(phrases[0]);
+
+      if (phrases.length < 2 || reducedMotionQuery.matches) {
+        return;
+      }
+
+      let activeIndex = 0;
+      let activePhraseElement = currentPhrase;
+      let standbyPhraseElement = nextPhrase;
+
+      const rotatePhrase = () => {
+        const nextIndex = (activeIndex + 1) % phrases.length;
+        const incomingPhrase = phrases[nextIndex];
+        const maxCharacterCount = Math.max(phrases[activeIndex].length, incomingPhrase.length);
+        const settleDuration = Math.max(enterDuration, leaveDuration) + Math.max(maxCharacterCount - 1, 0) * charStagger + 80;
+
+        standbyPhraseElement.innerHTML = buildAnimatedCharacters(incomingPhrase);
+        activePhraseElement.classList.remove("is-active");
+        activePhraseElement.classList.add("is-leaving");
+        standbyPhraseElement.classList.add("is-entering");
+
+        window.setTimeout(() => {
+          activePhraseElement.classList.remove("is-leaving");
+          activePhraseElement.innerHTML = "";
+          standbyPhraseElement.classList.remove("is-entering");
+          standbyPhraseElement.classList.add("is-active");
+          activeIndex = nextIndex;
+          [activePhraseElement, standbyPhraseElement] = [standbyPhraseElement, activePhraseElement];
+        }, settleDuration);
+        window.setTimeout(rotatePhrase, changeInterval);
+      };
+
+      window.setTimeout(rotatePhrase, changeInterval);
     };
 
     const syncToggle = (theme) => {
@@ -408,6 +493,7 @@
 
     syncToggle(getActiveTheme());
     setScrollOffset();
+    initializeHeroRotator();
 
     toggle?.addEventListener("click", () => {
       applyTheme(getActiveTheme() === "dark" ? "light" : "dark");
