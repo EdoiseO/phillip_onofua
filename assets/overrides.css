@@ -81,6 +81,141 @@ img {
   display: block;
 }
 
+.hero-heading {
+  line-height: 0.98 !important;
+}
+
+.hero-heading__intro,
+.hero-rotator-line {
+  display: block;
+}
+
+.hero-rotator-line {
+  margin-top: 0.06em;
+}
+
+.hero-rotator {
+  display: inline-grid;
+  grid-template-areas: "phrase";
+  align-items: start;
+  min-height: 1.2em;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: baseline;
+  overflow: hidden;
+  contain: layout paint;
+  isolation: isolate;
+  perspective: 1000px;
+}
+
+@media (min-width: 1024px) {
+  .hero-heading {
+    font-size: 2.55rem !important;
+  }
+}
+
+.hero-rotator__sizer,
+.hero-rotator__phrase {
+  grid-area: phrase;
+}
+
+.hero-rotator__sizer {
+  visibility: hidden;
+  pointer-events: none;
+  white-space: normal;
+}
+
+.hero-rotator__phrase {
+  display: block;
+  white-space: normal;
+  color: var(--text-primary);
+  opacity: 0;
+  backface-visibility: hidden;
+  transform: none;
+}
+
+.hero-rotator__phrase.is-active {
+  opacity: 1;
+}
+
+.hero-rotator__phrase.is-entering {
+  opacity: 1;
+}
+
+.hero-rotator__phrase.is-leaving {
+  opacity: 1;
+}
+
+.hero-rotator__character {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  backface-visibility: hidden;
+  will-change: opacity, transform;
+}
+
+.hero-rotator__phrase.is-entering .hero-rotator__character {
+  opacity: 0;
+  transform: translate3d(0, 0.38em, 0) rotateX(-90deg);
+  animation: hero-rotator-character-in 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--char-delay-index) * 34ms);
+}
+
+.hero-rotator__phrase.is-leaving .hero-rotator__character {
+  animation: hero-rotator-character-out 520ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: calc(var(--char-delay-index) * 34ms);
+}
+
+@keyframes hero-rotator-character-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0.38em, 0) rotateX(-90deg);
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg);
+  }
+}
+
+@keyframes hero-rotator-character-out {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -0.18em, 0) rotateX(90deg);
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-heading {
+    line-height: 1.02 !important;
+  }
+
+  .hero-rotator {
+    min-height: 1.3em;
+  }
+
+  .hero-rotator__phrase {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rotator__character,
+  .hero-rotator__phrase {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 main,
 .bg-stone-100 {
   background-color: var(--page-bg) !important;
