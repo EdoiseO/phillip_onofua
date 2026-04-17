@@ -71,11 +71,7 @@
 <p class="text-[11px] font-medium uppercase tracking-[0.25em] text-emerald-600">Portfolio · Phillip Onofua</p>
 <h1 class="hero-heading mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
 <span class="hero-heading__intro">Building <span class="text-emerald-700">full-stack apps</span> for</span>
-<span class="hero-rotator-line"><span class="hero-rotator" data-hero-rotator data-phrases="web and mobile.|real-world apps.|scalable systems.|team-driven delivery.">
-<span class="hero-rotator__sizer" data-rotator-sizer aria-hidden="true"></span>
-<span class="hero-rotator__phrase hero-rotator__phrase--current is-active" data-rotator-current>web and mobile.</span>
-<span class="hero-rotator__phrase hero-rotator__phrase--next" data-rotator-next aria-hidden="true"></span>
-</span></span>
+<span class="hero-rotator-line"><span class="hero-rotator" data-hero-rotator data-phrases="web and mobile.|real-world apps.|scalable systems.|team-driven delivery." aria-live="polite">web and mobile.</span></span>
 </h1>
 <p class="mt-4 max-w-xl text-sm leading-relaxed text-stone-600 sm:text-base">I&#x27;m a Computer Programming and Analysis student at George Brown Polytechnic with practical experience building full-stack applications using React, Next.js, TypeScript, C#, and cloud platforms. I enjoy systems architecture, collaborative development, and shipping thoughtful digital products.</p>
 <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -395,26 +391,99 @@
       root.style.setProperty("--scroll-offset", `${headerHeight + 16}px`);
     };
 
-    const enterDuration = 620;
-    const leaveDuration = 520;
-    const charStagger = 34;
+    const flipDuration = 50;
+    const staggerDelay = 90;
     const changeInterval = 5200;
+    const characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.- ";
 
-    const escapeHtml = (value) => value
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+    const renderGlyph = (character) => character === " " ? "\u00A0" : character;
 
-    const buildAnimatedCharacters = (phrase) => {
-      const characters = Array.from(phrase);
-      return characters
-        .map((character, index) => {
-          const content = character === " " ? "&nbsp;" : escapeHtml(character);
-          return `<span class="hero-rotator__character" style="--char-delay-index:${characters.length - index - 1};">${content}</span>`;
-        })
-        .join("");
+    const buildSequence = (current, target) => {
+      if (current === target) {
+        return [];
+      }
+
+      const currentIndex = characterSet.indexOf(current);
+      const targetIndex = characterSet.indexOf(target);
+      if (targetIndex === -1) {
+        return null;
+      }
+
+      const spaceIndex = characterSet.indexOf(" ");
+      const startIndex = currentIndex === -1 ? (spaceIndex === -1 ? 0 : spaceIndex) : currentIndex;
+      const sequence = [];
+
+      if (startIndex < targetIndex) {
+        for (let index = startIndex + 1; index <= targetIndex; index += 1) {
+          sequence.push(characterSet[index]);
+        }
+      } else {
+        for (let index = startIndex + 1; index < characterSet.length; index += 1) {
+          sequence.push(characterSet[index]);
+        }
+
+        for (let index = 0; index <= targetIndex; index += 1) {
+          sequence.push(characterSet[index]);
+        }
+      }
+
+      return sequence;
+    };
+
+    const createRotatorCell = () => {
+      const cell = document.createElement("span");
+      cell.className = "hero-rotator__cell";
+      cell.style.setProperty("--hero-flip-duration", `${flipDuration}ms`);
+
+      const top = document.createElement("span");
+      top.className = "hero-rotator__panel hero-rotator__panel--top";
+
+      const topGlyph = document.createElement("span");
+      topGlyph.className = "hero-rotator__glyph";
+      top.appendChild(topGlyph);
+
+      const bottom = document.createElement("span");
+      bottom.className = "hero-rotator__panel hero-rotator__panel--bottom";
+
+      const bottomGlyph = document.createElement("span");
+      bottomGlyph.className = "hero-rotator__glyph";
+      bottom.appendChild(bottomGlyph);
+
+      const seam = document.createElement("span");
+      seam.className = "hero-rotator__seam";
+      seam.setAttribute("aria-hidden", "true");
+
+      cell.append(top, bottom, seam);
+
+      return {
+        cell,
+        topGlyph,
+        bottomGlyph,
+      };
+    };
+
+    const clearFlaps = (cell) => {
+      cell.querySelectorAll("[data-hero-flap]").forEach((flap) => flap.remove());
+    };
+
+    const setStaticCell = (parts, character) => {
+      const isSpace = character === " ";
+      parts.cell.classList.toggle("is-space", isSpace);
+      parts.topGlyph.textContent = renderGlyph(character);
+      parts.bottomGlyph.textContent = renderGlyph(character);
+      clearFlaps(parts.cell);
+    };
+
+    const appendFlap = (cell, position, character) => {
+      const flap = document.createElement("span");
+      flap.className = `hero-rotator__panel hero-rotator__panel--${position} hero-rotator__panel--flap`;
+      flap.setAttribute("data-hero-flap", "true");
+
+      const glyph = document.createElement("span");
+      glyph.className = "hero-rotator__glyph";
+      glyph.textContent = renderGlyph(character);
+      flap.appendChild(glyph);
+      cell.appendChild(flap);
     };
 
     const initializeHeroRotator = () => {
@@ -426,53 +495,105 @@
         .split("|")
         .map((phrase) => phrase.trim())
         .filter(Boolean);
-      const sizer = heroRotator.querySelector("[data-rotator-sizer]");
-      const currentPhrase = heroRotator.querySelector("[data-rotator-current]");
-      const nextPhrase = heroRotator.querySelector("[data-rotator-next]");
 
-      if (!sizer || !currentPhrase || !nextPhrase || phrases.length === 0) {
+      if (phrases.length === 0) {
         return;
       }
 
       const longestPhrase = phrases.reduce((longest, phrase) => phrase.length > longest.length ? phrase : longest, phrases[0]);
-      sizer.textContent = longestPhrase;
-      currentPhrase.innerHTML = buildAnimatedCharacters(phrases[0]);
-      currentPhrase.setAttribute("aria-hidden", "false");
-      nextPhrase.setAttribute("aria-hidden", "true");
+      const columnCount = longestPhrase.length;
+      const cells = Array.from({ length: columnCount }, () => createRotatorCell());
+      const timeouts = [];
+      const currentCharacters = phrases[0].padEnd(columnCount, " ").split("");
+
+      heroRotator.textContent = "";
+      cells.forEach((parts) => heroRotator.appendChild(parts.cell));
+
+      const clearAnimationTimeouts = () => {
+        while (timeouts.length > 0) {
+          window.clearTimeout(timeouts.pop());
+        }
+      };
+
+      const renderPhrase = (phrase) => {
+        const paddedPhrase = phrase.padEnd(columnCount, " ");
+        cells.forEach((parts, index) => {
+          setStaticCell(parts, paddedPhrase[index]);
+          currentCharacters[index] = paddedPhrase[index];
+        });
+      };
+
+      renderPhrase(phrases[0]);
 
       if (phrases.length < 2 || reducedMotionQuery.matches) {
         return;
       }
 
       let activeIndex = 0;
-      let activePhraseElement = currentPhrase;
-      let standbyPhraseElement = nextPhrase;
 
       const rotatePhrase = () => {
+        clearAnimationTimeouts();
+
         const nextIndex = (activeIndex + 1) % phrases.length;
-        const incomingPhrase = phrases[nextIndex];
-        const maxCharacterCount = Math.max(phrases[activeIndex].length, incomingPhrase.length);
-        const settleDuration = Math.max(enterDuration, leaveDuration) + Math.max(maxCharacterCount - 1, 0) * charStagger + 80;
+        const incomingPhrase = phrases[nextIndex].padEnd(columnCount, " ");
+        let totalDuration = 0;
 
-        standbyPhraseElement.innerHTML = buildAnimatedCharacters(incomingPhrase);
-        activePhraseElement.classList.remove("is-active");
-        activePhraseElement.classList.add("is-leaving");
-        standbyPhraseElement.classList.add("is-entering");
+        incomingPhrase.split("").forEach((targetCharacter, index) => {
+          const currentCharacter = currentCharacters[index] || " ";
+          const sequence = buildSequence(currentCharacter, targetCharacter);
 
-        window.setTimeout(() => {
-          activePhraseElement.classList.remove("is-leaving");
-          activePhraseElement.setAttribute("aria-hidden", "true");
-          activePhraseElement.innerHTML = "";
-          standbyPhraseElement.classList.remove("is-entering");
-          standbyPhraseElement.classList.add("is-active");
-          standbyPhraseElement.setAttribute("aria-hidden", "false");
+          if (sequence === null) {
+            setStaticCell(cells[index], targetCharacter);
+            currentCharacters[index] = targetCharacter;
+            return;
+          }
+
+          if (sequence.length === 0) {
+            setStaticCell(cells[index], targetCharacter);
+            currentCharacters[index] = targetCharacter;
+            return;
+          }
+
+          const startDelay = index * staggerDelay;
+          const startTimeout = window.setTimeout(() => {
+            sequence.forEach((nextCharacter, stepIndex) => {
+              const stepTimeout = window.setTimeout(() => {
+                const parts = cells[index];
+                const displayedCharacter = stepIndex === 0 ? currentCharacter : sequence[stepIndex - 1];
+
+                parts.cell.classList.toggle("is-space", nextCharacter === " " && displayedCharacter === " ");
+                parts.topGlyph.textContent = renderGlyph(nextCharacter);
+                parts.bottomGlyph.textContent = renderGlyph(displayedCharacter);
+                clearFlaps(parts.cell);
+                appendFlap(parts.cell, "top", displayedCharacter);
+                appendFlap(parts.cell, "bottom", nextCharacter);
+              }, stepIndex * flipDuration);
+
+              timeouts.push(stepTimeout);
+            });
+
+            const settleTimeout = window.setTimeout(() => {
+              const settledCharacter = sequence[sequence.length - 1] || targetCharacter;
+              setStaticCell(cells[index], settledCharacter);
+              currentCharacters[index] = settledCharacter;
+            }, sequence.length * flipDuration);
+
+            timeouts.push(settleTimeout);
+          }, startDelay);
+
+          totalDuration = Math.max(totalDuration, startDelay + sequence.length * flipDuration);
+          timeouts.push(startTimeout);
+        });
+
+        const nextRotationTimeout = window.setTimeout(() => {
           activeIndex = nextIndex;
-          [activePhraseElement, standbyPhraseElement] = [standbyPhraseElement, activePhraseElement];
-          window.setTimeout(rotatePhrase, changeInterval);
-        }, settleDuration);
+          rotatePhrase();
+        }, totalDuration + changeInterval);
+
+        timeouts.push(nextRotationTimeout);
       };
 
-      window.setTimeout(rotatePhrase, changeInterval);
+      timeouts.push(window.setTimeout(rotatePhrase, changeInterval));
     };
 
     const syncToggle = (theme) => {
