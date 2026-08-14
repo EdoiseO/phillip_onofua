@@ -705,6 +705,16 @@ a.project-media:hover::after {
   color: var(--accent);
 }
 
+@media (min-width: 761px) {
+  html {
+    font-size: 70%;
+  }
+
+  .site-shell {
+    width: min(100%, 826px);
+  }
+}
+
 @media (max-width: 900px) {
   .featured-project-grid,
   .skills-grid,
