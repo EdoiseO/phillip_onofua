@@ -698,6 +698,51 @@ a.project-media:hover::after {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
+.skill-categories {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.15rem;
+  margin-top: 1.25rem;
+}
+
+.skill-category {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.skill-category h4 {
+  margin: 0;
+  color: var(--subtle);
+  font-family: "GeistMonoLocal", ui-monospace, monospace;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-tags li {
+  padding: 0.38rem 0.58rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.skill-card--core .skill-tags li {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
 .skill-card > p:last-child,
 .info-card > p {
   margin: 0.85rem 0 0;
@@ -1074,6 +1119,25 @@ a.project-media:hover::after {
   .info-card h3 {
     margin-top: 0.6rem;
     font-size: 1.08rem;
+  }
+
+  .skill-categories {
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
+
+  .skill-category {
+    padding-top: 0.7rem;
+  }
+
+  .skill-tags {
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+  }
+
+  .skill-tags li {
+    padding: 0.34rem 0.5rem;
+    font-size: 0.67rem;
   }
 
   .skill-card > p:last-child,
