@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>Phillip Onofua — Software Developer</title>
-  <meta name="description" content="Computer Programming and Analysis student building full-stack web and mobile apps with React, Next.js, TypeScript, C#, and cloud platforms." />
+  <title>Phillip Onofua — Full-Stack Developer</title>
+  <meta name="description" content="Phillip Onofua is a Toronto-based full-stack developer building practical products with Next.js, React, Supabase, and Python." />
   <script>
     (() => {
       let storedTheme = null;
@@ -14,9 +14,8 @@
       } catch (error) {
         storedTheme = null;
       }
-      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const theme = storedTheme || (systemPrefersDark ? "dark" : "light");
-      document.documentElement.dataset.theme = theme;
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = storedTheme || (prefersDark ? "dark" : "light");
     })();
   </script>
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
@@ -26,514 +25,400 @@
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="stylesheet" href="assets/overrides.css" />
 </head>
-<body class="__variable_1e4310 __variable_c3aa02 antialiased bg-stone-100 text-stone-900">
-<main id="top" class="min-h-screen bg-stone-100 text-stone-900 antialiased">
-<div class="mx-auto max-w-5xl px-4 pb-12 pt-4 sm:px-6 lg:px-8 md:pb-16 md:pt-6">
-<header class="sticky top-0 z-20 mb-6 border-b border-stone-200 bg-stone-100/95 py-3 backdrop-blur-sm">
-<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-<div class="flex items-center gap-3">
-<img alt="Phillip Onofua portrait" width="40" height="40" class="h-10 w-10 rounded-full border border-stone-300 object-cover bg-stone-100" src="assets/profile-photo.jpg"/>
-<div class="leading-tight">
-<div class="text-sm font-semibold tracking-tight">Phillip Onofua</div>
-<p class="text-xs text-stone-500">Software Engineer · Full-Stack Developer</p>
-</div>
-</div>
-<div class="header-actions flex flex-wrap items-center gap-3 sm:justify-end">
-<nav class="header-nav flex flex-wrap items-center gap-4 text-xs text-stone-500 sm:text-sm" aria-label="Primary navigation">
-<a href="#about" class="hover:text-stone-900">About</a>
-<a href="#about" id="skills-nav-link" data-mobile-target="#skills" class="hover:text-stone-900">Skills</a>
-<a href="#projects" class="hover:text-stone-900">Projects</a>
-<a href="#education" class="hover:text-stone-900">Education</a>
-<a href="#contact" class="hover:text-stone-900">Contact</a>
-</nav>
-<button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
-<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
-</svg>
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
-<circle cx="12" cy="12" r="4"></circle>
-<path d="M12 2v2"></path>
-<path d="M12 20v2"></path>
-<path d="m4.93 4.93 1.41 1.41"></path>
-<path d="m17.66 17.66 1.41 1.41"></path>
-<path d="M2 12h2"></path>
-<path d="M20 12h2"></path>
-<path d="m6.34 17.66-1.41 1.41"></path>
-<path d="m19.07 4.93-1.41 1.41"></path>
-</svg>
-<span class="theme-toggle__label" data-theme-label>Dark mode</span>
-</button>
-</div>
-</div>
-</header>
-<section class="mt-6 grid gap-8 md:mt-8 md:grid-cols-[minmax(0,3fr),minmax(0,2fr)] md:items-start">
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.25em] text-emerald-600">Portfolio · Phillip Onofua</p>
-<h1 class="hero-heading mt-3 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-<span class="hero-heading__intro">Building <span class="text-emerald-700">full-stack apps</span> for</span>
-<span class="hero-rotator-line"><span class="hero-rotator" data-hero-rotator data-phrases="web and mobile.|real-world apps.|scalable systems.|team-driven delivery.">
-<span class="hero-rotator__sizer" data-rotator-sizer aria-hidden="true"></span>
-<span class="hero-rotator__phrase hero-rotator__phrase--current is-active" data-rotator-current>web and mobile.</span>
-<span class="hero-rotator__phrase hero-rotator__phrase--next" data-rotator-next aria-hidden="true"></span>
-</span></span>
-</h1>
-<p class="mt-4 max-w-xl text-sm leading-relaxed text-stone-600 sm:text-base">I&#x27;m a Computer Programming and Analysis student at George Brown Polytechnic with practical experience building full-stack applications using React, Next.js, TypeScript, C#, and cloud platforms. I enjoy systems architecture, collaborative development, and shipping thoughtful digital products.</p>
-<div class="mt-6 flex flex-wrap items-center gap-3">
-<a href="#contact" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-500">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail h-4 w-4" aria-hidden="true">
-<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
-<rect x="2" y="4" width="20" height="16" rx="2"></rect>
-</svg>Contact me</a>
-<a href="assets/phillip-onofua-resume.pdf" download="Phillip_Onofua_Resume.pdf" class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm text-stone-800 shadow-sm hover:border-emerald-500 hover:text-emerald-700">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download h-4 w-4" aria-hidden="true">
-<path d="M12 15V3"></path>
-<path d="m7 10 5 5 5-5"></path>
-<path d="M5 21h14"></path>
-</svg>Get resume</a>
-<a href="https://github.com/EdoiseO" target="_blank" rel="noreferrer" class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm text-stone-800 shadow-sm hover:border-emerald-500 hover:text-emerald-700">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-github h-4 w-4" aria-hidden="true">
-<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
-<path d="M9 18c-4.51 2-5-2-7-2"></path>
-</svg>GitHub<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right h-3 w-3" aria-hidden="true">
-<path d="M7 7h10v10"></path>
-<path d="M7 17 17 7"></path>
-</svg>
-</a>
-<a href="mailto:philliponofua@gmail.com" class="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm text-stone-800 shadow-sm hover:border-emerald-500 hover:text-emerald-700">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail h-4 w-4" aria-hidden="true">
-<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
-<rect x="2" y="4" width="20" height="16" rx="2"></rect>
-</svg>Email<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right h-3 w-3" aria-hidden="true">
-<path d="M7 7h10v10"></path>
-<path d="M7 17 17 7"></path>
-</svg>
-</a>
-</div>
-<div class="mt-5 flex flex-wrap gap-2 text-[11px] text-stone-500 sm:text-xs">
-<span class="rounded-full border border-stone-300 bg-white px-3 py-1">North York, Toronto</span>
-<span class="rounded-full border border-stone-300 bg-white px-3 py-1">George Brown Polytechnic</span>
-<span class="rounded-full border border-stone-300 bg-white px-3 py-1">React &amp; Next.js</span>
-<span class="rounded-full border border-stone-300 bg-white px-3 py-1">TypeScript &amp; C#</span>
-<span class="rounded-full border border-stone-300 bg-white px-3 py-1">Supabase &amp; Azure</span>
-</div>
-</div>
-<div class="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
-<div class="flex items-center gap-3">
-<img alt="Phillip Onofua portrait" width="60" height="60" class="h-14 w-14 rounded-xl border border-stone-200 object-cover bg-stone-100" src="assets/profile-photo.jpg"/>
-<div class="space-y-0.5">
-<p class="text-sm font-semibold">Phillip Onofua</p>
-<p class="text-xs text-stone-500">Software Engineer · Full-Stack Developer</p>
-</div>
-</div>
-<div class="flex items-center justify-between gap-3 pt-1">
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.2em] text-stone-400">Snapshot</p>
-<p class="mt-1 text-sm text-stone-800">Developer · Collaborator · Systems-focused</p>
-</div>
-<div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code h-5 w-5" aria-hidden="true">
-<path d="m16 18 6-6-6-6"></path>
-<path d="m8 6-6 6 6 6"></path>
-</svg>
-</div>
-</div>
-<div class="mt-3 grid gap-3 text-xs text-stone-600">
-<div class="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Focus</p>
-<p class="mt-2">Full-stack web and mobile applications, systems architecture, responsive design, and collaborative product development.</p>
-</div>
-<div class="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Currently</p>
-<p class="mt-2">In second year at George Brown, building real-world projects with React, Next.js, TypeScript, C#, Supabase, and cloud deployment workflows.</p>
-</div>
-</div>
-<div class="mt-2 grid grid-cols-2 gap-3 text-[11px] text-stone-600 sm:text-xs">
-<div class="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-<p class="text-[11px] font-medium uppercase tracking-[0.16em] text-stone-400">Stack</p>
-<p class="mt-1">React, Next.js, TypeScript, C#, ASP.NET, Tailwind, shadcn/ui.</p>
-</div>
-<div class="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-<p class="text-[11px] font-medium uppercase tracking-[0.16em] text-stone-400">Platforms</p>
-<p class="mt-1">Supabase, Azure, Vercel, GitHub, SQL databases, REST APIs.</p>
-</div>
-</div>
-</div>
-</section>
-<section id="about" class="mt-12 grid gap-8 md:grid-cols-[minmax(0,2.2fr),minmax(0,2fr)]">
-<div>
-<h2 class="text-xs font-medium uppercase tracking-[0.25em] text-stone-400">About</h2>
-<p class="mt-3 text-lg font-semibold tracking-tight sm:text-xl">A developer focused on <span class="text-emerald-700">real-world product building.</span></p>
-<div class="mt-4 space-y-3 text-sm leading-relaxed text-stone-600 sm:text-[15px]">
-<p>I am a Computer Programming and Analysis student with practical experience building full-stack web and mobile applications using React, Next.js, TypeScript, C#, and cloud platforms.</p>
-<p>I am especially interested in systems architecture and collaborating with teams to produce high-quality digital products. I enjoy building applications that balance clean user experience, reliable backend logic, and maintainable code.</p>
-<p>Over the past year I have applied classroom concepts to projects involving authentication, SQL-backed data models, responsive interfaces, deployment workflows, and team-based development practices like code reviews and sprint planning.</p>
-</div>
-</div>
-<div id="skills" class="space-y-4">
-<h3 class="text-[11px] font-medium uppercase tracking-[0.24em] text-stone-400">Skills &amp; Tools</h3>
-<div class="space-y-3 text-xs text-stone-700">
-<div class="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
-<div class="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code h-4 w-4" aria-hidden="true">
-<path d="m16 18 6-6-6-6"></path>
-<path d="m8 6-6 6 6 6"></path>
-</svg>
-</div>
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Languages</p>
-<p class="mt-1 text-xs text-stone-800">JavaScript (ES6+), TypeScript, Python, Java, C#, C++, PHP, HTML5, CSS3.</p>
-</div>
-</div>
-<div class="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
-<div class="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-template h-4 w-4" aria-hidden="true">
-<rect width="18" height="7" x="3" y="3" rx="1"></rect>
-<rect width="9" height="7" x="3" y="14" rx="1"></rect>
-<rect width="5" height="7" x="16" y="14" rx="1"></rect>
-</svg>
-</div>
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Frameworks &amp; Libraries</p>
-<p class="mt-1 text-xs text-stone-800">React, React Native, Next.js, ASP.NET, Tailwind CSS, shadcn/ui.</p>
-</div>
-</div>
-<div class="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
-<div class="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud h-4 w-4" aria-hidden="true">
-<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
-</svg>
-</div>
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Tools &amp; Platforms</p>
-<p class="mt-1 text-xs text-stone-800">Git/GitHub, Supabase, Microsoft Azure, Vercel, Vite, PostgreSQL, Auth, Storage.</p>
-</div>
-</div>
-<div class="flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
-<div class="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-brain h-4 w-4" aria-hidden="true">
-<path d="M12 18V5"></path>
-<path d="M15 13a4.5 4.5 0 0 0 0-9"></path>
-<path d="M9 13a4.5 4.5 0 0 1 0-9"></path>
-<path d="M17.5 19a3.5 3.5 0 0 0 0-7"></path>
-<path d="M6.5 19a3.5 3.5 0 0 1 0-7"></path>
-<path d="M12 18a3.5 3.5 0 1 0 0 7"></path>
-</svg>
-</div>
-<div>
-<p class="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400">Concepts</p>
-<p class="mt-1 text-xs text-stone-800">REST APIs, SQL databases, authentication, responsive design, data structures, algorithms, agile collaboration, code reviews.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="projects" class="mt-12">
-<div class="flex flex-wrap items-end justify-between gap-3">
-<div>
-<h2 class="text-xs font-medium uppercase tracking-[0.25em] text-stone-400">Projects</h2>
-<p class="mt-3 text-lg font-semibold tracking-tight sm:text-xl">Applied work across full-stack apps, team projects, and cloud deployment.</p>
-</div>
-<p class="max-w-sm text-[11px] text-stone-500 sm:text-xs">Projects below reflect hands-on work across full-stack development, team collaboration, and cloud deployment.</p>
-</div>
-<div class="mt-6 space-y-5 border-l border-stone-200 pl-3 sm:pl-4">
-<article class="relative rounded-2xl border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
-<span class="absolute -left-[9px] top-5 h-3 w-3 rounded-full border border-emerald-600 bg-stone-100"></span>
-<div class="flex flex-wrap items-baseline justify-between gap-1.5 sm:gap-2">
-<h3 class="text-sm font-semibold">Receipt Bill-Splitting App</h3>
-<span class="text-[11px] text-stone-500 sm:text-xs">Personal Project</span>
-</div>
-<p class="mt-1 text-xs font-medium text-emerald-700 sm:text-[13px]">React · TypeScript · Tailwind CSS · Supabase · Vercel</p>
-<ul class="mt-3 space-y-1.5 text-xs leading-relaxed text-stone-600">
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Built a full-stack receipt-splitting mobile app that lets users scan receipts, assign items, and automatically calculate shared costs.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Implemented authentication and backend data storage with Supabase PostgreSQL.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Deployed the application on Vercel with Git-based preview deployments.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Designed a responsive interface using React, TypeScript, Tailwind CSS, and React Router.</span></li>
-</ul>
-</article>
-<article class="relative rounded-2xl border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
-<span class="absolute -left-[9px] top-5 h-3 w-3 rounded-full border border-emerald-600 bg-stone-100"></span>
-<div class="flex flex-wrap items-baseline justify-between gap-1.5 sm:gap-2">
-<h3 class="text-sm font-semibold">Student Marketplace Platform (SMT)</h3>
-<span class="text-[11px] text-stone-500 sm:text-xs">Team Project</span>
-</div>
-<p class="mt-1 text-xs font-medium text-emerald-700 sm:text-[13px]">Next.js · React · Supabase · Tailwind CSS · JavaScript · shadcn/ui</p>
-<ul class="mt-3 space-y-1.5 text-xs leading-relaxed text-stone-600">
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Worked with a team of developers to build a buying and selling marketplace for Toronto-area students.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Architected the full-stack application using Next.js for server-side rendering and API routes alongside Supabase for real-time data and authentication.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Contributed to database schema design and component development, and participated in team code reviews and sprint planning.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Integrated the shadcn/ui component library to deliver a consistent, accessible design system across the platform.</span></li>
-</ul>
-</article>
-<article class="relative rounded-2xl border border-stone-200 bg-white p-3 shadow-sm sm:p-4">
-<span class="absolute -left-[9px] top-5 h-3 w-3 rounded-full border border-emerald-600 bg-stone-100"></span>
-<div class="flex flex-wrap items-baseline justify-between gap-1.5 sm:gap-2">
-<h3 class="text-sm font-semibold">Event Ticketing Website</h3>
-<span class="text-[11px] text-stone-500 sm:text-xs">Academic Project</span>
-</div>
-<p class="mt-1 text-xs font-medium text-emerald-700 sm:text-[13px]">C# · ASP.NET · Microsoft Azure · SQL</p>
-<ul class="mt-3 space-y-1.5 text-xs leading-relaxed text-stone-600">
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Developed a full-stack event ticketing web application using C# and ASP.NET MVC.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Implemented user authentication, registration, and session-based account features.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Designed and queried a relational SQL database for event listings, ticket purchases, and user records.</span></li>
-<li class="flex gap-2"><span class="mt-1 h-[3px] w-[3px] rounded-full bg-stone-400"></span><span>Deployed the application and managed data storage on Microsoft Azure cloud services.</span></li>
-</ul>
-</article>
-</div>
-</section>
-<section id="education" class="mt-12">
-<div class="flex flex-wrap items-end justify-between gap-3">
-<div>
-<h2 class="text-xs font-medium uppercase tracking-[0.25em] text-stone-400">Education</h2>
-<p class="mt-3 text-lg font-semibold tracking-tight sm:text-xl">Academic foundation and coursework.</p>
-</div>
-<p class="max-w-sm text-[11px] text-stone-500 sm:text-xs">Formal training is centered on object-oriented programming, web development, database design, and software engineering.</p>
-</div>
-<div class="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2">
-<article class="group flex flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-emerald-500 hover:shadow-md">
-<h3 class="text-sm font-semibold text-stone-900">George Brown Polytechnic</h3>
-<p class="mt-1 text-xs font-medium text-emerald-700">Computer Programming and Analysis · Expected Graduation 2027</p>
-<p class="mt-3 text-xs leading-relaxed text-stone-600">Currently in second year, building real-world applications while applying classroom concepts in object-oriented programming, web development, database design, software engineering, and data structures.</p>
-<div class="mt-4 flex flex-wrap gap-2 text-[11px] text-stone-600">
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Toronto</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">2nd Year</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Expected 2027</span>
-</div>
-</article>
-<article class="group flex flex-col rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-emerald-500 hover:shadow-md">
-<h3 class="text-sm font-semibold text-stone-900">Coursework Highlights</h3>
-<p class="mt-1 text-xs font-medium text-emerald-700">Official George Brown subject areas</p>
-<p class="mt-3 text-xs leading-relaxed text-stone-600">Coursework includes IT Essentials, Communicating Across Contexts, Fundamentals of Computing Logic, Introduction to Data Management, Database Management, Object-Oriented Programming, Introduction to Full Stack Development, Advanced Web Programming, Web Application Development, Application Development using Java, Software Quality Assurance, System Analysis, Design and Testing, Agile Software Development, Open Source Development, Data Structures and Algorithms, Mobile Application Development, DevOps, Applied Data Science, Applied Machine Learning, and Introduction to Cyber Security.</p>
-<div class="mt-4 flex flex-wrap gap-2 text-[11px] text-stone-600">
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">OOP</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Web Dev</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Database Mgmt</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Full Stack</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Java</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Linux</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">SQA</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">System Analysis</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Data Structures</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Agile</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Open Source</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Mobile Apps</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">DevOps</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Data Science</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Machine Learning</span>
-<span class="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1">Cyber Security</span>
-</div>
-</article>
-</div>
-</section>
-<section id="contact" class="mt-12 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5 sm:mt-14 sm:p-7">
-<div class="grid gap-5 md:grid-cols-[minmax(0,3fr),minmax(0,2fr)] md:items-center">
-<div>
-<h2 class="text-xs font-medium uppercase tracking-[0.25em] text-emerald-700">Contact</h2>
-<p class="mt-3 text-base font-semibold tracking-tight sm:text-lg">Open to software developer opportunities and collaborative projects.</p>
-<p class="mt-3 text-sm leading-relaxed text-stone-600">If you&#x27;re looking for a developer who enjoys full-stack product work, learning fast, and contributing to team delivery, I&#x27;d love to connect.</p>
-</div>
-<div class="space-y-3 text-sm text-stone-800">
-<a href="mailto:philliponofua@gmail.com" class="inline-flex w-full items-center justify-between gap-3 rounded-xl border border-emerald-300 bg-white px-4 py-3 text-sm font-medium hover:border-emerald-500">
-<div class="flex items-center gap-2">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail h-4 w-4 text-emerald-700" aria-hidden="true">
-<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
-<rect x="2" y="4" width="20" height="16" rx="2"></rect>
-</svg>
-<span>philliponofua@gmail.com</span>
-</div>
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right h-3 w-3 text-emerald-700" aria-hidden="true">
-<path d="M7 7h10v10"></path>
-<path d="M7 17 17 7"></path>
-</svg>
-</a>
-<div class="flex flex-wrap gap-3 text-xs text-stone-700">
-<a href="https://github.com/EdoiseO" target="_blank" rel="noreferrer" class="inline-flex min-w-[120px] flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2 hover:border-emerald-500">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-github h-4 w-4" aria-hidden="true">
-<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
-<path d="M9 18c-4.51 2-5-2-7-2"></path>
-</svg>
-<span>github.com/EdoiseO</span>
-</a>
-<a href="tel:+1675695890" class="inline-flex min-w-[120px] flex-1 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2 hover:border-emerald-500">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone h-4 w-4" aria-hidden="true">
-<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.89.34 1.76.65 2.59a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 5 5l1.49-1.49a2 2 0 0 1 2.11-.45c.83.31 1.7.53 2.59.65A2 2 0 0 1 22 16.92z"></path>
-</svg>
-<span>+1 (675) 695-890</span>
-</a>
-</div>
-</div>
-</div>
-</section>
-<footer class="mt-10 border-t border-stone-200 pt-4 text-[11px] text-stone-500">
-<div class="flex flex-wrap items-center justify-between gap-2">
-<p>© 2026 Phillip Onofua. All rights reserved.</p>
-</div>
-</footer>
-</div>
-</main>
-<script>
-  (() => {
-    const root = document.documentElement;
-    const header = document.querySelector("header");
-    const heroRotator = document.querySelector("[data-hero-rotator]");
-    const skillsNavLink = document.getElementById("skills-nav-link");
-    const toggle = document.getElementById("theme-toggle");
-    const label = toggle?.querySelector("[data-theme-label]");
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const getStoredTheme = () => {
-      try {
-        return window.localStorage.getItem("theme");
-      } catch (error) {
-        return null;
-      }
-    };
+<body>
+  <div id="top" class="site-shell">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="Phillip Onofua — back to top">
+          <img src="assets/profile-photo.jpg" width="44" height="44" alt="Phillip Onofua" />
+          <span>
+            <strong>Phillip Onofua</strong>
+            <small>Full-Stack Developer</small>
+          </span>
+        </a>
 
-    const getActiveTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#about">About</a>
+          <a href="#education">Education</a>
+          <a href="#contact">Contact</a>
+        </nav>
 
-    const setScrollOffset = () => {
-      const headerHeight = header?.offsetHeight ?? 0;
-      root.style.setProperty("--scroll-offset", `${headerHeight + 16}px`);
-    };
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
+          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
+          </svg>
+          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+          <span data-theme-label>Dark mode</span>
+        </button>
+      </div>
+    </header>
 
-    const enterDuration = 620;
-    const leaveDuration = 520;
-    const charStagger = 34;
-    const changeInterval = 5200;
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">Full-Stack Developer · Toronto</p>
+        <h1 id="hero-title">
+          <span class="sr-only">Building full-stack products for real people.</span>
+          <span class="hero-visual" aria-hidden="true">
+            Building <span class="hero-highlight">full-stack products</span>
+            <span class="hero-motion-line"><span id="hero-motion" class="hero-motion-text" data-phrases="for real people.|from idea to launch.|for web and mobile.|with reliable systems.">for real people.</span></span>
+          </span>
+        </h1>
+        <p class="hero-lead">I’m a Computer Programming and Analysis student at George Brown Polytechnic, building practical software with Next.js, React, Supabase, and Python.</p>
 
-    const escapeHtml = (value) => value
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+        <div class="hero-actions">
+          <a class="button button--primary" href="#projects">View featured work <span aria-hidden="true">↓</span></a>
+          <a class="button button--secondary" href="assets/phillip-onofua-resume.pdf" download="Phillip_Onofua_Resume.pdf">Download résumé</a>
+        </div>
 
-    const buildAnimatedCharacters = (phrase) => {
-      const characters = Array.from(phrase);
-      return characters
-        .map((character, index) => {
-          const content = character === " " ? "&nbsp;" : escapeHtml(character);
-          return `<span class="hero-rotator__character" style="--char-delay-index:${characters.length - index - 1};">${content}</span>`;
-        })
-        .join("");
-    };
+        <div class="hero-facts" aria-label="Quick facts">
+          <span>North York, Toronto</span>
+          <span>George Brown Polytechnic</span>
+          <span>Open to developer opportunities</span>
+        </div>
+      </section>
 
-    const initializeHeroRotator = () => {
-      if (!heroRotator) {
-        return;
+      <section id="projects" class="section" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 · Selected work</p>
+            <h2 id="projects-title">Featured projects.</h2>
+          </div>
+          <p>Two builds that represent my approach to product thinking and full-stack delivery.</p>
+        </div>
+
+        <div class="featured-project-grid">
+          <article class="project-card project-card--featured">
+            <a class="project-media" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer" aria-label="Open the live Student Market of Toronto project">
+              <img class="project-placeholder" src="assets/student-market-placeholder.png" alt="Student Market of Toronto project logo" width="2000" height="2000" decoding="async" />
+              <span class="media-label">Screenshots coming soon</span>
+            </a>
+
+            <div class="project-content">
+              <div class="project-kicker">
+                <span>Featured full-stack project</span>
+                <span>Team lead · Developer</span>
+              </div>
+              <h3>Student Market of Toronto</h3>
+              <p class="project-summary">A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses.</p>
+
+              <details class="project-details" open>
+                <summary>View project details</summary>
+                <ul class="project-points">
+                  <li><strong>Contribution.</strong> Led development across the Next.js interface, Supabase data model, authentication, storage, and reusable components.</li>
+                  <li><strong>Technical challenge.</strong> Connected protected accounts, image-backed listings, favourites, messaging, and notifications into one consistent product flow.</li>
+                  <li><strong>Result.</strong> Shipped a public end-to-end marketplace with live browsing, seller tools, dashboards, and responsive mobile behavior.</li>
+                </ul>
+              </details>
+
+              <div class="tech-list" aria-label="Student Market technologies">
+                <span>Next.js</span><span>React</span><span>Supabase</span><span>PostgreSQL</span><span>Tailwind CSS</span>
+              </div>
+
+              <div class="project-actions">
+                <a class="button button--primary button--small" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer">Open live project <span aria-hidden="true">↗</span></a>
+                <a class="button button--secondary button--small" href="https://github.com/EdoiseO/student-market-of-toronto" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+              </div>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <figure class="project-media project-media--video">
+              <video autoplay muted loop playsinline preload="metadata" aria-label="Overlay Studio live OBS overlay demonstration">
+                <source src="assets/overlay-studio-demo.webm" type="video/webm" />
+              </video>
+              <figcaption class="media-label">Live overlay preview</figcaption>
+            </figure>
+
+            <div class="project-content">
+              <div class="project-kicker">
+                <span>Windows desktop project</span>
+                <span>Independent build</span>
+              </div>
+              <h3>Overlay Studio</h3>
+              <p class="project-summary">Overlay Studio streamlines the process of previewing, customizing, and launching animated overlays for OBS.</p>
+
+              <details class="project-details" open>
+                <summary>View project details</summary>
+                <ul class="project-points">
+                  <li><strong>Contribution.</strong> Designed the desktop experience, instance-based overlay library, live customizers, saved settings, and OBS URL workflow.</li>
+                  <li><strong>Technical challenge.</strong> Coordinated Windows media sessions, system-audio capture, persistent configuration, and live browser-source updates.</li>
+                  <li><strong>Result.</strong> Built a reusable suite of goal, social, now-playing, audio-reactive, match-record, and game-rank overlays.</li>
+                </ul>
+              </details>
+
+              <div class="tech-list" aria-label="Overlay Studio technologies">
+                <span>Python</span><span>JavaScript</span><span>aiohttp</span><span>WebSockets</span><span>WebView2</span><span>OBS Studio</span>
+              </div>
+
+              <p class="private-note">Private development project · Demo shown above</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="skills" class="section" aria-labelledby="skills-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">02 · Technical focus</p>
+            <h2 id="skills-title">What I work with.</h2>
+          </div>
+          <p>My core web stack, plus supporting desktop and cloud experience.</p>
+        </div>
+
+        <div class="skills-grid">
+          <article class="skill-card skill-card--core">
+            <p class="card-label">Core stack</p>
+            <h3>Web product development</h3>
+            <p>Next.js, React, JavaScript, TypeScript, Supabase, PostgreSQL, Tailwind CSS, REST APIs, Git, and GitHub.</p>
+          </article>
+          <article class="skill-card">
+            <p class="card-label">Additional experience</p>
+            <h3>Desktop, backend, and cloud</h3>
+            <p>Python, aiohttp, WebSockets, C#, ASP.NET, Java, React Native, Microsoft Azure, Vercel, WebView2, and OBS integrations.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="about" class="section" aria-labelledby="about-title">
+        <div class="section-heading section-heading--compact">
+          <div>
+            <p class="eyebrow">03 · About</p>
+            <h2 id="about-title">About &amp; education.</h2>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <article class="info-card">
+            <p class="card-label">How I work</p>
+            <p>I turn unclear requirements into working interfaces and dependable backends, with a focus on thoughtful UX, clean components, authentication, data modeling, and practical deployment. I’m looking for opportunities to contribute, learn, and keep shipping useful software.</p>
+          </article>
+
+          <article id="education" class="info-card">
+            <p class="card-label">Education</p>
+            <h3>George Brown Polytechnic</h3>
+            <p class="education-program">Computer Programming and Analysis · Expected 2027</p>
+            <div class="course-list" aria-label="Relevant coursework">
+              <span>Object-Oriented Programming</span>
+              <span>Full-Stack Web Development</span>
+              <span>Database Design</span>
+              <span>Data Structures</span>
+              <span>Agile Development</span>
+              <span>Software Quality Assurance</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="contact" class="contact-section" aria-labelledby="contact-title">
+        <div>
+          <p class="eyebrow">04 · Contact</p>
+          <h2 id="contact-title">Let’s build something useful.</h2>
+          <p>I’m open to software development opportunities, collaborations, and conversations about product ideas.</p>
+        </div>
+        <div class="contact-actions">
+          <a class="button button--primary" href="mailto:philliponofua@gmail.com">Email me</a>
+          <a class="button button--secondary" href="https://github.com/EdoiseO" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 Phillip Onofua</p>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const toggle = document.getElementById("theme-toggle");
+      const label = toggle?.querySelector("[data-theme-label]");
+      const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      const getTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
+
+      const syncToggle = () => {
+        const isDark = getTheme() === "dark";
+        toggle?.setAttribute("aria-pressed", String(isDark));
+        toggle?.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+        if (label) label.textContent = isDark ? "Light mode" : "Dark mode";
+      };
+
+      const applyTheme = (theme, persist = true) => {
+        root.dataset.theme = theme;
+        if (persist) {
+          try {
+            window.localStorage.setItem("theme", theme);
+          } catch (error) {
+          }
+        }
+        syncToggle();
+      };
+
+      syncToggle();
+
+      toggle?.addEventListener("click", () => {
+        applyTheme(getTheme() === "dark" ? "light" : "dark");
+      });
+
+      themeQuery.addEventListener("change", (event) => {
+        let storedTheme = null;
+        try {
+          storedTheme = window.localStorage.getItem("theme");
+        } catch (error) {
+          storedTheme = null;
+        }
+        if (!storedTheme) applyTheme(event.matches ? "dark" : "light", false);
+      });
+
+      if (motionQuery.matches) {
+        document.querySelectorAll("video[autoplay]").forEach((video) => {
+          video.pause();
+          video.removeAttribute("autoplay");
+        });
       }
 
-      const phrases = (heroRotator.dataset.phrases || "")
+      const heroMotion = document.getElementById("hero-motion");
+      const heroPhrases = (heroMotion?.dataset.phrases || "")
         .split("|")
         .map((phrase) => phrase.trim())
         .filter(Boolean);
-      const sizer = heroRotator.querySelector("[data-rotator-sizer]");
-      const currentPhrase = heroRotator.querySelector("[data-rotator-current]");
-      const nextPhrase = heroRotator.querySelector("[data-rotator-next]");
 
-      if (!sizer || !currentPhrase || !nextPhrase || phrases.length === 0) {
-        return;
-      }
+      const renderHeroCharacters = (phrase) => {
+        if (!heroMotion) return;
 
-      const longestPhrase = phrases.reduce((longest, phrase) => phrase.length > longest.length ? phrase : longest, phrases[0]);
-      sizer.textContent = longestPhrase;
-      currentPhrase.innerHTML = buildAnimatedCharacters(phrases[0]);
-      currentPhrase.setAttribute("aria-hidden", "false");
-      nextPhrase.setAttribute("aria-hidden", "true");
+        const characters = Array.from(phrase);
+        const fragment = document.createDocumentFragment();
 
-      if (phrases.length < 2 || reducedMotionQuery.matches) {
-        return;
-      }
+        characters.forEach((character, index) => {
+          const span = document.createElement("span");
+          span.className = "hero-motion-character";
+          span.style.setProperty("--char-delay-index", characters.length - index - 1);
+          span.textContent = character === " " ? "\u00a0" : character;
+          fragment.appendChild(span);
+        });
 
-      let activeIndex = 0;
-      let activePhraseElement = currentPhrase;
-      let standbyPhraseElement = nextPhrase;
-
-      const rotatePhrase = () => {
-        const nextIndex = (activeIndex + 1) % phrases.length;
-        const incomingPhrase = phrases[nextIndex];
-        const maxCharacterCount = Math.max(phrases[activeIndex].length, incomingPhrase.length);
-        const settleDuration = Math.max(enterDuration, leaveDuration) + Math.max(maxCharacterCount - 1, 0) * charStagger + 80;
-
-        standbyPhraseElement.innerHTML = buildAnimatedCharacters(incomingPhrase);
-        activePhraseElement.classList.remove("is-active");
-        activePhraseElement.classList.add("is-leaving");
-        standbyPhraseElement.classList.add("is-entering");
-
-        window.setTimeout(() => {
-          activePhraseElement.classList.remove("is-leaving");
-          activePhraseElement.setAttribute("aria-hidden", "true");
-          activePhraseElement.innerHTML = "";
-          standbyPhraseElement.classList.remove("is-entering");
-          standbyPhraseElement.classList.add("is-active");
-          standbyPhraseElement.setAttribute("aria-hidden", "false");
-          activeIndex = nextIndex;
-          [activePhraseElement, standbyPhraseElement] = [standbyPhraseElement, activePhraseElement];
-          window.setTimeout(rotatePhrase, changeInterval);
-        }, settleDuration);
+        heroMotion.replaceChildren(fragment);
       };
 
-      window.setTimeout(rotatePhrase, changeInterval);
-    };
-
-    const syncToggle = (theme) => {
-      const isDark = theme === "dark";
-      toggle?.setAttribute("aria-pressed", String(isDark));
-      toggle?.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-      if (label) {
-        label.textContent = isDark ? "Light mode" : "Dark mode";
+      if (heroMotion && heroPhrases.length) {
+        renderHeroCharacters(heroPhrases[0]);
       }
-    };
 
-    const applyTheme = (theme, persist = true) => {
-      root.dataset.theme = theme;
-      if (persist) {
-        try {
-          window.localStorage.setItem("theme", theme);
-        } catch (error) {
+      if (heroMotion && heroPhrases.length > 1 && !motionQuery.matches) {
+        const enterDuration = 620;
+        const leaveDuration = 520;
+        const characterStagger = 34;
+        const phraseHold = 4200;
+        let phraseIndex = 0;
+
+        const rotateHeroPhrase = () => {
+          heroMotion.classList.add("is-leaving");
+
+          const outgoingDuration = leaveDuration + Math.max(heroPhrases[phraseIndex].length - 1, 0) * characterStagger;
+          window.setTimeout(() => {
+            phraseIndex = (phraseIndex + 1) % heroPhrases.length;
+            heroMotion.classList.remove("is-leaving");
+            renderHeroCharacters(heroPhrases[phraseIndex]);
+            heroMotion.classList.add("is-entering");
+
+            const incomingDuration = enterDuration + Math.max(heroPhrases[phraseIndex].length - 1, 0) * characterStagger;
+            window.setTimeout(() => {
+              heroMotion.classList.remove("is-entering");
+              window.setTimeout(rotateHeroPhrase, phraseHold);
+            }, incomingDuration + 80);
+          }, outgoingDuration + 80);
+        };
+
+        window.setTimeout(rotateHeroPhrase, phraseHold);
+      }
+
+      const projectDetails = document.querySelectorAll(".project-details");
+      const projectDetailsQuery = window.matchMedia("(min-width: 761px)");
+      const activeDetailsAnimations = new WeakMap();
+
+      const setDetailsOpen = (details, shouldOpen) => {
+        const activeAnimation = activeDetailsAnimations.get(details);
+        if (activeAnimation) {
+          activeAnimation.cancel();
+          activeDetailsAnimations.delete(details);
         }
-      }
-      syncToggle(theme);
-    };
 
-    syncToggle(getActiveTheme());
-    setScrollOffset();
-    initializeHeroRotator();
+        details.classList.remove("is-opening", "is-closing");
+        details.open = shouldOpen;
+      };
 
-    toggle?.addEventListener("click", () => {
-      applyTheme(getActiveTheme() === "dark" ? "light" : "dark");
-    });
+      const animateDetails = (details, shouldOpen) => {
+        const content = details.querySelector(".project-points");
 
-    skillsNavLink?.addEventListener("click", (event) => {
-      if (!window.matchMedia("(max-width: 767px)").matches) {
-        return;
-      }
+        if (!content || motionQuery.matches) {
+          setDetailsOpen(details, shouldOpen);
+          return;
+        }
 
-      const targetSelector = skillsNavLink.dataset.mobileTarget;
-      const target = targetSelector ? document.querySelector(targetSelector) : null;
-      if (!target) {
-        return;
-      }
+        if (activeDetailsAnimations.has(details)) return;
 
-      event.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-      window.history.pushState(null, "", targetSelector);
-    });
+        if (shouldOpen) {
+          details.open = true;
+          details.classList.add("is-opening");
+        } else {
+          details.classList.add("is-closing");
+        }
 
-    window.addEventListener("load", setScrollOffset);
-    window.addEventListener("resize", setScrollOffset);
+        const contentHeight = content.scrollHeight;
+        const keyframes = shouldOpen
+          ? [
+              { height: "0px", opacity: 0, transform: "translateY(-0.4rem)" },
+              { height: `${contentHeight}px`, opacity: 1, transform: "translateY(0)" }
+            ]
+          : [
+              { height: `${contentHeight}px`, opacity: 1, transform: "translateY(0)" },
+              { height: "0px", opacity: 0, transform: "translateY(-0.4rem)" }
+            ];
 
-    const handleSystemThemeChange = (event) => {
-      if (!getStoredTheme()) {
-        applyTheme(event.matches ? "dark" : "light", false);
-      }
-    };
+        const animation = content.animate(keyframes, {
+          duration: shouldOpen ? 360 : 280,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)"
+        });
 
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", handleSystemThemeChange);
-    } else {
-      mediaQuery.addListener(handleSystemThemeChange);
-    }
-  })();
-</script>
+        activeDetailsAnimations.set(details, animation);
+
+        animation.onfinish = () => {
+          if (activeDetailsAnimations.get(details) !== animation) return;
+          activeDetailsAnimations.delete(details);
+          details.classList.remove("is-opening", "is-closing");
+          details.open = shouldOpen;
+        };
+
+        animation.oncancel = () => {
+          details.classList.remove("is-opening", "is-closing");
+        };
+      };
+
+      const syncProjectDetails = (event) => {
+        projectDetails.forEach((details) => {
+          setDetailsOpen(details, event.matches);
+        });
+      };
+
+      projectDetails.forEach((details) => {
+        const summary = details.querySelector("summary");
+        summary?.addEventListener("click", (event) => {
+          if (projectDetailsQuery.matches) return;
+          event.preventDefault();
+          animateDetails(details, !details.open);
+        });
+      });
+
+      syncProjectDetails(projectDetailsQuery);
+      projectDetailsQuery.addEventListener("change", syncProjectDetails);
+    })();
+  </script>
 </body>
 </html>
