@@ -1,24 +1,32 @@
 # Phillip Onofua — Developer Portfolio
 
-A responsive personal portfolio showcasing Phillip Onofua's full-stack and desktop development work, technical focus, education, and contact information.
+A responsive personal portfolio showcasing my full-stack and desktop development work, technical skills, education, and contact information.
 
-**Live site:** [philliponofua.vercel.app](https://philliponofua.vercel.app)
+[View the live portfolio](https://philliponofua.vercel.app)
 
-## Highlights
+![Phillip Onofua portfolio homepage](assets/portfolio-preview.png)
+
+## Overview
+
+This repository contains the source for my portfolio website. It is a framework-free static site built to present selected work clearly, load quickly, and remain usable across desktop and mobile devices.
+
+## Technical highlights
 
 - Responsive layouts designed for desktop and mobile
 - Animated hero headline with reduced-motion support and screen-reader-friendly text
-- Three featured project cards with live links, source code, demos, and honest project status
+- Project case studies with live links, source code, or demos where available
 - Expandable project details with smooth opening and closing transitions on mobile
 - Sticky navigation and light/dark theme selection with saved preferences
 - Downloadable résumé and direct contact links
-- Built with semantic HTML and accessibility-conscious interactions
+- Semantic HTML and keyboard-accessible interactions
 
 ## Featured projects
 
 ### Student Market of Toronto
 
 A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
+
+**Role:** Team lead and full-stack developer
 
 - [Open the live project](https://student-market-of-toronto.vercel.app)
 - [View the source code](https://github.com/EdoiseO/student-market-of-toronto)
@@ -27,11 +35,15 @@ A student-focused marketplace for discovering, listing, saving, and discussing i
 
 A Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes a recorded product demo; the application is currently developed in a private repository.
 
+**Status:** Independent development project; demo available on the portfolio
+
 ### Receipt Splitter
 
 A mobile app for assigning shared receipt items, tax, and tip to individual people. This project is currently a work in progress.
 
-## Portfolio stack
+**Status:** Work in progress
+
+## Built with
 
 - HTML5
 - CSS3
@@ -62,6 +74,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 │   ├── styles.css                     # Base styles
 │   ├── overrides.css                  # Responsive layout and visual refinements
 │   ├── profile-photo.jpg              # Portfolio profile image
+│   ├── portfolio-preview.png          # README portfolio preview
 │   ├── student-market-placeholder.png # Student Market project artwork
 │   ├── overlay-studio-demo.webm       # Overlay Studio product demo
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
