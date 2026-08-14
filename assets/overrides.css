@@ -707,11 +707,11 @@ a.project-media:hover::after {
 
 @media (min-width: 761px) {
   html {
-    font-size: 70%;
+    font-size: 80%;
   }
 
   .site-shell {
-    width: min(100%, 826px);
+    width: min(100%, 944px);
   }
 }
 
