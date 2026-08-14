@@ -8,7 +8,7 @@ A responsive personal portfolio showcasing my full-stack and desktop development
 
 ## Overview
 
-This repository contains the source for my portfolio website. It is a framework-free static site built to present selected work clearly, load quickly, and remain usable across desktop and mobile devices.
+This repository contains the source for my portfolio website. It is delivered as a static HTML, CSS, and JavaScript site built to present selected work clearly, load quickly, and remain usable across desktop and mobile devices.
 
 ## Technical highlights
 
@@ -51,7 +51,7 @@ A mobile app for assigning shared receipt items, tax, and tip to individual peop
 - Web Animations API
 - Vercel
 
-The site is intentionally framework-free and runs as a static website with no build step.
+The portfolio has no runtime dependencies or build step; all required static assets are committed with the site.
 
 ## Run locally
 
@@ -69,6 +69,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 
 ```text
 .
+├── _next/static/media/                # Font assets used by the compiled base styles
 ├── index.html                         # Page content and interactions
 ├── assets/
 │   ├── styles.css                     # Base styles
