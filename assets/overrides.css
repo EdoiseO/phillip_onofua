@@ -411,7 +411,6 @@ html[data-theme="dark"] .theme-icon--sun {
 
 .section {
   padding: clamp(4.5rem, 8vw, 6.5rem) 0 0;
-  border-top: 1px solid var(--border);
 }
 
 .section-heading {
@@ -724,11 +723,16 @@ a.project-media:hover::after {
   padding: clamp(1.7rem, 5vw, 3rem);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: stretch;
   gap: 2rem;
   border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
   border-radius: 1.5rem;
   background: var(--accent-soft);
+}
+
+.contact-actions {
+  align-self: end;
+  justify-content: flex-end;
 }
 
 .contact-section > div > p:last-child {
@@ -1100,6 +1104,8 @@ a.project-media:hover::after {
   .contact-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: stretch;
+    justify-content: stretch;
     gap: 0.5rem;
   }
 
