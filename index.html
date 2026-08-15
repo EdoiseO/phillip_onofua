@@ -126,27 +126,26 @@
           </article>
 
           <article class="project-card">
-            <figure class="project-media project-media--video">
-              <video autoplay muted loop playsinline preload="metadata" aria-label="Overlay Studio live OBS overlay demonstration">
-                <source src="assets/overlay-studio-demo.webm" type="video/webm" />
-              </video>
-              <figcaption class="media-label">Live overlay preview</figcaption>
-            </figure>
+            <button class="project-media project-media--gallery-preview" type="button" data-overlay-gallery-open aria-haspopup="dialog" aria-controls="overlay-studio-gallery" aria-label="Open the Overlay Studio product gallery">
+              <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio customizer showing a live Platform Badge draft and its settings" width="1280" height="720" decoding="async" />
+              <span class="media-label">Screenshots + live demo</span>
+              <span class="media-hint">Open gallery <span aria-hidden="true">↗</span></span>
+            </button>
 
             <div class="project-content">
               <div class="project-kicker">
                 <span>Windows desktop project</span>
-                <span>Independent build</span>
+                <span>Active development</span>
               </div>
               <h3>Overlay Studio</h3>
-              <p class="project-summary">Overlay Studio streamlines the process of previewing, customizing, and launching animated overlays for OBS.</p>
+              <p class="project-summary">Overlay Studio is an actively developed Windows application for previewing, customizing, and launching animated overlays for OBS.</p>
 
               <details class="project-details" open>
                 <summary>View project details</summary>
                 <ul class="project-points">
                   <li><strong>Contribution.</strong> Designed the desktop experience, instance-based overlay library, live customizers, saved settings, and OBS URL workflow.</li>
                   <li><strong>Technical challenge.</strong> Coordinated Windows media sessions, system-audio capture, persistent configuration, and live browser-source updates.</li>
-                  <li><strong>Result.</strong> Built a reusable suite of goal, social, now-playing, audio-reactive, match-record, and game-rank overlays.</li>
+                  <li><strong>Result.</strong> Delivered a working production build and continue expanding its goal, social, now-playing, audio-reactive, match-record, and game-rank overlays based on new ideas and feedback.</li>
                 </ul>
               </details>
 
@@ -154,7 +153,7 @@
                 <span>Python</span><span>JavaScript</span><span>aiohttp</span><span>WebSockets</span><span>WebView2</span><span>OBS Studio</span>
               </div>
 
-              <p class="private-note">Private development project · Demo shown above</p>
+              <p class="private-note">Private project · Actively maintained · Interface and overlay library continue to evolve</p>
             </div>
           </article>
 
@@ -196,6 +195,35 @@
           </article>
         </div>
       </section>
+
+      <dialog class="media-gallery" id="overlay-studio-gallery" aria-labelledby="overlay-gallery-title">
+        <div class="media-gallery__panel">
+          <header class="media-gallery__header">
+            <div>
+              <p class="eyebrow">Overlay Studio · Current production build</p>
+              <h2 id="overlay-gallery-title">Product gallery</h2>
+            </div>
+            <button class="media-gallery__close" type="button" data-overlay-gallery-close aria-label="Close product gallery">×</button>
+          </header>
+
+          <div class="media-gallery__viewport">
+            <img data-gallery-image src="assets/overlay-studio-customizer.png" alt="" width="1280" height="720" />
+            <video data-gallery-video controls muted playsinline preload="metadata" hidden></video>
+            <button class="media-gallery__nav media-gallery__nav--previous" type="button" data-gallery-previous aria-label="Show previous gallery item">‹</button>
+            <button class="media-gallery__nav media-gallery__nav--next" type="button" data-gallery-next aria-label="Show next gallery item">›</button>
+          </div>
+
+          <div class="media-gallery__meta" aria-live="polite">
+            <div>
+              <strong data-gallery-title>Platform Badge customizer</strong>
+              <p data-gallery-description>Live draft preview and appearance controls inside the desktop application.</p>
+            </div>
+            <span data-gallery-counter>1 / 7</span>
+          </div>
+
+          <div class="media-gallery__thumbnails" data-gallery-thumbnails aria-label="Choose a gallery item"></div>
+        </div>
+      </dialog>
 
       <section id="skills" class="section" aria-labelledby="skills-title">
         <div class="section-heading">
@@ -503,6 +531,176 @@
 
       syncProjectDetails(projectDetailsQuery);
       projectDetailsQuery.addEventListener("change", syncProjectDetails);
+
+      const galleryDialog = document.getElementById("overlay-studio-gallery");
+      const galleryOpenButtons = document.querySelectorAll("[data-overlay-gallery-open]");
+      const galleryCloseButton = galleryDialog?.querySelector("[data-overlay-gallery-close]");
+      const galleryPreviousButton = galleryDialog?.querySelector("[data-gallery-previous]");
+      const galleryNextButton = galleryDialog?.querySelector("[data-gallery-next]");
+      const galleryImage = galleryDialog?.querySelector("[data-gallery-image]");
+      const galleryVideo = galleryDialog?.querySelector("[data-gallery-video]");
+      const galleryTitle = galleryDialog?.querySelector("[data-gallery-title]");
+      const galleryDescription = galleryDialog?.querySelector("[data-gallery-description]");
+      const galleryCounter = galleryDialog?.querySelector("[data-gallery-counter]");
+      const galleryThumbnails = galleryDialog?.querySelector("[data-gallery-thumbnails]");
+      const overlayStudioMedia = [
+        {
+          type: "image",
+          src: "assets/overlay-studio-customizer.png",
+          title: "Platform Badge customizer",
+          description: "Live draft preview and appearance controls inside the desktop application.",
+          alt: "Overlay Studio Platform Badge customizer with a live draft preview and identity controls"
+        },
+        {
+          type: "image",
+          src: "assets/overlay-studio-library.png",
+          title: "Overlay library",
+          description: "Installed overlay instances, live status, quick actions, and OBS canvas sizes.",
+          alt: "Overlay Studio library showing installed social, goal, and now-playing overlays"
+        },
+        {
+          type: "image",
+          src: "assets/overlay-studio-spotify-customizer.png",
+          title: "Spotify customizer",
+          description: "Live Windows media data with artwork-matched colors and fallback palette controls.",
+          alt: "Overlay Studio Spotify customizer showing a live player draft and color settings"
+        },
+        {
+          type: "image",
+          src: "assets/overlay-studio-spotify-preview.png",
+          title: "Spotify live preview",
+          description: "An OBS-ready now-playing card driven by the Spotify desktop media session.",
+          alt: "Large Overlay Studio preview of a Spotify now-playing overlay"
+        },
+        {
+          type: "image",
+          src: "assets/overlay-studio-social-grouped-customizer.png",
+          title: "Social Grouped customizer",
+          description: "Platform grouping, shared handles, and a live draft for a reusable social identity strip.",
+          alt: "Overlay Studio Social Grouped customizer with account groups and a live draft"
+        },
+        {
+          type: "image",
+          src: "assets/overlay-studio-social-grouped-preview.png",
+          title: "Social Grouped live preview",
+          description: "Multiple platform identities combined into one compact OBS browser source.",
+          alt: "Large Overlay Studio preview of a grouped social overlay"
+        },
+        {
+          type: "video",
+          src: "assets/overlay-studio-demo.webm",
+          title: "Live OBS demonstration",
+          description: "The animated overlay running in context while media is playing.",
+          alt: "Overlay Studio animated OBS overlay demonstration"
+        }
+      ];
+      let galleryIndex = 0;
+
+      const renderGallery = () => {
+        if (!galleryDialog || !galleryImage || !galleryVideo) return;
+        const item = overlayStudioMedia[galleryIndex];
+        const isVideo = item.type === "video";
+
+        galleryImage.hidden = isVideo;
+        galleryVideo.hidden = !isVideo;
+
+        if (isVideo) {
+          galleryImage.removeAttribute("src");
+          galleryImage.alt = "";
+          if (galleryVideo.getAttribute("src") !== item.src) {
+            galleryVideo.src = item.src;
+            galleryVideo.load();
+          }
+          galleryVideo.setAttribute("aria-label", item.alt);
+        } else {
+          galleryVideo.pause();
+          galleryVideo.removeAttribute("src");
+          galleryVideo.load();
+          galleryImage.src = item.src;
+          galleryImage.alt = item.alt;
+        }
+
+        if (galleryTitle) galleryTitle.textContent = item.title;
+        if (galleryDescription) galleryDescription.textContent = item.description;
+        if (galleryCounter) galleryCounter.textContent = `${galleryIndex + 1} / ${overlayStudioMedia.length}`;
+
+        galleryThumbnails?.querySelectorAll("button").forEach((button, index) => {
+          const isCurrent = index === galleryIndex;
+          button.classList.toggle("is-current", isCurrent);
+          if (isCurrent) button.setAttribute("aria-current", "true");
+          else button.removeAttribute("aria-current");
+        });
+      };
+
+      const showGalleryItem = (index) => {
+        galleryIndex = (index + overlayStudioMedia.length) % overlayStudioMedia.length;
+        renderGallery();
+      };
+
+      if (galleryThumbnails) {
+        overlayStudioMedia.forEach((item, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "media-gallery__thumbnail";
+          button.setAttribute("aria-label", `Show ${item.title}`);
+
+          if (item.type === "image") {
+            const image = document.createElement("img");
+            image.src = item.src;
+            image.alt = "";
+            image.loading = "lazy";
+            button.append(image);
+          } else {
+            const label = document.createElement("span");
+            label.innerHTML = '<span aria-hidden="true">▶</span> Live demo';
+            button.append(label);
+          }
+
+          button.addEventListener("click", () => showGalleryItem(index));
+          galleryThumbnails.append(button);
+        });
+      }
+
+      const openGallery = () => {
+        if (!galleryDialog) return;
+        showGalleryItem(0);
+        document.body.classList.add("gallery-open");
+        galleryDialog.showModal();
+      };
+
+      const closeGallery = () => {
+        if (!galleryDialog?.open) return;
+        galleryDialog.close();
+      };
+
+      galleryOpenButtons.forEach((button) => button.addEventListener("click", openGallery));
+      galleryCloseButton?.addEventListener("click", closeGallery);
+      galleryPreviousButton?.addEventListener("click", () => showGalleryItem(galleryIndex - 1));
+      galleryNextButton?.addEventListener("click", () => showGalleryItem(galleryIndex + 1));
+
+      galleryDialog?.addEventListener("click", (event) => {
+        if (event.target === galleryDialog) closeGallery();
+      });
+
+      galleryDialog?.addEventListener("close", () => {
+        galleryVideo?.pause();
+        document.body.classList.remove("gallery-open");
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!galleryDialog?.open) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeGallery();
+          return;
+        }
+        if (event.key === "ArrowLeft") showGalleryItem(galleryIndex - 1);
+        if (event.key === "ArrowRight") showGalleryItem(galleryIndex + 1);
+        if (event.key === "Home") showGalleryItem(0);
+        if (event.key === "End") showGalleryItem(overlayStudioMedia.length - 1);
+      });
+
+      renderGallery();
     })();
   </script>
 </body>
