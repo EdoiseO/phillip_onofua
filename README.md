@@ -20,6 +20,7 @@ This repository contains the source for my portfolio website. It is delivered as
 - Downloadable résumé and direct contact links
 - Semantic HTML and keyboard-accessible interactions
 - Canonical and social-sharing metadata for consistent link previews
+- Self-hosted technology logos with theme-aware presentation
 
 ## Featured projects
 
@@ -80,6 +81,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 │   ├── student-market-placeholder.png # Student Market project artwork
 │   ├── overlay-studio-*.png            # Overlay Studio product-gallery screenshots
 │   ├── overlay-studio-demo.webm        # Overlay Studio live product demo
+│   ├── tech-logos/                      # Self-hosted technology brand marks
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
 └── README.md
 ```
@@ -87,6 +89,8 @@ Then open [http://localhost:8000](http://localhost:8000).
 ## Deployment
 
 The production site is deployed on Vercel from the `main` branch.
+
+Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simple Icons](https://simpleicons.org). All trademarks belong to their respective owners.
 
 ## Contact
 
