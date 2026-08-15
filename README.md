@@ -1,6 +1,6 @@
 # Phillip Onofua — Developer Portfolio
 
-A responsive personal portfolio showcasing my full-stack and desktop development work, technical skills, education, and contact information.
+A responsive personal portfolio showcasing my production web and Windows desktop development work, technical skills, education, and contact information.
 
 [View the live portfolio](https://philliponofua.vercel.app)
 
@@ -19,6 +19,7 @@ This repository contains the source for my portfolio website. It is delivered as
 - Sticky navigation and light/dark theme selection with saved preferences
 - Downloadable résumé and direct contact links
 - Semantic HTML and keyboard-accessible interactions
+- Canonical and social-sharing metadata for consistent link previews
 
 ## Featured projects
 
@@ -33,13 +34,13 @@ A student-focused marketplace for discovering, listing, saving, and discussing i
 
 ### Overlay Studio
 
-A Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes a seven-item product gallery with current interface screenshots and a recorded live demo. The private application is actively maintained and continues to evolve based on new ideas and feedback.
+A production Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes current interface screenshots and a recorded live demo. Its source code is private, and the application is actively maintained as the interface and overlay library continue to evolve.
 
-**Status:** Working production build; active development
+**Status:** Production application; active development
 
 ### Receipt Splitter
 
-A mobile app for assigning shared receipt items, tax, and tip to individual people. This project is currently a work in progress.
+A planned mobile app for assigning shared receipt items, tax, and tip to individual people. This project is currently a work in progress.
 
 **Status:** Work in progress
 
