@@ -33,9 +33,9 @@ A student-focused marketplace for discovering, listing, saving, and discussing i
 
 ### Overlay Studio
 
-A Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes a recorded product demo; the application is currently developed in a private repository.
+A Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes a seven-item product gallery with current interface screenshots and a recorded live demo. The private application is actively maintained and continues to evolve based on new ideas and feedback.
 
-**Status:** Independent development project; demo available on the portfolio
+**Status:** Working production build; active development
 
 ### Receipt Splitter
 
@@ -77,7 +77,8 @@ Then open [http://localhost:8000](http://localhost:8000).
 │   ├── profile-photo.jpg              # Portfolio profile image
 │   ├── portfolio-preview.png          # README portfolio preview
 │   ├── student-market-placeholder.png # Student Market project artwork
-│   ├── overlay-studio-demo.webm       # Overlay Studio product demo
+│   ├── overlay-studio-*.png            # Overlay Studio product-gallery screenshots
+│   ├── overlay-studio-demo.webm        # Overlay Studio live product demo
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
 └── README.md
 ```
