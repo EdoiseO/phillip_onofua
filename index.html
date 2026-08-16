@@ -107,10 +107,11 @@
 
         <div class="featured-project-grid">
           <article class="project-card project-card--featured">
-            <a class="project-media" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer" aria-label="Open the live Student Market of Toronto project">
-              <img class="project-placeholder" src="assets/student-market-placeholder.png" alt="Student Market of Toronto project logo" width="2000" height="2000" decoding="async" />
-              <span class="media-label">Screenshots coming soon</span>
-            </a>
+            <button class="project-media project-media--gallery-preview" type="button" data-student-market-gallery-open aria-haspopup="dialog" aria-controls="student-market-gallery" aria-label="Open the Student Market of Toronto product gallery">
+              <img src="assets/student-market-browse-desktop.png" alt="Student Market of Toronto marketplace with live student listings and campus details" width="1440" height="1000" decoding="async" />
+              <span class="media-label">Desktop + mobile screenshots</span>
+              <span class="media-hint">Open gallery <span aria-hidden="true">↗</span></span>
+            </button>
 
             <div class="project-content">
               <div class="project-kicker">
@@ -210,6 +211,35 @@
           </article>
         </div>
       </section>
+
+      <dialog class="media-gallery" id="student-market-gallery" aria-labelledby="student-market-gallery-title">
+        <div class="media-gallery__panel">
+          <header class="media-gallery__header">
+            <div>
+              <p class="eyebrow">Student Market · Responsive marketplace</p>
+              <h2 id="student-market-gallery-title">Product gallery</h2>
+            </div>
+            <button class="media-gallery__close" type="button" data-student-market-gallery-close aria-label="Close Student Market product gallery">×</button>
+          </header>
+
+          <div class="media-gallery__viewport">
+            <img data-gallery-image src="assets/student-market-browse-desktop.png" alt="" width="1440" height="1000" />
+            <video data-gallery-video controls muted playsinline preload="metadata" hidden></video>
+            <button class="media-gallery__nav media-gallery__nav--previous" type="button" data-gallery-previous aria-label="Show previous gallery item">‹</button>
+            <button class="media-gallery__nav media-gallery__nav--next" type="button" data-gallery-next aria-label="Show next gallery item">›</button>
+          </div>
+
+          <div class="media-gallery__meta" aria-live="polite">
+            <div>
+              <strong data-gallery-title>Marketplace discovery</strong>
+              <p data-gallery-description>Search, category browsing, live listings, pricing, and campus context in one responsive marketplace.</p>
+            </div>
+            <span data-gallery-counter>1 / 8</span>
+          </div>
+
+          <div class="media-gallery__thumbnails" data-gallery-thumbnails aria-label="Choose a Student Market gallery item"></div>
+        </div>
+      </dialog>
 
       <dialog class="media-gallery" id="overlay-studio-gallery" aria-labelledby="overlay-gallery-title">
         <div class="media-gallery__panel">
@@ -572,17 +602,67 @@
       syncProjectDetails(projectDetailsQuery);
       projectDetailsQuery.addEventListener("change", syncProjectDetails);
 
-      const galleryDialog = document.getElementById("overlay-studio-gallery");
-      const galleryOpenButtons = document.querySelectorAll("[data-overlay-gallery-open]");
-      const galleryCloseButton = galleryDialog?.querySelector("[data-overlay-gallery-close]");
-      const galleryPreviousButton = galleryDialog?.querySelector("[data-gallery-previous]");
-      const galleryNextButton = galleryDialog?.querySelector("[data-gallery-next]");
-      const galleryImage = galleryDialog?.querySelector("[data-gallery-image]");
-      const galleryVideo = galleryDialog?.querySelector("[data-gallery-video]");
-      const galleryTitle = galleryDialog?.querySelector("[data-gallery-title]");
-      const galleryDescription = galleryDialog?.querySelector("[data-gallery-description]");
-      const galleryCounter = galleryDialog?.querySelector("[data-gallery-counter]");
-      const galleryThumbnails = galleryDialog?.querySelector("[data-gallery-thumbnails]");
+      const studentMarketMedia = [
+        {
+          type: "image",
+          src: "assets/student-market-browse-desktop.png",
+          title: "Marketplace discovery",
+          description: "Search, category browsing, live listings, pricing, and campus context in one responsive marketplace.",
+          alt: "Student Market desktop marketplace showing electronics and book listings with campus details"
+        },
+        {
+          type: "image",
+          src: "assets/student-market-listing-desktop.png",
+          title: "Listing details and campus meetup",
+          description: "Product media, seller identity, favourites, messaging entry point, and a campus meetup map.",
+          alt: "Student Market desktop listing page with a product gallery, seller information, and meetup location"
+        },
+        {
+          type: "image",
+          src: "assets/student-market-messages-desktop.png",
+          title: "Buyer–seller messaging",
+          description: "Listing-linked conversations and unread states keep marketplace coordination connected to each item.",
+          alt: "Student Market desktop inbox showing listing-linked buyer and seller conversations"
+        },
+        {
+          type: "image",
+          src: "assets/student-market-admin-desktop.png",
+          title: "Admin moderation",
+          description: "Report triage, listing approvals, review status, and moderator actions in one protected workspace.",
+          alt: "Student Market admin dashboard showing report metrics, moderation queues, and listing approvals"
+        },
+        {
+          type: "image",
+          src: "assets/student-market-report-review-desktop.png",
+          title: "Report review workflow",
+          description: "Flagged content, conversation context, related reports, moderator notes, and resolution actions support informed decisions.",
+          alt: "Student Market report review page showing flagged conversation context, related reports, notes, and moderation actions"
+        },
+        {
+          type: "image",
+          orientation: "portrait",
+          src: "assets/student-market-browse-mobile.png",
+          title: "Mobile marketplace",
+          description: "Responsive product discovery and persistent navigation designed for phone-sized screens.",
+          alt: "Student Market mobile marketplace showing responsive listing cards and bottom navigation"
+        },
+        {
+          type: "image",
+          orientation: "portrait",
+          src: "assets/student-market-messages-mobile.png",
+          title: "Mobile messaging",
+          description: "Conversation access, product context, and unread states remain easy to scan on mobile.",
+          alt: "Student Market mobile inbox showing marketplace conversations and unread message states"
+        },
+        {
+          type: "image",
+          orientation: "portrait",
+          src: "assets/student-market-profile-mobile.png",
+          title: "Mobile profile management",
+          description: "Profile image, school identity, seller details, and account controls adapt cleanly to mobile.",
+          alt: "Student Market mobile profile editor showing account identity, school, and seller details"
+        }
+      ];
       const overlayStudioMedia = [
         {
           type: "image",
@@ -634,113 +714,142 @@
           alt: "Overlay Studio animated OBS overlay demonstration"
         }
       ];
-      let galleryIndex = 0;
 
-      const renderGallery = () => {
-        if (!galleryDialog || !galleryImage || !galleryVideo) return;
-        const item = overlayStudioMedia[galleryIndex];
-        const isVideo = item.type === "video";
+      const setupMediaGallery = ({ dialogId, openSelector, closeSelector, media }) => {
+        const dialog = document.getElementById(dialogId);
+        if (!dialog) return;
 
-        galleryImage.hidden = isVideo;
-        galleryVideo.hidden = !isVideo;
+        const openButtons = document.querySelectorAll(openSelector);
+        const closeButton = dialog.querySelector(closeSelector);
+        const previousButton = dialog.querySelector("[data-gallery-previous]");
+        const nextButton = dialog.querySelector("[data-gallery-next]");
+        const viewportElement = dialog.querySelector(".media-gallery__viewport");
+        const imageElement = dialog.querySelector("[data-gallery-image]");
+        const videoElement = dialog.querySelector("[data-gallery-video]");
+        const titleElement = dialog.querySelector("[data-gallery-title]");
+        const descriptionElement = dialog.querySelector("[data-gallery-description]");
+        const counterElement = dialog.querySelector("[data-gallery-counter]");
+        const thumbnailsElement = dialog.querySelector("[data-gallery-thumbnails]");
+        let activeIndex = 0;
 
-        if (isVideo) {
-          galleryImage.removeAttribute("src");
-          galleryImage.alt = "";
-          if (galleryVideo.getAttribute("src") !== item.src) {
-            galleryVideo.src = item.src;
-            galleryVideo.load();
+        const render = () => {
+          if (!imageElement || !videoElement) return;
+          const item = media[activeIndex];
+          const isVideo = item.type === "video";
+
+          viewportElement?.classList.toggle("is-portrait", item.orientation === "portrait");
+          imageElement.hidden = isVideo;
+          videoElement.hidden = !isVideo;
+
+          if (isVideo) {
+            imageElement.removeAttribute("src");
+            imageElement.alt = "";
+            if (videoElement.getAttribute("src") !== item.src) {
+              videoElement.src = item.src;
+              videoElement.load();
+            }
+            videoElement.setAttribute("aria-label", item.alt);
+          } else {
+            videoElement.pause();
+            videoElement.removeAttribute("src");
+            videoElement.load();
+            imageElement.src = item.src;
+            imageElement.alt = item.alt;
           }
-          galleryVideo.setAttribute("aria-label", item.alt);
-        } else {
-          galleryVideo.pause();
-          galleryVideo.removeAttribute("src");
-          galleryVideo.load();
-          galleryImage.src = item.src;
-          galleryImage.alt = item.alt;
-        }
 
-        if (galleryTitle) galleryTitle.textContent = item.title;
-        if (galleryDescription) galleryDescription.textContent = item.description;
-        if (galleryCounter) galleryCounter.textContent = `${galleryIndex + 1} / ${overlayStudioMedia.length}`;
+          if (titleElement) titleElement.textContent = item.title;
+          if (descriptionElement) descriptionElement.textContent = item.description;
+          if (counterElement) counterElement.textContent = `${activeIndex + 1} / ${media.length}`;
 
-        galleryThumbnails?.querySelectorAll("button").forEach((button, index) => {
-          const isCurrent = index === galleryIndex;
-          button.classList.toggle("is-current", isCurrent);
-          if (isCurrent) button.setAttribute("aria-current", "true");
-          else button.removeAttribute("aria-current");
-        });
-      };
+          thumbnailsElement?.querySelectorAll("button").forEach((button, index) => {
+            const isCurrent = index === activeIndex;
+            button.classList.toggle("is-current", isCurrent);
+            if (isCurrent) button.setAttribute("aria-current", "true");
+            else button.removeAttribute("aria-current");
+          });
+        };
 
-      const showGalleryItem = (index) => {
-        galleryIndex = (index + overlayStudioMedia.length) % overlayStudioMedia.length;
-        renderGallery();
-      };
+        const showItem = (index) => {
+          activeIndex = (index + media.length) % media.length;
+          render();
+        };
 
-      if (galleryThumbnails) {
-        overlayStudioMedia.forEach((item, index) => {
+        media.forEach((item, index) => {
+          if (!thumbnailsElement) return;
           const button = document.createElement("button");
           button.type = "button";
           button.className = "media-gallery__thumbnail";
           button.setAttribute("aria-label", `Show ${item.title}`);
 
           if (item.type === "image") {
-            const image = document.createElement("img");
-            image.src = item.src;
-            image.alt = "";
-            image.loading = "lazy";
-            button.append(image);
+            const thumbnailImage = document.createElement("img");
+            thumbnailImage.src = item.src;
+            thumbnailImage.alt = "";
+            thumbnailImage.loading = "lazy";
+            button.append(thumbnailImage);
           } else {
             const label = document.createElement("span");
             label.innerHTML = '<span aria-hidden="true">▶</span> Live demo';
             button.append(label);
           }
 
-          button.addEventListener("click", () => showGalleryItem(index));
-          galleryThumbnails.append(button);
+          button.addEventListener("click", () => showItem(index));
+          thumbnailsElement.append(button);
         });
-      }
 
-      const openGallery = () => {
-        if (!galleryDialog) return;
-        showGalleryItem(0);
-        document.body.classList.add("gallery-open");
-        galleryDialog.showModal();
+        const open = () => {
+          showItem(0);
+          document.body.classList.add("gallery-open");
+          dialog.showModal();
+        };
+
+        const close = () => {
+          if (dialog.open) dialog.close();
+        };
+
+        openButtons.forEach((button) => button.addEventListener("click", open));
+        closeButton?.addEventListener("click", close);
+        previousButton?.addEventListener("click", () => showItem(activeIndex - 1));
+        nextButton?.addEventListener("click", () => showItem(activeIndex + 1));
+
+        dialog.addEventListener("click", (event) => {
+          if (event.target === dialog) close();
+        });
+
+        dialog.addEventListener("close", () => {
+          videoElement?.pause();
+          document.body.classList.remove("gallery-open");
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (!dialog.open) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+            return;
+          }
+          if (event.key === "ArrowLeft") showItem(activeIndex - 1);
+          if (event.key === "ArrowRight") showItem(activeIndex + 1);
+          if (event.key === "Home") showItem(0);
+          if (event.key === "End") showItem(media.length - 1);
+        });
+
+        render();
       };
 
-      const closeGallery = () => {
-        if (!galleryDialog?.open) return;
-        galleryDialog.close();
-      };
-
-      galleryOpenButtons.forEach((button) => button.addEventListener("click", openGallery));
-      galleryCloseButton?.addEventListener("click", closeGallery);
-      galleryPreviousButton?.addEventListener("click", () => showGalleryItem(galleryIndex - 1));
-      galleryNextButton?.addEventListener("click", () => showGalleryItem(galleryIndex + 1));
-
-      galleryDialog?.addEventListener("click", (event) => {
-        if (event.target === galleryDialog) closeGallery();
+      setupMediaGallery({
+        dialogId: "student-market-gallery",
+        openSelector: "[data-student-market-gallery-open]",
+        closeSelector: "[data-student-market-gallery-close]",
+        media: studentMarketMedia
       });
 
-      galleryDialog?.addEventListener("close", () => {
-        galleryVideo?.pause();
-        document.body.classList.remove("gallery-open");
+      setupMediaGallery({
+        dialogId: "overlay-studio-gallery",
+        openSelector: "[data-overlay-gallery-open]",
+        closeSelector: "[data-overlay-gallery-close]",
+        media: overlayStudioMedia
       });
-
-      document.addEventListener("keydown", (event) => {
-        if (!galleryDialog?.open) return;
-        if (event.key === "Escape") {
-          event.preventDefault();
-          closeGallery();
-          return;
-        }
-        if (event.key === "ArrowLeft") showGalleryItem(galleryIndex - 1);
-        if (event.key === "ArrowRight") showGalleryItem(galleryIndex + 1);
-        if (event.key === "Home") showGalleryItem(0);
-        if (event.key === "End") showGalleryItem(overlayStudioMedia.length - 1);
-      });
-
-      renderGallery();
     })();
   </script>
 </body>

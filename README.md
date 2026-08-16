@@ -14,7 +14,7 @@ This repository contains the source for my portfolio website. It is delivered as
 
 - Responsive layouts designed for desktop and mobile
 - Animated hero headline with reduced-motion support and screen-reader-friendly text
-- Project case studies with live links, source code, or demos where available
+- Project case studies with live links, source code, responsive screenshots, or demos where available
 - Expandable project details with smooth opening and closing transitions on mobile
 - Sticky navigation and light/dark theme selection with saved preferences
 - Downloadable résumé and direct contact links
@@ -26,7 +26,7 @@ This repository contains the source for my portfolio website. It is delivered as
 
 ### Student Market of Toronto
 
-A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
+A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. Its portfolio gallery demonstrates the responsive marketplace, listing details, buyer–seller messaging, profile management, and protected moderation and report-review workflows. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
 
 **Role:** Team lead and full-stack developer
 
@@ -78,10 +78,10 @@ Then open [http://localhost:8000](http://localhost:8000).
 │   ├── overrides.css                  # Responsive layout and visual refinements
 │   ├── profile-photo.jpg              # Portfolio profile image
 │   ├── portfolio-preview.png          # README portfolio preview
-│   ├── student-market-placeholder.png # Student Market project artwork
+│   ├── student-market-*.png            # Student Market desktop and mobile screenshots
 │   ├── overlay-studio-*.png            # Overlay Studio product-gallery screenshots
 │   ├── overlay-studio-demo.webm        # Overlay Studio live product demo
-│   ├── tech-logos/                      # Self-hosted technology brand marks
+│   ├── tech-logos/                     # Self-hosted technology brand marks
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
 └── README.md
 ```

@@ -819,6 +819,10 @@ body.gallery-open {
     border-radius: 0.75rem;
   }
 
+  .media-gallery__viewport.is-portrait {
+    aspect-ratio: 4 / 5;
+  }
+
   .media-gallery__nav {
     width: 2.5rem;
     height: 2.5rem;
