@@ -602,6 +602,42 @@
       syncProjectDetails(projectDetailsQuery);
       projectDetailsQuery.addEventListener("change", syncProjectDetails);
 
+      const projectCards = document.querySelectorAll(".featured-project-grid .project-card");
+
+      if (projectCards.length && !motionQuery.matches && "IntersectionObserver" in window) {
+        root.classList.add("motion-ready");
+
+        projectCards.forEach((card, index) => {
+          card.style.setProperty("--reveal-delay", `${index * 110}ms`);
+        });
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+
+            const card = entry.target;
+            const delay = Number.parseInt(card.style.getPropertyValue("--reveal-delay"), 10) || 0;
+            card.classList.add("is-visible");
+            window.setTimeout(() => card.classList.add("has-revealed"), 760 + delay);
+            observer.unobserve(card);
+          });
+        }, {
+          threshold: 0.16,
+          rootMargin: "0px 0px -6%"
+        });
+
+        window.requestAnimationFrame(() => {
+          projectCards.forEach((card) => revealObserver.observe(card));
+        });
+
+        motionQuery.addEventListener("change", (event) => {
+          if (!event.matches) return;
+          revealObserver.disconnect();
+          root.classList.remove("motion-ready");
+          projectCards.forEach((card) => card.classList.add("is-visible", "has-revealed"));
+        }, { once: true });
+      }
+
       const studentMarketMedia = [
         {
           type: "image",
@@ -729,8 +765,11 @@
         const titleElement = dialog.querySelector("[data-gallery-title]");
         const descriptionElement = dialog.querySelector("[data-gallery-description]");
         const counterElement = dialog.querySelector("[data-gallery-counter]");
+        const metaElement = dialog.querySelector(".media-gallery__meta");
         const thumbnailsElement = dialog.querySelector("[data-gallery-thumbnails]");
         let activeIndex = 0;
+        let isTransitioning = false;
+        let closeTimer = null;
 
         const render = () => {
           if (!imageElement || !videoElement) return;
@@ -769,9 +808,70 @@
           });
         };
 
-        const showItem = (index) => {
-          activeIndex = (index + media.length) % media.length;
-          render();
+        const showItem = async (index, direction = "next", shouldAnimate = true) => {
+          const nextIndex = (index + media.length) % media.length;
+          const canAnimate = shouldAnimate && dialog.open && !motionQuery.matches && nextIndex !== activeIndex;
+
+          if (!canAnimate) {
+            activeIndex = nextIndex;
+            render();
+            return;
+          }
+
+          if (isTransitioning) return;
+          isTransitioning = true;
+
+          const outgoingElement = imageElement?.hidden ? videoElement : imageElement;
+          const outgoingOffset = direction === "previous" ? "6%" : "-6%";
+          const incomingOffset = direction === "previous" ? "-7%" : "7%";
+
+          try {
+            if (outgoingElement) {
+              await outgoingElement.animate([
+                { opacity: 1, transform: "translateX(0) scale(1)" },
+                { opacity: 0, transform: `translateX(${outgoingOffset}) scale(0.985)` }
+              ], {
+                duration: 170,
+                easing: "cubic-bezier(0.4, 0, 1, 1)"
+              }).finished;
+            }
+
+            activeIndex = nextIndex;
+            render();
+
+            const incomingElement = imageElement?.hidden ? videoElement : imageElement;
+            const animations = [];
+
+            if (incomingElement) {
+              animations.push(incomingElement.animate([
+                { opacity: 0, transform: `translateX(${incomingOffset}) scale(0.985)` },
+                { opacity: 1, transform: "translateX(0) scale(1)" }
+              ], {
+                duration: 360,
+                easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+              }));
+            }
+
+            if (metaElement) {
+              animations.push(metaElement.animate([
+                { opacity: 0.35, transform: `translateX(${incomingOffset})` },
+                { opacity: 1, transform: "translateX(0)" }
+              ], {
+                duration: 320,
+                easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+              }));
+            }
+
+            await Promise.allSettled(animations.map((animation) => animation.finished));
+
+            const currentThumbnail = thumbnailsElement?.querySelector(`[data-gallery-index="${activeIndex}"]`);
+            currentThumbnail?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+          } catch (error) {
+            activeIndex = nextIndex;
+            render();
+          } finally {
+            isTransitioning = false;
+          }
         };
 
         media.forEach((item, index) => {
@@ -779,6 +879,7 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "media-gallery__thumbnail";
+          button.dataset.galleryIndex = String(index);
           button.setAttribute("aria-label", `Show ${item.title}`);
 
           if (item.type === "image") {
@@ -793,30 +894,63 @@
             button.append(label);
           }
 
-          button.addEventListener("click", () => showItem(index));
+          button.addEventListener("click", () => {
+            const direction = index < activeIndex ? "previous" : "next";
+            void showItem(index, direction);
+          });
           thumbnailsElement.append(button);
         });
 
         const open = () => {
-          showItem(0);
+          if (dialog.open) return;
+          activeIndex = 0;
+          render();
+          dialog.classList.remove("is-closing");
           document.body.classList.add("gallery-open");
           dialog.showModal();
         };
 
-        const close = () => {
+        const finishClose = () => {
+          if (closeTimer) {
+            window.clearTimeout(closeTimer);
+            closeTimer = null;
+          }
+          dialog.classList.remove("is-closing");
           if (dialog.open) dialog.close();
+        };
+
+        const close = () => {
+          if (!dialog.open || dialog.classList.contains("is-closing")) return;
+
+          if (motionQuery.matches) {
+            finishClose();
+            return;
+          }
+
+          dialog.classList.add("is-closing");
+          closeTimer = window.setTimeout(finishClose, 210);
         };
 
         openButtons.forEach((button) => button.addEventListener("click", open));
         closeButton?.addEventListener("click", close);
-        previousButton?.addEventListener("click", () => showItem(activeIndex - 1));
-        nextButton?.addEventListener("click", () => showItem(activeIndex + 1));
+        previousButton?.addEventListener("click", () => void showItem(activeIndex - 1, "previous"));
+        nextButton?.addEventListener("click", () => void showItem(activeIndex + 1, "next"));
 
         dialog.addEventListener("click", (event) => {
           if (event.target === dialog) close();
         });
 
+        dialog.addEventListener("cancel", (event) => {
+          event.preventDefault();
+          close();
+        });
+
         dialog.addEventListener("close", () => {
+          if (closeTimer) {
+            window.clearTimeout(closeTimer);
+            closeTimer = null;
+          }
+          dialog.classList.remove("is-closing");
           videoElement?.pause();
           document.body.classList.remove("gallery-open");
         });
@@ -828,10 +962,10 @@
             close();
             return;
           }
-          if (event.key === "ArrowLeft") showItem(activeIndex - 1);
-          if (event.key === "ArrowRight") showItem(activeIndex + 1);
-          if (event.key === "Home") showItem(0);
-          if (event.key === "End") showItem(media.length - 1);
+          if (event.key === "ArrowLeft") void showItem(activeIndex - 1, "previous");
+          if (event.key === "ArrowRight") void showItem(activeIndex + 1, "next");
+          if (event.key === "Home") void showItem(0, "previous");
+          if (event.key === "End") void showItem(media.length - 1, "next");
         });
 
         render();
