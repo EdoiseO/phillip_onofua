@@ -14,6 +14,7 @@ This repository contains the source for my portfolio website. It is delivered as
 
 - Responsive layouts designed for desktop and mobile
 - Animated hero headline with reduced-motion support and screen-reader-friendly text
+- Staggered project reveals and directional product-gallery transitions
 - Project case studies with live links, source code, responsive screenshots, or demos where available
 - Expandable project details with smooth opening and closing transitions on mobile
 - Sticky navigation and light/dark theme selection with saved preferences

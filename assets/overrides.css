@@ -477,6 +477,44 @@ html[data-theme="dark"] .theme-icon--sun {
   border-radius: 1.4rem;
   background: var(--surface-raised);
   box-shadow: var(--shadow);
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms ease,
+    border-color 240ms ease;
+  transform-origin: center bottom;
+}
+
+.motion-ready .project-card {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(2rem) scale(0.985);
+  transition:
+    opacity 620ms ease,
+    filter 520ms ease,
+    transform 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 420ms ease,
+    border-color 240ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.motion-ready .project-card.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0) scale(1);
+}
+
+.motion-ready .project-card.has-revealed {
+  transition-delay: 0ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project-card:hover,
+  .motion-ready .project-card.is-visible:hover {
+    z-index: 1;
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+    box-shadow: 0 24px 56px rgb(15 23 42 / 0.14);
+    transform: translateY(-0.45rem);
+  }
 }
 
 .project-card--featured {
@@ -545,6 +583,7 @@ button.project-media {
   text-align: left;
   cursor: pointer;
   appearance: none;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .project-media--gallery-preview {
@@ -559,6 +598,20 @@ button.project-media {
 .project-media--gallery-preview:hover img {
   transform: scale(1.025);
   filter: brightness(0.88);
+}
+
+.project-media--gallery-preview:hover .media-hint {
+  border-color: rgb(255 255 255 / 0.52);
+  background: rgb(9 12 17 / 0.9);
+  transform: translateY(-2px);
+}
+
+button.project-media:active {
+  transform: scale(0.992);
+}
+
+button.project-media:active img {
+  transform: scale(1.04);
 }
 
 .project-media--gallery-preview:focus-visible {
@@ -582,6 +635,10 @@ button.project-media {
   backdrop-filter: blur(10px);
   font-size: 0.68rem;
   font-weight: 650;
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 
 body.gallery-open {
@@ -599,11 +656,76 @@ body.gallery-open {
   background: var(--surface-raised);
   color: var(--text);
   box-shadow: 0 32px 90px rgb(0 0 0 / 0.48);
+  transform-origin: center;
+}
+
+.media-gallery[open] {
+  animation: gallery-dialog-in 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.media-gallery[open].is-closing {
+  animation: gallery-dialog-out 190ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .media-gallery::backdrop {
   background: rgb(5 8 12 / 0.82);
   backdrop-filter: blur(8px);
+}
+
+.media-gallery[open]::backdrop {
+  animation: gallery-backdrop-in 280ms ease-out both;
+}
+
+.media-gallery[open].is-closing::backdrop {
+  animation: gallery-backdrop-out 190ms ease-in both;
+}
+
+@keyframes gallery-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem) scale(0.965);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gallery-dialog-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(0.65rem) scale(0.98);
+  }
+}
+
+@keyframes gallery-backdrop-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes gallery-backdrop-out {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
 }
 
 .media-gallery__panel {
@@ -642,12 +764,20 @@ body.gallery-open {
   font-size: 1.55rem;
   line-height: 1;
   cursor: pointer;
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
 .media-gallery__close:hover,
 .media-gallery__close:focus-visible {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.media-gallery__close:active {
+  transform: scale(0.9);
 }
 
 .media-gallery__viewport {
@@ -689,12 +819,20 @@ body.gallery-open {
   transform: translateY(-50%);
   backdrop-filter: blur(8px);
   cursor: pointer;
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 
 .media-gallery__nav:hover,
 .media-gallery__nav:focus-visible {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 72%, #080b0f);
+}
+
+.media-gallery__nav:active {
+  transform: translateY(-50%) scale(0.88);
 }
 
 .media-gallery__nav--previous {
@@ -764,6 +902,10 @@ body.gallery-open {
   border-color: var(--accent);
   opacity: 1;
   transform: translateY(-2px);
+}
+
+.media-gallery__thumbnail:active {
+  transform: translateY(0) scale(0.94);
 }
 
 .media-gallery__thumbnail img {
