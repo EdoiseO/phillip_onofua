@@ -1582,6 +1582,11 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   color: var(--accent);
 }
 
+.case-study-actions .button--secondary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .case-study-actions .button:hover {
   border-color: var(--accent);
   background: transparent;
