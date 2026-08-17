@@ -202,15 +202,50 @@
   const previousButton = dialog.querySelector("[data-gallery-prev]");
   const nextButton = dialog.querySelector("[data-gallery-next]");
   const thumbnails = dialog.querySelector("[data-gallery-thumbnails]");
+  const zoomOutButton = dialog.querySelector("[data-gallery-zoom-out]");
+  const zoomInButton = dialog.querySelector("[data-gallery-zoom-in]");
+  const zoomLevelOutput = dialog.querySelector("[data-gallery-zoom-level]");
 
-  if (!image || !figure || !groupLabel || !title || !caption || !original || !closeButton || !previousButton || !nextButton || !thumbnails) {
+  if (!image || !figure || !groupLabel || !title || !caption || !original || !closeButton || !previousButton || !nextButton || !thumbnails || !zoomOutButton || !zoomInButton || !zoomLevelOutput) {
     return;
   }
 
+  const minimumZoom = 1;
+  const maximumZoom = 2;
+  const zoomStep = 0.25;
   let activeGroup = "marketplace";
   let activeIndex = 0;
   let lastTrigger = null;
   let pointerStart = null;
+  let zoomLevel = minimumZoom;
+
+  const applyZoom = (nextZoom, { resetScroll = false } = {}) => {
+    const previousScrollWidth = figure.scrollWidth || figure.clientWidth;
+    const previousScrollHeight = figure.scrollHeight || figure.clientHeight;
+    const horizontalCenter = previousScrollWidth > 0 ? (figure.scrollLeft + figure.clientWidth / 2) / previousScrollWidth : 0.5;
+    const verticalCenter = previousScrollHeight > 0 ? (figure.scrollTop + figure.clientHeight / 2) / previousScrollHeight : 0.5;
+    const gallery = galleries[activeGroup];
+
+    zoomLevel = Math.min(maximumZoom, Math.max(minimumZoom, nextZoom));
+
+    const percentage = Math.round(zoomLevel * 100);
+    image.style.width = gallery.layout === "mobile" ? `min(${percentage}%, ${390 * zoomLevel}px)` : `${percentage}%`;
+    figure.dataset.galleryZoomed = zoomLevel > minimumZoom ? "true" : "false";
+    zoomLevelOutput.textContent = `${percentage}%`;
+    zoomOutButton.disabled = zoomLevel <= minimumZoom;
+    zoomInButton.disabled = zoomLevel >= maximumZoom;
+
+    if (resetScroll) {
+      figure.scrollTop = 0;
+      figure.scrollLeft = 0;
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      figure.scrollLeft = Math.max(0, horizontalCenter * figure.scrollWidth - figure.clientWidth / 2);
+      figure.scrollTop = Math.max(0, verticalCenter * figure.scrollHeight - figure.clientHeight / 2);
+    });
+  };
 
   const buildThumbnails = (gallery) => {
     thumbnails.replaceChildren();
@@ -256,8 +291,7 @@
     original.href = item.src;
     previousButton.setAttribute("aria-label", `Show previous image in ${gallery.label}`);
     nextButton.setAttribute("aria-label", `Show next image in ${gallery.label}`);
-    figure.scrollTop = 0;
-    figure.scrollLeft = 0;
+    applyZoom(minimumZoom, { resetScroll: true });
 
     Array.from(thumbnails.children).forEach((button, index) => {
       if (index === activeIndex) {
@@ -304,6 +338,8 @@
 
   previousButton.addEventListener("click", () => move(-1));
   nextButton.addEventListener("click", () => move(1));
+  zoomOutButton.addEventListener("click", () => applyZoom(zoomLevel - zoomStep));
+  zoomInButton.addEventListener("click", () => applyZoom(zoomLevel + zoomStep));
   closeButton.addEventListener("click", () => dialog.close());
 
   dialog.addEventListener("click", (event) => {
@@ -322,10 +358,26 @@
       event.preventDefault();
       move(1);
     }
+
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      applyZoom(zoomLevel + zoomStep);
+    }
+
+    if (event.key === "-") {
+      event.preventDefault();
+      applyZoom(zoomLevel - zoomStep);
+    }
+
+    if (event.key === "0") {
+      event.preventDefault();
+      applyZoom(minimumZoom);
+    }
   });
 
   figure.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary) {
+    if (!event.isPrimary || zoomLevel > minimumZoom) {
+      pointerStart = null;
       return;
     }
 
