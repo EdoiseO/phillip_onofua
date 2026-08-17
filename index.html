@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
+  <meta name="color-scheme" content="dark" />
   <title>Phillip Onofua — Full-Stack Developer</title>
   <meta name="description" content="Phillip Onofua is a Toronto-based full-stack developer building production web and Windows desktop software with Next.js, React, Supabase, and Python." />
   <link rel="canonical" href="https://philliponofua.vercel.app/" />
@@ -21,18 +21,6 @@
   <meta name="twitter:description" content="Production web and Windows desktop software built with Next.js, React, Supabase, and Python." />
   <meta name="twitter:image" content="https://philliponofua.vercel.app/assets/portfolio-preview.png" />
   <meta name="twitter:image:alt" content="Phillip Onofua developer portfolio" />
-  <script>
-    (() => {
-      let storedTheme = null;
-      try {
-        storedTheme = window.localStorage.getItem("theme");
-      } catch (error) {
-        storedTheme = null;
-      }
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.dataset.theme = storedTheme || (prefersDark ? "dark" : "light");
-    })();
-  </script>
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
   <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
   <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
@@ -60,16 +48,6 @@
           <a href="#contact">Contact</a>
         </nav>
 
-        <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
-          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
-          </svg>
-          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-          </svg>
-          <span data-theme-label>Dark mode</span>
-        </button>
       </div>
     </header>
 
@@ -77,10 +55,10 @@
       <section class="hero" aria-labelledby="hero-title">
         <p class="eyebrow">Full-Stack Developer · Toronto</p>
         <h1 id="hero-title">
-          <span class="sr-only">Building full-stack products for real people.</span>
+          <span class="sr-only">Building full-stack products for real people</span>
           <span class="hero-visual" aria-hidden="true">
             Building <span class="hero-highlight">full-stack products</span>
-            <span class="hero-motion-line"><span id="hero-motion" class="hero-motion-text" data-phrases="for real people.|from idea to launch.|for web and mobile.|with reliable systems.">for real people.</span></span>
+            <span class="hero-motion-line"><span id="hero-motion" class="hero-motion-text" data-phrases="for real people|from idea to launch|for web and mobile|with reliable systems">for real people</span></span>
           </span>
         </h1>
         <p class="hero-lead">I’m a Computer Programming and Analysis student at George Brown Polytechnic, building production web and Windows desktop software with Next.js, React, Supabase, and Python.</p>
@@ -101,80 +79,71 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">01 · Selected work</p>
-            <h2 id="projects-title">Featured projects.</h2>
+            <h2 id="projects-title">Featured projects</h2>
           </div>
         </div>
 
-        <div class="featured-project-grid">
-          <article class="project-card project-card--featured">
-            <button class="project-media project-media--gallery-preview" type="button" data-student-market-gallery-open aria-haspopup="dialog" aria-controls="student-market-gallery" aria-label="Open the Student Market of Toronto product gallery">
-              <img src="assets/student-market-browse-desktop.png" alt="Student Market of Toronto marketplace with live student listings and campus details" width="1440" height="1000" decoding="async" />
-              <span class="media-label">Desktop + mobile screenshots</span>
-              <span class="media-hint">Open gallery <span aria-hidden="true">↗</span></span>
-            </button>
+        <div class="project-showcase">
+          <article class="project-feature project-feature--lead">
+            <figure class="project-feature__media">
+              <img src="assets/student-market-browse-desktop.png" alt="Student Market of Toronto marketplace with live listings, pricing, and campus details" width="1440" height="1000" decoding="async" />
+              <figcaption>Responsive marketplace · Desktop and mobile</figcaption>
+            </figure>
 
-            <div class="project-content">
+            <div class="project-feature__content">
               <div class="project-kicker">
                 <span>Featured full-stack project</span>
-                <span>Team lead · Full-stack developer</span>
+                <span>Team lead · Developer</span>
               </div>
               <h3>Student Market of Toronto</h3>
-              <p class="project-summary">A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses.</p>
+              <p class="project-feature__lead">A student marketplace connecting discovery, selling, messaging, profiles, and protected moderation across Toronto campuses.</p>
+              <p class="project-feature__detail"><strong>Highlight:</strong> a complete end-to-end product flow backed by authentication, relational data, image storage, responsive interfaces, and role-based administration.</p>
 
-              <details class="project-details" open>
-                <summary>View project details</summary>
-                <ul class="project-points">
-                  <li><strong>Contribution.</strong> Led development across the Next.js interface, Supabase data model, authentication, storage, and reusable components.</li>
-                  <li><strong>Technical challenge.</strong> Connected protected accounts, image-backed listings, favourites, messaging, and notifications into one consistent product flow.</li>
-                  <li><strong>Result.</strong> Shipped a public end-to-end marketplace with live browsing, seller tools, dashboards, and responsive mobile behavior.</li>
-                </ul>
-              </details>
+              <div class="project-contribution">
+                <p><strong>My contribution</strong> Led development across the Next.js interface, Supabase data model, authentication, storage, reusable components, messaging, notifications, and administration workflows.</p>
+              </div>
 
               <div class="tech-list" aria-label="Student Market technologies">
                 <span>Next.js</span><span>React</span><span>Supabase</span><span>PostgreSQL</span><span>Tailwind CSS</span>
               </div>
 
-              <div class="project-actions">
-                <a class="button button--primary button--small" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer">Open live project <span aria-hidden="true">↗</span></a>
-                <a class="button button--secondary button--small" href="https://github.com/EdoiseO/student-market-of-toronto" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
-              </div>
+              <a class="project-case-study-link" href="student-market.html">
+                <span>Explore how Student Market works</span>
+              </a>
             </div>
           </article>
 
-          <article class="project-card">
-            <button class="project-media project-media--gallery-preview" type="button" data-overlay-gallery-open aria-haspopup="dialog" aria-controls="overlay-studio-gallery" aria-label="Open the Overlay Studio product gallery">
-              <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio customizer showing a live Platform Badge draft and its settings" width="1280" height="720" decoding="async" />
-              <span class="media-label">Screenshots + live demo</span>
-              <span class="media-hint">Open gallery <span aria-hidden="true">↗</span></span>
-            </button>
+          <article class="project-feature project-feature--reverse">
+            <figure class="project-feature__media">
+              <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio customizer with live draft preview and appearance controls" width="1280" height="720" decoding="async" />
+              <figcaption>Production Windows application · Active development</figcaption>
+            </figure>
 
-            <div class="project-content">
+            <div class="project-feature__content">
               <div class="project-kicker">
                 <span>Windows desktop application</span>
-                <span>Production · Active development</span>
+                <span>Production build</span>
               </div>
               <h3>Overlay Studio</h3>
-              <p class="project-summary">Overlay Studio is a production Windows application for previewing, customizing, and launching animated overlays in OBS, with new overlay types added through active development.</p>
+              <p class="project-feature__lead">A desktop application for managing, customizing, previewing, and launching animated OBS browser-source overlays.</p>
+              <p class="project-feature__detail"><strong>Highlight:</strong> one workflow connecting Windows media data, persistent settings, a local service, live browser output, and reusable overlay instances.</p>
 
-              <details class="project-details" open>
-                <summary>View project details</summary>
-                <ul class="project-points">
-                  <li><strong>Contribution.</strong> Designed and built the desktop experience, instance-based overlay library, live customizers, saved settings, and OBS URL workflow.</li>
-                  <li><strong>Technical challenge.</strong> Coordinated Windows media sessions, system-audio capture, persistent configuration, and live browser-source updates.</li>
-                  <li><strong>Result.</strong> Shipped a working production application, with ongoing development expanding its goal, social, now-playing, audio-reactive, match-record, and game-rank overlays based on feedback.</li>
-                </ul>
-              </details>
+              <div class="project-contribution">
+                <p><strong>My contribution</strong> Designed and built the desktop experience, instance-based library, live customizers, saved settings, local service, WebSocket updates, and OBS browser-source workflow.</p>
+              </div>
 
               <div class="tech-list" aria-label="Overlay Studio technologies">
                 <span>Python</span><span>JavaScript</span><span>aiohttp</span><span>WebSockets</span><span>WebView2</span><span>OBS Studio</span>
               </div>
 
-              <p class="private-note">Private source code · Actively maintained · Interface and overlay library continue to evolve</p>
+              <a class="project-case-study-link" href="overlay-studio.html">
+                <span>Explore how Overlay Studio works</span>
+              </a>
             </div>
           </article>
 
-          <article class="project-card project-card--planned">
-            <figure class="project-media project-media--concept" role="img" aria-label="Receipt Splitter concept preview">
+          <article class="project-feature project-feature--planned">
+            <figure class="project-feature__media project-media--concept" role="img" aria-label="Receipt Splitter concept preview">
               <div class="receipt-concept" aria-hidden="true">
                 <p>Shared dinner</p>
                 <div class="receipt-line"><span>Phillip</span><strong>$24.60</strong></div>
@@ -182,99 +151,39 @@
                 <div class="receipt-line"><span>Wesley</span><strong>$27.15</strong></div>
                 <div class="receipt-total"><span>Total split</span><strong>$83.00</strong></div>
               </div>
-              <figcaption class="media-label">Concept preview</figcaption>
+              <figcaption>Concept preview · Work in progress</figcaption>
             </figure>
 
-            <div class="project-content">
+            <div class="project-feature__content">
               <div class="project-kicker">
                 <span>Planned mobile project</span>
                 <span>Work in progress</span>
               </div>
               <h3>Receipt Splitter</h3>
-              <p class="project-summary">A planned app for turning a shared receipt into clear individual totals by assigning items, tax, and tip across a group.</p>
+              <p class="project-feature__lead">A proposed mobile app for assigning shared receipt items, tax, and tip and producing clear totals for each person.</p>
+              <p class="project-feature__detail"><strong>Current focus:</strong> validating receipt extraction, correction, shared-item calculations, privacy requirements, and the smallest useful mobile flow.</p>
 
-              <details class="project-details" open>
-                <summary>View planned features</summary>
-                <ul class="project-points">
-                  <li><strong>Problem.</strong> Shared receipts make it difficult to calculate what each person owes after tax and tip.</li>
-                  <li><strong>Planned experience.</strong> Scan or upload a receipt, confirm its items, assign them to people, and calculate each total.</li>
-                  <li><strong>Status.</strong> This project is currently a work in progress.</li>
-                </ul>
-              </details>
+              <div class="project-contribution">
+                <p><strong>My contribution</strong> Defined the problem, mapped the proposed user flow, and identified the calculation, receipt-recognition, and privacy questions that need validation before implementation.</p>
+              </div>
 
               <div class="tech-list" aria-label="Receipt Splitter planned features">
                 <span>Receipt scanning</span><span>Item assignment</span><span>Tax &amp; tip</span><span>Shareable totals</span>
               </div>
 
-              <p class="private-note">Planned concept · Work in progress</p>
+              <a class="project-case-study-link" href="receipt-splitter.html">
+                <span>Explore how Receipt Splitter will work</span>
+              </a>
             </div>
           </article>
         </div>
       </section>
 
-      <dialog class="media-gallery" id="student-market-gallery" aria-labelledby="student-market-gallery-title">
-        <div class="media-gallery__panel">
-          <header class="media-gallery__header">
-            <div>
-              <p class="eyebrow">Student Market · Responsive marketplace</p>
-              <h2 id="student-market-gallery-title">Product gallery</h2>
-            </div>
-            <button class="media-gallery__close" type="button" data-student-market-gallery-close aria-label="Close Student Market product gallery">×</button>
-          </header>
-
-          <div class="media-gallery__viewport">
-            <img data-gallery-image src="assets/student-market-browse-desktop.png" alt="" width="1440" height="1000" />
-            <video data-gallery-video controls muted playsinline preload="metadata" hidden></video>
-            <button class="media-gallery__nav media-gallery__nav--previous" type="button" data-gallery-previous aria-label="Show previous gallery item">‹</button>
-            <button class="media-gallery__nav media-gallery__nav--next" type="button" data-gallery-next aria-label="Show next gallery item">›</button>
-          </div>
-
-          <div class="media-gallery__meta" aria-live="polite">
-            <div>
-              <strong data-gallery-title>Marketplace discovery</strong>
-              <p data-gallery-description>Search, category browsing, live listings, pricing, and campus context in one responsive marketplace.</p>
-            </div>
-            <span data-gallery-counter>1 / 8</span>
-          </div>
-
-          <div class="media-gallery__thumbnails" data-gallery-thumbnails aria-label="Choose a Student Market gallery item"></div>
-        </div>
-      </dialog>
-
-      <dialog class="media-gallery" id="overlay-studio-gallery" aria-labelledby="overlay-gallery-title">
-        <div class="media-gallery__panel">
-          <header class="media-gallery__header">
-            <div>
-              <p class="eyebrow">Overlay Studio · Current production build</p>
-              <h2 id="overlay-gallery-title">Product gallery</h2>
-            </div>
-            <button class="media-gallery__close" type="button" data-overlay-gallery-close aria-label="Close product gallery">×</button>
-          </header>
-
-          <div class="media-gallery__viewport">
-            <img data-gallery-image src="assets/overlay-studio-customizer.png" alt="" width="1280" height="720" />
-            <video data-gallery-video controls muted playsinline preload="metadata" hidden></video>
-            <button class="media-gallery__nav media-gallery__nav--previous" type="button" data-gallery-previous aria-label="Show previous gallery item">‹</button>
-            <button class="media-gallery__nav media-gallery__nav--next" type="button" data-gallery-next aria-label="Show next gallery item">›</button>
-          </div>
-
-          <div class="media-gallery__meta" aria-live="polite">
-            <div>
-              <strong data-gallery-title>Platform Badge customizer</strong>
-              <p data-gallery-description>Live draft preview and appearance controls inside the desktop application.</p>
-            </div>
-            <span data-gallery-counter>1 / 7</span>
-          </div>
-
-          <div class="media-gallery__thumbnails" data-gallery-thumbnails aria-label="Choose a gallery item"></div>
-        </div>
-      </dialog>
-
       <section id="skills" class="section" aria-labelledby="skills-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">02 · Technical focus</p>
-            <h2 id="skills-title">What I work with.</h2>
+            <h2 id="skills-title">What I work with</h2>
           </div>
         </div>
 
@@ -360,7 +269,7 @@
         <div class="section-heading section-heading--compact">
           <div>
             <p class="eyebrow">03 · About</p>
-            <h2 id="about-title">About &amp; education.</h2>
+            <h2 id="about-title">About &amp; education</h2>
           </div>
         </div>
 
@@ -390,75 +299,38 @@
         <div>
           <p class="eyebrow">04 · Contact</p>
           <h2 id="contact-title">Let’s build something useful.</h2>
-          <p>I’m open to software development opportunities, collaborations, and conversations about product ideas.</p>
-        </div>
-        <div class="contact-actions">
-          <a class="button button--primary" href="mailto:philliponofua@gmail.com">
-            <svg class="button-icon button-icon--mail" viewBox="0 0 24 24" aria-hidden="true">
-              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-            </svg>
-            Email me
-          </a>
-          <a class="button button--secondary" href="https://github.com/EdoiseO" target="_blank" rel="noreferrer">
-            <svg class="button-icon button-icon--github" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.5 5.9 18.5 6.2 18.5 6.2c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"></path>
-            </svg>
-            GitHub <span aria-hidden="true">↗</span>
-          </a>
+          <div class="contact-actions">
+            <a class="contact-link" href="mailto:philliponofua@gmail.com">
+              <svg class="button-icon button-icon--mail" viewBox="0 0 24 24" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+              Email
+            </a>
+            <a class="contact-link" href="https://github.com/EdoiseO" target="_blank" rel="noreferrer">
+              <svg class="button-icon button-icon--github" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.5 5.9 18.5 6.2 18.5 6.2c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"></path>
+              </svg>
+              GitHub
+            </a>
+          </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <p>© 2026 Phillip Onofua</p>
-      <a href="#top">Back to top ↑</a>
+      <nav class="footer-links" aria-label="Legal">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
     </footer>
   </div>
 
   <script>
     (() => {
       const root = document.documentElement;
-      const toggle = document.getElementById("theme-toggle");
-      const label = toggle?.querySelector("[data-theme-label]");
-      const themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-      const getTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
-
-      const syncToggle = () => {
-        const isDark = getTheme() === "dark";
-        toggle?.setAttribute("aria-pressed", String(isDark));
-        toggle?.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-        if (label) label.textContent = isDark ? "Light mode" : "Dark mode";
-      };
-
-      const applyTheme = (theme, persist = true) => {
-        root.dataset.theme = theme;
-        if (persist) {
-          try {
-            window.localStorage.setItem("theme", theme);
-          } catch (error) {
-          }
-        }
-        syncToggle();
-      };
-
-      syncToggle();
-
-      toggle?.addEventListener("click", () => {
-        applyTheme(getTheme() === "dark" ? "light" : "dark");
-      });
-
-      themeQuery.addEventListener("change", (event) => {
-        let storedTheme = null;
-        try {
-          storedTheme = window.localStorage.getItem("theme");
-        } catch (error) {
-          storedTheme = null;
-        }
-        if (!storedTheme) applyTheme(event.matches ? "dark" : "light", false);
-      });
 
       if (motionQuery.matches) {
         document.querySelectorAll("video[autoplay]").forEach((video) => {
@@ -602,7 +474,7 @@
       syncProjectDetails(projectDetailsQuery);
       projectDetailsQuery.addEventListener("change", syncProjectDetails);
 
-      const projectCards = document.querySelectorAll(".featured-project-grid .project-card");
+      const projectCards = document.querySelectorAll(".project-showcase .project-feature");
 
       if (projectCards.length && !motionQuery.matches && "IntersectionObserver" in window) {
         root.classList.add("motion-ready");
@@ -638,352 +510,6 @@
         }, { once: true });
       }
 
-      const studentMarketMedia = [
-        {
-          type: "image",
-          src: "assets/student-market-browse-desktop.png",
-          title: "Marketplace discovery",
-          description: "Search, category browsing, live listings, pricing, and campus context in one responsive marketplace.",
-          alt: "Student Market desktop marketplace showing electronics and book listings with campus details"
-        },
-        {
-          type: "image",
-          src: "assets/student-market-listing-desktop.png",
-          title: "Listing details and campus meetup",
-          description: "Product media, seller identity, favourites, messaging entry point, and a campus meetup map.",
-          alt: "Student Market desktop listing page with a product gallery, seller information, and meetup location"
-        },
-        {
-          type: "image",
-          src: "assets/student-market-messages-desktop.png",
-          title: "Buyer–seller messaging",
-          description: "Listing-linked conversations and unread states keep marketplace coordination connected to each item.",
-          alt: "Student Market desktop inbox showing listing-linked buyer and seller conversations"
-        },
-        {
-          type: "image",
-          src: "assets/student-market-admin-desktop.png",
-          title: "Admin moderation",
-          description: "Report triage, listing approvals, review status, and moderator actions in one protected workspace.",
-          alt: "Student Market admin dashboard showing report metrics, moderation queues, and listing approvals"
-        },
-        {
-          type: "image",
-          src: "assets/student-market-report-review-desktop.png",
-          title: "Report review workflow",
-          description: "Flagged content, conversation context, related reports, moderator notes, and resolution actions support informed decisions.",
-          alt: "Student Market report review page showing flagged conversation context, related reports, notes, and moderation actions"
-        },
-        {
-          type: "image",
-          orientation: "portrait",
-          src: "assets/student-market-browse-mobile.png",
-          title: "Mobile marketplace",
-          description: "Responsive product discovery and persistent navigation designed for phone-sized screens.",
-          alt: "Student Market mobile marketplace showing responsive listing cards and bottom navigation"
-        },
-        {
-          type: "image",
-          orientation: "portrait",
-          src: "assets/student-market-messages-mobile.png",
-          title: "Mobile messaging",
-          description: "Conversation access, product context, and unread states remain easy to scan on mobile.",
-          alt: "Student Market mobile inbox showing marketplace conversations and unread message states"
-        },
-        {
-          type: "image",
-          orientation: "portrait",
-          src: "assets/student-market-profile-mobile.png",
-          title: "Mobile profile management",
-          description: "Profile image, school identity, seller details, and account controls adapt cleanly to mobile.",
-          alt: "Student Market mobile profile editor showing account identity, school, and seller details"
-        }
-      ];
-      const overlayStudioMedia = [
-        {
-          type: "image",
-          src: "assets/overlay-studio-customizer.png",
-          title: "Platform Badge customizer",
-          description: "Live draft preview and appearance controls inside the desktop application.",
-          alt: "Overlay Studio Platform Badge customizer with a live draft preview and identity controls"
-        },
-        {
-          type: "image",
-          src: "assets/overlay-studio-library.png",
-          title: "Overlay library",
-          description: "Installed overlay instances, live status, quick actions, and OBS canvas sizes.",
-          alt: "Overlay Studio library showing installed social, goal, and now-playing overlays"
-        },
-        {
-          type: "image",
-          src: "assets/overlay-studio-spotify-customizer.png",
-          title: "Spotify customizer",
-          description: "Live Windows media data with artwork-matched colors and fallback palette controls.",
-          alt: "Overlay Studio Spotify customizer showing a live player draft and color settings"
-        },
-        {
-          type: "image",
-          src: "assets/overlay-studio-spotify-preview.png",
-          title: "Spotify live preview",
-          description: "An OBS-ready now-playing card driven by the Spotify desktop media session.",
-          alt: "Large Overlay Studio preview of a Spotify now-playing overlay"
-        },
-        {
-          type: "image",
-          src: "assets/overlay-studio-social-grouped-customizer.png",
-          title: "Social Grouped customizer",
-          description: "Platform grouping, shared handles, and a live draft for a reusable social identity strip.",
-          alt: "Overlay Studio Social Grouped customizer with account groups and a live draft"
-        },
-        {
-          type: "image",
-          src: "assets/overlay-studio-social-grouped-preview.png",
-          title: "Social Grouped live preview",
-          description: "Multiple platform identities combined into one compact OBS browser source.",
-          alt: "Large Overlay Studio preview of a grouped social overlay"
-        },
-        {
-          type: "video",
-          src: "assets/overlay-studio-demo.webm",
-          title: "Live OBS demonstration",
-          description: "The animated overlay running in context while media is playing.",
-          alt: "Overlay Studio animated OBS overlay demonstration"
-        }
-      ];
-
-      const setupMediaGallery = ({ dialogId, openSelector, closeSelector, media }) => {
-        const dialog = document.getElementById(dialogId);
-        if (!dialog) return;
-
-        const openButtons = document.querySelectorAll(openSelector);
-        const closeButton = dialog.querySelector(closeSelector);
-        const previousButton = dialog.querySelector("[data-gallery-previous]");
-        const nextButton = dialog.querySelector("[data-gallery-next]");
-        const viewportElement = dialog.querySelector(".media-gallery__viewport");
-        const imageElement = dialog.querySelector("[data-gallery-image]");
-        const videoElement = dialog.querySelector("[data-gallery-video]");
-        const titleElement = dialog.querySelector("[data-gallery-title]");
-        const descriptionElement = dialog.querySelector("[data-gallery-description]");
-        const counterElement = dialog.querySelector("[data-gallery-counter]");
-        const metaElement = dialog.querySelector(".media-gallery__meta");
-        const thumbnailsElement = dialog.querySelector("[data-gallery-thumbnails]");
-        let activeIndex = 0;
-        let isTransitioning = false;
-        let closeTimer = null;
-
-        const render = () => {
-          if (!imageElement || !videoElement) return;
-          const item = media[activeIndex];
-          const isVideo = item.type === "video";
-
-          viewportElement?.classList.toggle("is-portrait", item.orientation === "portrait");
-          imageElement.hidden = isVideo;
-          videoElement.hidden = !isVideo;
-
-          if (isVideo) {
-            imageElement.removeAttribute("src");
-            imageElement.alt = "";
-            if (videoElement.getAttribute("src") !== item.src) {
-              videoElement.src = item.src;
-              videoElement.load();
-            }
-            videoElement.setAttribute("aria-label", item.alt);
-          } else {
-            videoElement.pause();
-            videoElement.removeAttribute("src");
-            videoElement.load();
-            imageElement.src = item.src;
-            imageElement.alt = item.alt;
-          }
-
-          if (titleElement) titleElement.textContent = item.title;
-          if (descriptionElement) descriptionElement.textContent = item.description;
-          if (counterElement) counterElement.textContent = `${activeIndex + 1} / ${media.length}`;
-
-          thumbnailsElement?.querySelectorAll("button").forEach((button, index) => {
-            const isCurrent = index === activeIndex;
-            button.classList.toggle("is-current", isCurrent);
-            if (isCurrent) button.setAttribute("aria-current", "true");
-            else button.removeAttribute("aria-current");
-          });
-        };
-
-        const showItem = async (index, direction = "next", shouldAnimate = true) => {
-          const nextIndex = (index + media.length) % media.length;
-          const canAnimate = shouldAnimate && dialog.open && !motionQuery.matches && nextIndex !== activeIndex;
-
-          if (!canAnimate) {
-            activeIndex = nextIndex;
-            render();
-            return;
-          }
-
-          if (isTransitioning) return;
-          isTransitioning = true;
-
-          const outgoingElement = imageElement?.hidden ? videoElement : imageElement;
-          const outgoingOffset = direction === "previous" ? "6%" : "-6%";
-          const incomingOffset = direction === "previous" ? "-7%" : "7%";
-
-          try {
-            if (outgoingElement) {
-              await outgoingElement.animate([
-                { opacity: 1, transform: "translateX(0) scale(1)" },
-                { opacity: 0, transform: `translateX(${outgoingOffset}) scale(0.985)` }
-              ], {
-                duration: 170,
-                easing: "cubic-bezier(0.4, 0, 1, 1)"
-              }).finished;
-            }
-
-            activeIndex = nextIndex;
-            render();
-
-            const incomingElement = imageElement?.hidden ? videoElement : imageElement;
-            const animations = [];
-
-            if (incomingElement) {
-              animations.push(incomingElement.animate([
-                { opacity: 0, transform: `translateX(${incomingOffset}) scale(0.985)` },
-                { opacity: 1, transform: "translateX(0) scale(1)" }
-              ], {
-                duration: 360,
-                easing: "cubic-bezier(0.16, 1, 0.3, 1)"
-              }));
-            }
-
-            if (metaElement) {
-              animations.push(metaElement.animate([
-                { opacity: 0.35, transform: `translateX(${incomingOffset})` },
-                { opacity: 1, transform: "translateX(0)" }
-              ], {
-                duration: 320,
-                easing: "cubic-bezier(0.16, 1, 0.3, 1)"
-              }));
-            }
-
-            await Promise.allSettled(animations.map((animation) => animation.finished));
-
-            const currentThumbnail = thumbnailsElement?.querySelector(`[data-gallery-index="${activeIndex}"]`);
-            currentThumbnail?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-          } catch (error) {
-            activeIndex = nextIndex;
-            render();
-          } finally {
-            isTransitioning = false;
-          }
-        };
-
-        media.forEach((item, index) => {
-          if (!thumbnailsElement) return;
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "media-gallery__thumbnail";
-          button.dataset.galleryIndex = String(index);
-          button.setAttribute("aria-label", `Show ${item.title}`);
-
-          if (item.type === "image") {
-            const thumbnailImage = document.createElement("img");
-            thumbnailImage.src = item.src;
-            thumbnailImage.alt = "";
-            thumbnailImage.loading = "lazy";
-            button.append(thumbnailImage);
-          } else {
-            const label = document.createElement("span");
-            label.innerHTML = '<span aria-hidden="true">▶</span> Live demo';
-            button.append(label);
-          }
-
-          button.addEventListener("click", () => {
-            const direction = index < activeIndex ? "previous" : "next";
-            void showItem(index, direction);
-          });
-          thumbnailsElement.append(button);
-        });
-
-        const open = () => {
-          if (dialog.open) return;
-          activeIndex = 0;
-          render();
-          dialog.classList.remove("is-closing");
-          document.body.classList.add("gallery-open");
-          dialog.showModal();
-        };
-
-        const finishClose = () => {
-          if (closeTimer) {
-            window.clearTimeout(closeTimer);
-            closeTimer = null;
-          }
-          dialog.classList.remove("is-closing");
-          if (dialog.open) dialog.close();
-        };
-
-        const close = () => {
-          if (!dialog.open || dialog.classList.contains("is-closing")) return;
-
-          if (motionQuery.matches) {
-            finishClose();
-            return;
-          }
-
-          dialog.classList.add("is-closing");
-          closeTimer = window.setTimeout(finishClose, 210);
-        };
-
-        openButtons.forEach((button) => button.addEventListener("click", open));
-        closeButton?.addEventListener("click", close);
-        previousButton?.addEventListener("click", () => void showItem(activeIndex - 1, "previous"));
-        nextButton?.addEventListener("click", () => void showItem(activeIndex + 1, "next"));
-
-        dialog.addEventListener("click", (event) => {
-          if (event.target === dialog) close();
-        });
-
-        dialog.addEventListener("cancel", (event) => {
-          event.preventDefault();
-          close();
-        });
-
-        dialog.addEventListener("close", () => {
-          if (closeTimer) {
-            window.clearTimeout(closeTimer);
-            closeTimer = null;
-          }
-          dialog.classList.remove("is-closing");
-          videoElement?.pause();
-          document.body.classList.remove("gallery-open");
-        });
-
-        document.addEventListener("keydown", (event) => {
-          if (!dialog.open) return;
-          if (event.key === "Escape") {
-            event.preventDefault();
-            close();
-            return;
-          }
-          if (event.key === "ArrowLeft") void showItem(activeIndex - 1, "previous");
-          if (event.key === "ArrowRight") void showItem(activeIndex + 1, "next");
-          if (event.key === "Home") void showItem(0, "previous");
-          if (event.key === "End") void showItem(media.length - 1, "next");
-        });
-
-        render();
-      };
-
-      setupMediaGallery({
-        dialogId: "student-market-gallery",
-        openSelector: "[data-student-market-gallery-open]",
-        closeSelector: "[data-student-market-gallery-close]",
-        media: studentMarketMedia
-      });
-
-      setupMediaGallery({
-        dialogId: "overlay-studio-gallery",
-        openSelector: "[data-overlay-gallery-open]",
-        closeSelector: "[data-overlay-gallery-close]",
-        media: overlayStudioMedia
-      });
     })();
   </script>
 </body>
