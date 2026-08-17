@@ -2481,12 +2481,25 @@ body.case-study-gallery-open {
   grid-template-columns: minmax(18rem, 0.92fr) minmax(0, 1.08fr);
 }
 
-.project-feature--reverse .project-feature__media {
+.project-feature--reverse .project-feature__media-link {
   order: 2;
 }
 
 .project-feature--reverse .project-feature__content {
   order: 1;
+}
+
+.project-feature__media-link {
+  min-width: 0;
+  display: block;
+  color: inherit;
+  border-radius: 0.85rem;
+  text-decoration: none;
+}
+
+.project-feature__media-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 0.3rem;
 }
 
 .project-feature__media {
@@ -2616,7 +2629,8 @@ body.case-study-gallery-open {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .project-feature:hover .project-feature__media img {
+  .project-feature__media-link:hover .project-feature__media img,
+  .project-feature__media-link:focus-visible .project-feature__media img {
     transform: scale(1.018);
   }
 }
@@ -2628,7 +2642,7 @@ body.case-study-gallery-open {
     gap: 1.5rem;
   }
 
-  .project-feature--reverse .project-feature__media,
+  .project-feature--reverse .project-feature__media-link,
   .project-feature--reverse .project-feature__content {
     order: initial;
   }
