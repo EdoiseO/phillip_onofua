@@ -2102,16 +2102,6 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   letter-spacing: -0.025em;
 }
 
-.case-study-lightbox-header output {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--muted);
-  font-family: "GeistMonoLocal", ui-monospace, monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
 .case-study-lightbox-header button {
   width: 2.75rem;
   height: 2.75rem;

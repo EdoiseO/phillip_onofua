@@ -197,14 +197,13 @@
   const groupLabel = dialog.querySelector("[data-gallery-group-label]");
   const title = dialog.querySelector("[data-gallery-title]");
   const caption = dialog.querySelector("[data-gallery-caption]");
-  const count = dialog.querySelector("[data-gallery-count]");
   const original = dialog.querySelector("[data-gallery-original]");
   const closeButton = dialog.querySelector("[data-gallery-close]");
   const previousButton = dialog.querySelector("[data-gallery-prev]");
   const nextButton = dialog.querySelector("[data-gallery-next]");
   const thumbnails = dialog.querySelector("[data-gallery-thumbnails]");
 
-  if (!image || !figure || !groupLabel || !title || !caption || !count || !original || !closeButton || !previousButton || !nextButton || !thumbnails) {
+  if (!image || !figure || !groupLabel || !title || !caption || !original || !closeButton || !previousButton || !nextButton || !thumbnails) {
     return;
   }
 
@@ -254,7 +253,6 @@
     image.width = item.width;
     image.height = item.height;
     caption.textContent = item.caption;
-    count.textContent = `${activeIndex + 1} / ${gallery.images.length}`;
     original.href = item.src;
     previousButton.setAttribute("aria-label", `Show previous image in ${gallery.label}`);
     nextButton.setAttribute("aria-label", `Show next image in ${gallery.label}`);
