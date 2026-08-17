@@ -12,11 +12,11 @@
           caption: "The visible catalogue is produced by bounded server queries over database-controlled listing state."
         },
         {
-          src: "assets/student-market-listing-desktop.png",
-          width: 1440,
-          height: 1000,
-          title: "Committed listing detail",
-          alt: "Student Market listing page with item photography, price, seller information, message action, description, and meetup location",
+          src: "assets/student-market-miles-morales-listing-desktop.png",
+          width: 1470,
+          height: 726,
+          title: "Miles Morales listing detail",
+          alt: "Student Market listing page for MILES MORALES: SPIDER-MAN #1 with cover art, price, campus, condition, description, and seller profile",
           caption: "The listing route renders the committed result after ownership, lifecycle, revision, and media rules have been enforced."
         }
       ]
