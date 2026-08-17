@@ -2234,11 +2234,13 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-lightbox-thumbnails {
   min-width: 0;
+  padding: 0.2rem 0.15rem;
   display: flex;
   justify-content: center;
   gap: 0.55rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  scroll-padding-inline: 0.15rem;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
@@ -2253,7 +2255,7 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   border-radius: 0.7rem;
   background: #080b10;
   opacity: 0.62;
-  transition: border-color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, opacity 160ms ease;
 }
 
 .case-study-lightbox-thumbnail:hover,
@@ -2264,7 +2266,6 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-lightbox-thumbnail[aria-current="true"] {
   box-shadow: 0 0 0 1px var(--accent);
-  transform: translateY(-1px);
 }
 
 .case-study-lightbox-thumbnail img {
