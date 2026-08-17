@@ -137,6 +137,14 @@
           caption: "Conversation context, bounded history, and lifecycle-aware controls remain visible in the narrower composition."
         },
         {
+          src: "assets/student-market-ben10-conversation-mobile.jpg",
+          width: 585,
+          height: 1266,
+          title: "Mobile media-rich conversation",
+          alt: "Student Market mobile conversation linked to a Ben 10 comic listing with participant details, image attachments, reactions, and the message composer",
+          caption: "The compact conversation keeps listing context, participants, attachments, reactions, message history, and the composer within one touch-first thread."
+        },
+        {
           src: "assets/student-market-profile-mobile.png",
           width: 390,
           height: 844,

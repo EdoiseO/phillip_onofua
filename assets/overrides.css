@@ -2121,9 +2121,9 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   align-items: center;
   justify-content: center;
   color: var(--text-soft);
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-  background: var(--surface);
+  border: 0;
+  border-radius: 0.3rem;
+  background: transparent;
 }
 
 .case-study-lightbox-header button svg {
@@ -2136,8 +2136,12 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 }
 
 .case-study-lightbox-header button:hover {
-  color: var(--text);
-  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.case-study-lightbox-header button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 0.15rem;
 }
 
 .case-study-lightbox-stage {
