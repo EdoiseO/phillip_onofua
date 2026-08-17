@@ -192,9 +192,11 @@
   const count = dialog.querySelector("[data-gallery-count]");
   const original = dialog.querySelector("[data-gallery-original]");
   const closeButton = dialog.querySelector("[data-gallery-close]");
-  const slider = dialog.querySelector("[data-gallery-slider]");
+  const previousButton = dialog.querySelector("[data-gallery-prev]");
+  const nextButton = dialog.querySelector("[data-gallery-next]");
+  const thumbnails = dialog.querySelector("[data-gallery-thumbnails]");
 
-  if (!image || !figure || !groupLabel || !title || !caption || !count || !original || !closeButton || !slider) {
+  if (!image || !figure || !groupLabel || !title || !caption || !count || !original || !closeButton || !previousButton || !nextButton || !thumbnails) {
     return;
   }
 
@@ -203,9 +205,38 @@
   let lastTrigger = null;
   let pointerStart = null;
 
+  const buildThumbnails = (gallery) => {
+    thumbnails.replaceChildren();
+
+    gallery.images.forEach((item, index) => {
+      const button = document.createElement("button");
+      const thumbnail = document.createElement("img");
+
+      button.type = "button";
+      button.className = "case-study-lightbox-thumbnail";
+      button.setAttribute("aria-label", `Open ${item.title}, image ${index + 1} of ${gallery.images.length}`);
+      button.addEventListener("click", () => {
+        activeIndex = index;
+        render();
+      });
+
+      thumbnail.src = item.src;
+      thumbnail.alt = "";
+      thumbnail.loading = "lazy";
+      button.append(thumbnail);
+      thumbnails.append(button);
+    });
+
+    thumbnails.dataset.galleryGroup = activeGroup;
+  };
+
   const render = () => {
     const gallery = galleries[activeGroup];
     const item = gallery.images[activeIndex];
+
+    if (thumbnails.dataset.galleryGroup !== activeGroup) {
+      buildThumbnails(gallery);
+    }
 
     dialog.dataset.galleryLayout = gallery.layout || "desktop";
     groupLabel.textContent = gallery.label;
@@ -217,13 +248,22 @@
     caption.textContent = item.caption;
     count.textContent = `${activeIndex + 1} / ${gallery.images.length}`;
     original.href = item.src;
-    slider.min = "1";
-    slider.max = String(gallery.images.length);
-    slider.value = String(activeIndex + 1);
-    slider.setAttribute("aria-valuetext", `${item.title}, image ${activeIndex + 1} of ${gallery.images.length}`);
-    slider.style.setProperty("--gallery-progress", gallery.images.length === 1 ? "100%" : `${(activeIndex / (gallery.images.length - 1)) * 100}%`);
+    previousButton.setAttribute("aria-label", `Show previous image in ${gallery.label}`);
+    nextButton.setAttribute("aria-label", `Show next image in ${gallery.label}`);
     figure.scrollTop = 0;
     figure.scrollLeft = 0;
+
+    Array.from(thumbnails.children).forEach((button, index) => {
+      if (index === activeIndex) {
+        button.setAttribute("aria-current", "true");
+
+        if (dialog.open) {
+          button.scrollIntoView({ block: "nearest", inline: "center" });
+        }
+      } else {
+        button.removeAttribute("aria-current");
+      }
+    });
   };
 
   const move = (direction) => {
@@ -247,8 +287,8 @@
     activeGroup = groupName;
     activeIndex = 0;
     lastTrigger = trigger;
-    render();
     dialog.showModal();
+    render();
     document.body.classList.add("case-study-gallery-open");
   };
 
@@ -256,11 +296,8 @@
     trigger.addEventListener("click", () => openGallery(trigger.dataset.galleryGroup, trigger));
   });
 
-  slider.addEventListener("input", () => {
-    activeIndex = Number(slider.value) - 1;
-    render();
-  });
-
+  previousButton.addEventListener("click", () => move(-1));
+  nextButton.addEventListener("click", () => move(1));
   closeButton.addEventListener("click", () => dialog.close());
 
   dialog.addEventListener("click", (event) => {
@@ -270,10 +307,6 @@
   });
 
   dialog.addEventListener("keydown", (event) => {
-    if (event.target === slider) {
-      return;
-    }
-
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       move(-1);

@@ -2102,6 +2102,16 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   letter-spacing: -0.025em;
 }
 
+.case-study-lightbox-header output {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-family: "GeistMonoLocal", ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .case-study-lightbox-header button {
   width: 2.75rem;
   height: 2.75rem;
@@ -2130,7 +2140,15 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   border-color: var(--accent);
 }
 
+.case-study-lightbox-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: #080b10;
+}
+
 .case-study-lightbox-figure {
+  height: 100%;
   min-height: 0;
   margin: 0;
   overflow: auto;
@@ -2169,97 +2187,111 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   backdrop-filter: blur(12px);
 }
 
-.case-study-lightbox-controls {
-  padding: 0.9rem 1.15rem 1rem;
+.case-study-lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0;
   display: grid;
-  gap: 0.7rem;
+  place-items: center;
+  color: #f5f7fa;
+  border: 1px solid rgb(255 255 255 / 0.24);
+  border-radius: 50%;
+  background: rgb(8 11 16 / 0.78);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(10px);
+  transform: translateY(-50%);
+}
+
+.case-study-lightbox-arrow:hover {
+  border-color: var(--accent);
+  background: rgb(17 21 27 / 0.94);
+}
+
+.case-study-lightbox-arrow svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.case-study-lightbox-arrow--previous {
+  left: 1rem;
+}
+
+.case-study-lightbox-arrow--next {
+  right: 1rem;
+}
+
+.case-study-lightbox-footer {
+  padding: 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
   border-top: 1px solid var(--border);
   background: #11151b;
 }
 
-.case-study-lightbox-slider-meta {
+.case-study-lightbox-thumbnails {
+  min-width: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: center;
+  gap: 0.55rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
-.case-study-lightbox-controls output {
-  color: var(--muted);
-  font-family: "GeistMonoLocal", ui-monospace, monospace;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.case-study-lightbox-thumbnail {
+  width: 4.25rem;
+  height: 3.35rem;
+  flex: 0 0 auto;
+  padding: 0.16rem;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.7rem;
+  background: #080b10;
+  opacity: 0.62;
+  transition: border-color 160ms ease, opacity 160ms ease, transform 160ms ease;
 }
 
-.case-study-lightbox-controls a {
+.case-study-lightbox-thumbnail:hover,
+.case-study-lightbox-thumbnail[aria-current="true"] {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.case-study-lightbox-thumbnail[aria-current="true"] {
+  box-shadow: 0 0 0 1px var(--accent);
+  transform: translateY(-1px);
+}
+
+.case-study-lightbox-thumbnail img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.45rem;
+  object-fit: cover;
+  object-position: top;
+}
+
+.case-study-lightbox-footer > a {
   color: var(--accent);
   font-size: 0.76rem;
   font-weight: 650;
   text-decoration: underline;
   text-underline-offset: 0.24em;
+  white-space: nowrap;
 }
 
-.case-study-lightbox-controls a:hover {
+.case-study-lightbox-footer > a:hover {
   color: var(--accent-hover);
-}
-
-[data-gallery-slider] {
-  --gallery-progress: 0%;
-  width: 100%;
-  height: 2.75rem;
-  margin: 0;
-  padding: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  touch-action: none;
-  cursor: pointer;
-  background: transparent;
-}
-
-[data-gallery-slider]:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 65%, transparent);
-  outline-offset: 1px;
-  border-radius: 999px;
-}
-
-[data-gallery-slider]::-webkit-slider-runnable-track {
-  height: 0.3rem;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--accent) 0 var(--gallery-progress), var(--border-strong) var(--gallery-progress) 100%);
-}
-
-[data-gallery-slider]::-webkit-slider-thumb {
-  width: 1.35rem;
-  height: 1.35rem;
-  margin-top: -0.525rem;
-  appearance: none;
-  -webkit-appearance: none;
-  border: 3px solid #11151b;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgb(0 0 0 / 0.35);
-}
-
-[data-gallery-slider]::-moz-range-track {
-  height: 0.3rem;
-  border-radius: 999px;
-  background: var(--border-strong);
-}
-
-[data-gallery-slider]::-moz-range-progress {
-  height: 0.3rem;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
-[data-gallery-slider]::-moz-range-thumb {
-  width: 1.1rem;
-  height: 1.1rem;
-  border: 3px solid #11151b;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 4px 12px rgb(0 0 0 / 0.35);
 }
 
 body.case-study-gallery-open {
@@ -2376,8 +2408,36 @@ body.case-study-gallery-open {
     padding: 0.75rem;
   }
 
-  .case-study-lightbox-controls {
-    padding: 0.75rem 0.85rem 0.85rem;
+  .case-study-lightbox-arrow {
+    width: 2.55rem;
+    height: 2.55rem;
+  }
+
+  .case-study-lightbox-arrow--previous {
+    left: 0.55rem;
+  }
+
+  .case-study-lightbox-arrow--next {
+    right: 0.55rem;
+  }
+
+  .case-study-lightbox-footer {
+    padding: 0.65rem 0.75rem;
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .case-study-lightbox-thumbnails {
+    justify-content: flex-start;
+  }
+
+  .case-study-lightbox-thumbnail {
+    width: 3.65rem;
+    height: 2.9rem;
+  }
+
+  .case-study-lightbox-footer > a {
+    justify-self: center;
   }
 
   .case-study-lightbox-figure figcaption {
@@ -2397,7 +2457,8 @@ body.case-study-gallery-open {
 
 @media (prefers-reduced-motion: reduce) {
   .case-study-gallery-card,
-  .case-study-gallery-cover img {
+  .case-study-gallery-cover img,
+  .case-study-lightbox-thumbnail {
     transition: none;
   }
 }
