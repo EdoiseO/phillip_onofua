@@ -2180,7 +2180,11 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-lightbox-figure[data-gallery-zoomed="true"] {
   touch-action: pan-x pan-y;
-  cursor: move;
+  cursor: grab;
+}
+
+.case-study-lightbox-figure[data-gallery-panning="true"] {
+  cursor: grabbing;
 }
 
 .case-study-lightbox-arrow {

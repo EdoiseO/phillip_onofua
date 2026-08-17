@@ -217,6 +217,7 @@
   let lastTrigger = null;
   let legacyPinchGesture = null;
   let legacyTouchStart = null;
+  let panStart = null;
   let pointerStart = null;
   let pinchGesture = null;
   let zoomFrame = null;
@@ -416,10 +417,38 @@
       }
     }
 
-    if (!event.isPrimary || zoomLevel > minimumZoom) {
+    if (!event.isPrimary) {
+      panStart = null;
       pointerStart = null;
       return;
     }
+
+    if (zoomLevel > minimumZoom) {
+      pointerStart = null;
+
+      if (event.pointerType === "touch" || event.button !== 0) {
+        panStart = null;
+        return;
+      }
+
+      event.preventDefault();
+      panStart = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        scrollLeft: figure.scrollLeft,
+        scrollTop: figure.scrollTop
+      };
+      figure.dataset.galleryPanning = "true";
+
+      if (figure.setPointerCapture) {
+        figure.setPointerCapture(event.pointerId);
+      }
+
+      return;
+    }
+
+    panStart = null;
 
     pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
 
@@ -429,6 +458,13 @@
   });
 
   figure.addEventListener("pointermove", (event) => {
+    if (panStart?.id === event.pointerId) {
+      event.preventDefault();
+      figure.scrollLeft = panStart.scrollLeft - (event.clientX - panStart.x);
+      figure.scrollTop = panStart.scrollTop - (event.clientY - panStart.y);
+      return;
+    }
+
     if (event.pointerType !== "touch" || !activeTouchPoints.has(event.pointerId)) {
       return;
     }
@@ -453,6 +489,17 @@
 
   figure.addEventListener("pointerup", (event) => {
     const wasPinching = pinchGesture !== null;
+
+    if (panStart?.id === event.pointerId) {
+      panStart = null;
+      delete figure.dataset.galleryPanning;
+
+      if (figure.hasPointerCapture?.(event.pointerId)) {
+        figure.releasePointerCapture(event.pointerId);
+      }
+
+      return;
+    }
 
     if (event.pointerType === "touch") {
       activeTouchPoints.delete(event.pointerId);
@@ -577,6 +624,8 @@
       figure.releasePointerCapture(event.pointerId);
     }
 
+    panStart = null;
+    delete figure.dataset.galleryPanning;
     pointerStart = null;
   });
 
@@ -585,8 +634,10 @@
     activeTouchPoints.clear();
     legacyPinchGesture = null;
     legacyTouchStart = null;
+    panStart = null;
     pinchGesture = null;
     pointerStart = null;
+    delete figure.dataset.galleryPanning;
 
     if (zoomFrame !== null) {
       cancelAnimationFrame(zoomFrame);
