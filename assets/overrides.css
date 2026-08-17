@@ -2050,8 +2050,11 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-lightbox {
   width: min(94vw, 1180px);
+  height: min(94vh, 900px);
+  height: min(94dvh, 900px);
   max-width: none;
   max-height: 94vh;
+  max-height: 94dvh;
   padding: 0;
   overflow: hidden;
   color: var(--text);
@@ -2067,7 +2070,9 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 }
 
 .case-study-lightbox-shell {
+  height: 100%;
   max-height: 94vh;
+  max-height: 94dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
@@ -2458,11 +2463,16 @@ body.case-study-gallery-open {
 
   .case-study-lightbox {
     width: calc(100vw - 1rem);
+    height: calc(100vh - 1rem);
+    height: calc(100dvh - 1rem);
+    max-height: calc(100vh - 1rem);
     max-height: calc(100dvh - 1rem);
     border-radius: 0.8rem;
   }
 
   .case-study-lightbox-shell {
+    height: 100%;
+    max-height: calc(100vh - 1rem);
     max-height: calc(100dvh - 1rem);
   }
 
