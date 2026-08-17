@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <title>How Student Market of Toronto Works | Phillip Onofua</title>
-  <meta name="description" content="An inside look at Student Market of Toronto, a responsive marketplace with listings, messaging, profiles, administration, and moderation workflows." />
+  <meta name="description" content="A detailed case study of Student Market of Toronto: a responsive Next.js marketplace with trusted student accounts, listing workflows, media messaging, and evidence-first moderation." />
   <link rel="canonical" href="https://philliponofua.vercel.app/student-market.html" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="How Student Market of Toronto Works" />
-  <meta property="og:description" content="How Phillip Onofua helped build a responsive student marketplace from browsing through moderation." />
+  <meta property="og:description" content="How Phillip Onofua led a responsive student marketplace from discovery and messaging through secure, evidence-first moderation." />
   <meta property="og:image" content="https://philliponofua.vercel.app/assets/student-market-browse-desktop.png" />
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
   <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
@@ -31,14 +31,14 @@
 
     <main class="case-study-main">
       <section class="case-study-hero" aria-labelledby="case-study-title">
-        <p class="eyebrow">Inside the project · Full-stack web application</p>
+        <p class="eyebrow">Product case study · Full-stack marketplace</p>
         <h1 id="case-study-title">Student Market of Toronto</h1>
-        <p class="case-study-lead">A student marketplace that connects discovery, selling, messaging, account management, and moderation in one responsive product.</p>
+        <p class="case-study-lead">I led the development of a marketplace where Toronto students can discover campus-relevant items, manage listings, negotiate in listing-linked conversations, and rely on a structured moderation system when something goes wrong.</p>
 
         <dl class="case-study-meta">
-          <div><dt>Role</dt><dd>Team lead and full-stack developer</dd></div>
-          <div><dt>Core stack</dt><dd>Next.js, React, Supabase, PostgreSQL, Tailwind CSS</dd></div>
-          <div><dt>Scope</dt><dd>Marketplace, accounts, messaging, administration, and reporting</dd></div>
+          <div><dt>My role</dt><dd>Team lead and full-stack developer</dd></div>
+          <div><dt>Core stack</dt><dd>Next.js, React, Supabase, PostgreSQL, Tailwind CSS, Vercel</dd></div>
+          <div><dt>Product scope</dt><dd>Identity, listings, media, messaging, notifications, moderation, and administration</dd></div>
         </dl>
 
         <div class="case-study-actions">
@@ -50,94 +50,201 @@
             View source
           </a>
         </div>
+
+        <div class="case-study-highlights" aria-label="Project highlights">
+          <div>
+            <strong>One connected product</strong>
+            <span>Discovery, selling, messaging, and account tools share the same listing and identity model.</span>
+          </div>
+          <div>
+            <strong>Evidence-first moderation</strong>
+            <span>Message, listing, and profile reports retain the context a moderator needs before acting.</span>
+          </div>
+          <div>
+            <strong>Reliable data flows</strong>
+            <span>Trusted PostgreSQL functions, bounded reads, and retry-safe writes protect important operations.</span>
+          </div>
+        </div>
       </section>
 
       <div class="case-study-sections">
-        <section class="case-study-row" aria-labelledby="market-discovery">
-          <figure class="case-study-media">
-            <img src="assets/student-market-browse-desktop.png" alt="Student Market desktop marketplace showing listings, prices, campuses, search, and category filters" width="1440" height="1000" />
-            <figcaption>The desktop marketplace keeps search, category filters, pricing, and campus context visible together.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">01 · Discovery</p>
-            <h2 id="market-discovery">Find relevant items quickly</h2>
-            <p>The marketplace is organized around the questions a student has before opening a listing: what is available, how much does it cost, and where is the seller located?</p>
-            <p>Search, categories, favourites, and campus information share one browsing flow, reducing the need to jump between disconnected pages.</p>
+        <section class="case-study-overview" aria-labelledby="market-problem">
+          <div>
+            <p class="eyebrow">The product problem</p>
+            <h2 id="market-problem">A marketplace only works when discovery, trust, and communication work together.</h2>
+          </div>
+          <div class="case-study-overview-copy">
+            <p>Students need more than a grid of products. They need to know who they are dealing with, whether a meetup location is practical, which listing a conversation belongs to, and what happens when content is misleading or unsafe.</p>
+            <p>I treated those concerns as one product system rather than separate pages. A listing remains connected to its seller, campus, images, favourites, conversation, reports, moderation history, and eventual lifecycle state.</p>
           </div>
         </section>
 
-        <section class="case-study-row case-study-row--reverse" aria-labelledby="listing-flow">
-          <figure class="case-study-media">
-            <img src="assets/student-market-listing-desktop.png" alt="Student Market listing page with item photography, seller information, message action, and meetup location" width="1440" height="1000" loading="lazy" />
-            <figcaption>A listing brings the item, seller, saved state, conversation entry point, and meetup context into one decision page.</figcaption>
+        <section class="case-study-system" aria-labelledby="market-system-flow">
+          <p class="eyebrow">How the product works</p>
+          <h2 id="market-system-flow">One listing moves through a complete, accountable workflow.</h2>
+          <ol class="case-study-flow-grid">
+            <li><span>01</span><strong>Discover</strong><p>Search and category views surface active listings with price, campus, condition, and seller context.</p></li>
+            <li><span>02</span><strong>Evaluate</strong><p>The listing page combines media, description, seller identity, meetup location, and a direct message entry point.</p></li>
+            <li><span>03</span><strong>Coordinate</strong><p>A conversation remains anchored to the item while supporting text, reactions, photos, videos, and lifecycle-aware controls.</p></li>
+            <li><span>04</span><strong>Moderate</strong><p>Reports preserve evidence and route trusted staff to bounded review queues, private context, and explicit decisions.</p></li>
+          </ol>
+        </section>
+
+        <section class="case-study-feature" aria-labelledby="market-discovery">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">01 · Discovery</p>
+              <h2 id="market-discovery">Make the next useful item easy to recognize.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>The desktop marketplace keeps navigation, search, categories, price, campus, condition, and negotiability visible without crowding the listings themselves.</p>
+              <ul>
+                <li>Active listings are separated from drafts, pending review, rejected, sold, and retired records.</li>
+                <li>Search and category pages use bounded result windows instead of loading the entire catalogue.</li>
+                <li>Saved items and seller tools remain accessible without interrupting browsing.</li>
+              </ul>
+            </div>
+          </div>
+          <figure class="case-study-media case-study-media--wide">
+            <img src="assets/student-market-browse-desktop.png" alt="Student Market desktop marketplace showing active student listings, prices, campuses, search, categories, and seller navigation" width="1440" height="1000" />
+            <figcaption>Desktop discovery keeps the catalogue and the student-specific context needed to judge a listing in the same view.</figcaption>
           </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">02 · Listing flow</p>
-            <h2 id="listing-flow">Move from interest to contact</h2>
-            <p>Each listing keeps the product media and essential details prominent while connecting the buyer directly to the seller and a practical campus meetup location.</p>
-            <p>Behind the interface, authenticated accounts, uploaded images, listing records, saved items, and seller identity have to remain consistent as the listing changes.</p>
+        </section>
+
+        <section class="case-study-feature" aria-labelledby="listing-flow">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">02 · Listing lifecycle</p>
+              <h2 id="listing-flow">Connect a seller’s draft to a buyer’s decision.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>Sellers can build a draft, upload ordered images, submit it for review, respond to requested changes, and update an approved listing without silently losing work.</p>
+              <p>For buyers, the detail page turns that structured record into a clear decision: what the item is, how much it costs, who is selling it, where a meetup could happen, and how to start a conversation.</p>
+            </div>
+          </div>
+          <figure class="case-study-media case-study-media--wide">
+            <img src="assets/student-market-listing-desktop.png" alt="Student Market listing page with item photography, price, seller information, message action, description, and meetup location" width="1440" height="1000" loading="lazy" />
+            <figcaption>The listing page is the bridge between catalogue discovery, seller identity, saved state, and a listing-specific conversation.</figcaption>
+          </figure>
+        </section>
+
+        <section class="case-study-feature" aria-labelledby="market-messaging">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">03 · Messaging</p>
+              <h2 id="market-messaging">Keep the negotiation attached to the item.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>Every buyer–seller conversation carries the listing card and participant identity into the thread. The composer supports text, emoji, photo and video attachments, while read state and reactions make active threads easier to scan.</p>
+              <p>When a listing or conversation closes, history and media remain readable while new writes are disabled. This preserves the agreement without pretending the transaction is still active.</p>
+            </div>
+          </div>
+          <div class="case-study-media-stack">
+            <figure class="case-study-media case-study-media--wide">
+              <img src="assets/student-market-messages-desktop.png" alt="Student Market desktop inbox with announcement and listing-linked buyer and seller conversations" width="1440" height="1000" loading="lazy" />
+              <figcaption>The desktop inbox keeps listing titles, people, the latest message, unread state, and conversation actions scannable.</figcaption>
+            </figure>
+            <figure class="case-study-media case-study-media--wide">
+              <img src="assets/student-market-conversation-desktop.png" alt="Student Market desktop conversation showing its listing, buyer and seller messages, and a disabled composer after the listing closed" width="1470" height="670" loading="lazy" />
+              <figcaption>The conversation workspace keeps listing context above a consistently sized, scrollable thread and clearly communicates when new messages are unavailable.</figcaption>
+            </figure>
           </div>
         </section>
 
-        <section class="case-study-row" aria-labelledby="market-messaging">
-          <figure class="case-study-media case-study-media--pair">
-            <img src="assets/student-market-messages-desktop.png" alt="Student Market desktop inbox with listing-linked buyer and seller conversations" width="1440" height="1000" loading="lazy" />
-            <img src="assets/student-market-messages-mobile.png" alt="Student Market mobile inbox showing conversations and unread message states" width="430" height="932" loading="lazy" />
-            <figcaption>The same listing-linked conversation model adapts from desktop inbox to phone-sized navigation.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">03 · Messaging</p>
-            <h2 id="market-messaging">Keep every conversation tied to its item</h2>
-            <p>Marketplace messages retain product context, participants, and unread state. That makes it easier to coordinate several purchases without losing track of which conversation belongs to which listing.</p>
-            <p>The responsive version prioritizes scanability and direct access to active threads without attempting to reproduce the desktop layout at a smaller scale.</p>
+        <section class="case-study-feature" aria-labelledby="market-reporting">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">04 · Moderation</p>
+              <h2 id="market-reporting">Turn a report into an evidence-backed decision.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>The admin area separates ordinary marketplace activity from trusted operations. Admin, moderator, and staff roles receive different capabilities, and every registry is filtered and bounded before a reviewer opens a record.</p>
+              <ul>
+                <li>Reports can target a listing, profile, or specific conversation message.</li>
+                <li>The detail view combines the flagged evidence, full context, related reports, listing or participant information, and private moderator notes.</li>
+                <li>Decision details are explicit and private moderation text stays out of user notifications.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="case-study-media-stack">
+            <figure class="case-study-media case-study-media--wide">
+              <img src="assets/student-market-reports-registry-desktop.png" alt="Student Market Reports registry with status, subject, reason, and search filters above the newest active reports" width="1470" height="771" loading="lazy" />
+              <figcaption>The current Reports registry offers a focused, newest-first queue with filters for status, subject type, reason, and search.</figcaption>
+            </figure>
+            <figure class="case-study-media case-study-media--wide case-study-media--report-detail" tabindex="0" aria-label="Scrollable full report review screenshot">
+              <img src="assets/student-market-report-review-current-desktop.png" alt="Student Market report review showing reported listing evidence, related reports, listing and seller context, moderator notes, and decision fields" width="1470" height="1823" loading="lazy" />
+              <figcaption>This listing-report workspace keeps primary evidence on the left, supporting context on the right, and the final decision fields across the full width.</figcaption>
+            </figure>
           </div>
         </section>
 
-        <section class="case-study-row case-study-row--reverse" aria-labelledby="market-admin">
-          <figure class="case-study-media">
-            <img src="assets/student-market-admin-desktop.png" alt="Student Market admin dashboard with moderation metrics, report queues, and listing approvals" width="1440" height="1000" loading="lazy" />
-            <figcaption>Protected administration tools surface the workload, review states, and actions that moderators need.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">04 · Administration</p>
-            <h2 id="market-admin">Give trusted roles the right controls</h2>
-            <p>The admin workspace separates moderation from the regular marketplace experience. Role-aware navigation exposes reporting and approval tools only to the accounts that need them.</p>
-            <p>Summary metrics and queues help an administrator understand what requires attention before opening an individual record.</p>
+        <section class="case-study-feature" aria-labelledby="market-responsive">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">05 · Responsive product</p>
+              <h2 id="market-responsive">Recompose the workflow for a phone—not just a narrower screen.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>Mobile navigation prioritizes browse, sell, messages, and account actions. Cards become touch targets, sidebars become focused routes, and the conversation preserves the listing and composer without shrinking a desktop split view.</p>
+              <p>The mobile examples below show the complete path from discovering an item to negotiating in the message thread and checking the person behind the listing.</p>
+            </div>
+          </div>
+          <div class="case-study-mobile-gallery" role="group" aria-label="Student Market mobile interfaces">
+            <figure>
+              <img src="assets/student-market-browse-mobile.png" alt="Student Market mobile marketplace with responsive listing cards and bottom navigation" width="390" height="844" loading="lazy" />
+              <figcaption>Browse</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/student-market-messages-mobile.png" alt="Student Market mobile conversation showing its listing, participant, message history, and closed composer state" width="390" height="844" loading="lazy" />
+              <figcaption>Listing-linked messaging</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/student-market-profile-mobile.png" alt="Student Market mobile profile with account identity, school, seller information, and account navigation" width="390" height="844" loading="lazy" />
+              <figcaption>Student identity</figcaption>
+            </figure>
           </div>
         </section>
 
-        <section class="case-study-row" aria-labelledby="market-reporting">
-          <figure class="case-study-media">
-            <img src="assets/student-market-report-review-desktop.png" alt="Student Market report review with flagged conversation, related reports, moderator notes, and listing context" width="1440" height="1000" loading="lazy" />
-            <figcaption>The reporting system combines the flagged content with conversation history, related reports, notes, and listing details.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">05 · Reporting</p>
-            <h2 id="market-reporting">Support informed moderation decisions</h2>
-            <p>A report alone rarely contains enough context. The review page brings the reported message, surrounding conversation, prior reports, user details, and the related listing into one workspace.</p>
-            <p>Private moderator notes preserve the reasoning behind a decision and make follow-up work easier to understand.</p>
+        <section class="case-study-feature case-study-engineering" aria-labelledby="market-engineering">
+          <div class="case-study-feature-heading">
+            <div>
+              <p class="eyebrow">06 · Engineering depth</p>
+              <h2 id="market-engineering">Make the difficult states as deliberate as the happy path.</h2>
+            </div>
+            <div class="case-study-feature-copy">
+              <p>The interface is only one layer of the work. The project also handles ambiguous network responses, concurrent edits, role changes, rejected content, closed conversations, private evidence, and uploaded media that must not become orphaned.</p>
+            </div>
           </div>
-        </section>
-
-        <section class="case-study-row case-study-row--reverse" aria-labelledby="market-responsive">
-          <figure class="case-study-media case-study-media--pair case-study-media--equal">
-            <img src="assets/student-market-browse-mobile.png" alt="Student Market mobile marketplace with responsive listing cards and bottom navigation" width="430" height="932" loading="lazy" />
-            <img src="assets/student-market-profile-mobile.png" alt="Student Market mobile profile with account identity, school, and seller details" width="430" height="932" loading="lazy" />
-            <figcaption>Mobile discovery and account management use layouts designed for touch and limited screen width.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">06 · Responsive design</p>
-            <h2 id="market-responsive">Preserve the product flow on mobile</h2>
-            <p>Mobile is treated as a first-class marketplace experience. Browsing, messaging, profile management, and navigation reorganize around the actions that matter most on a phone.</p>
-            <p>The result is not a compressed desktop page; it is the same product model expressed through a more focused interface.</p>
+          <div class="case-study-engineering-grid">
+            <article>
+              <span>Identity and access</span>
+              <h3>Derive trust from current account state.</h3>
+              <p>Toronto school identity, moderation roles, and application standing are rechecked by trusted server and database paths instead of relying on editable browser state.</p>
+            </article>
+            <article>
+              <span>Data integrity</span>
+              <h3>Make important writes replay-safe.</h3>
+              <p>Stable operation identifiers, canonical payloads, row locks, revisions, and immutable records protect listing, messaging, report, and enforcement changes from accidental duplication.</p>
+            </article>
+            <article>
+              <span>Private moderation</span>
+              <h3>Separate internal reasoning from public outcomes.</h3>
+              <p>Private notes and decision records remain behind role checks, while notifications receive only the bounded, user-safe explanation intended for the affected account.</p>
+            </article>
+            <article>
+              <span>Media lifecycle</span>
+              <h3>Bind uploads before they become product data.</h3>
+              <p>Reserved upload paths, ownership checks, bounded attachment rules, and cleanup workflows keep listing and message media connected to the correct user and record.</p>
+            </article>
           </div>
         </section>
       </div>
 
       <section class="case-study-end" aria-label="Student Market project conclusion">
         <div class="case-study-result">
-          <h2>What this project demonstrates</h2>
-          <p>Student Market shows my ability to connect interface design with authentication, relational data, storage, responsive behavior, communication features, and role-based administration across a complete product.</p>
+          <p class="eyebrow">What this project demonstrates</p>
+          <h2>I can carry a product from visible interaction design into the database rules that keep it trustworthy.</h2>
+          <p>Student Market of Toronto brings together responsive product design, authentication, relational data, secure media handling, real-time communication, failure recovery, and role-based moderation. The result is a portfolio project that behaves like a connected marketplace rather than a collection of isolated screens.</p>
         </div>
         <p>Continue exploring</p>
         <nav aria-label="Project navigation">
