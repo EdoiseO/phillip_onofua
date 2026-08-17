@@ -51,20 +51,6 @@
           </a>
         </div>
 
-        <div class="case-study-highlights" aria-label="Project highlights">
-          <div>
-            <strong>Deliberate render boundary</strong>
-            <span>Server Components load request data. Focused Client Components own forms, browser state, media, and realtime interaction.</span>
-          </div>
-          <div>
-            <strong>PostgreSQL as the authority</strong>
-            <span>RLS, triggers, private schemas, version checks, and narrow RPCs enforce ownership, state transitions, and staff capabilities.</span>
-          </div>
-          <div>
-            <strong>Recovery is part of the design</strong>
-            <span>Operation identifiers, durable intents, upload reservations, cleanup queues, and exact replay handle lost or repeated responses.</span>
-          </div>
-        </div>
       </section>
 
       <div class="case-study-sections">
@@ -105,10 +91,6 @@
               </ul>
             </div>
           </div>
-          <figure class="case-study-media case-study-media--wide">
-            <img src="assets/student-market-browse-desktop.png" alt="Student Market desktop marketplace showing active student listings, prices, campuses, search, categories, and seller navigation" width="1440" height="1000" />
-            <figcaption>The visible catalogue is the output of bounded server queries and database-controlled listing state.</figcaption>
-          </figure>
         </section>
 
         <section class="case-study-feature" aria-labelledby="listing-flow">
@@ -122,10 +104,6 @@
               <p>Image paths are reserved before upload. The final commit verifies the reservation, owner, listing revision, required fields, and image order in one trusted database path. Ambiguous network failures replay the same operation instead of issuing a second write, and abandoned objects enter a bounded cleanup queue.</p>
             </div>
           </div>
-          <figure class="case-study-media case-study-media--wide">
-            <img src="assets/student-market-listing-desktop.png" alt="Student Market listing page with item photography, price, seller information, message action, description, and meetup location" width="1440" height="1000" loading="lazy" />
-            <figcaption>The listing page renders the committed result after ownership, lifecycle, revision, and media rules have been enforced.</figcaption>
-          </figure>
         </section>
 
         <section class="case-study-feature" aria-labelledby="market-messaging">
@@ -138,16 +116,6 @@
               <p>A thread loads 40 messages at a time and retains a bounded 160-message client window. New inserts and reaction changes arrive through unique Supabase Realtime channels, then merge by stable database identifiers.</p>
               <p>A media send reserves up to three exact conversation and user paths, uploads files, and completes through an idempotent message RPC. If the operation aborts, reservations are released only after Storage cleanup. Closed conversations keep their readable history, but database guards reject new messages, attachments, and reactions even if a client bypasses the disabled composer.</p>
             </div>
-          </div>
-          <div class="case-study-media-stack">
-            <figure class="case-study-media case-study-media--wide">
-              <img src="assets/student-market-messages-desktop.png" alt="Student Market desktop inbox with announcement and listing-linked buyer and seller conversations" width="1440" height="1000" loading="lazy" />
-              <figcaption>The inbox is capped at 100 conversations and refreshes through recipient-safe notification signals.</figcaption>
-            </figure>
-            <figure class="case-study-media case-study-media--wide">
-              <img src="assets/student-market-conversation-desktop.png" alt="Student Market desktop conversation showing its listing, buyer and seller messages, and a disabled composer after the listing closed" width="1470" height="670" loading="lazy" />
-              <figcaption>The scrollable thread combines bounded history, signed attachment access, reactions, read state, and lifecycle-aware controls.</figcaption>
-            </figure>
           </div>
         </section>
 
@@ -166,16 +134,6 @@
               </ul>
             </div>
           </div>
-          <div class="case-study-media-stack">
-            <figure class="case-study-media case-study-media--wide">
-              <img src="assets/student-market-reports-registry-desktop.png" alt="Student Market Reports registry with status, subject, reason, and search filters above the newest active reports" width="1470" height="771" loading="lazy" />
-              <figcaption>The registry is a bounded server query with normalized status, subject, reason, search, and pagination inputs.</figcaption>
-            </figure>
-            <figure class="case-study-media case-study-media--wide case-study-media--report-detail" tabindex="0" aria-label="Scrollable full report review screenshot">
-              <img src="assets/student-market-report-review-current-desktop.png" alt="Student Market report review showing reported listing evidence, related reports, listing and seller context, moderator notes, and decision fields" width="1470" height="1823" loading="lazy" />
-              <figcaption>The review route assembles evidence, related reports, private note history, subject context, and decision controls without exposing privileged data to ordinary users.</figcaption>
-            </figure>
-          </div>
         </section>
 
         <section class="case-study-feature" aria-labelledby="market-responsive">
@@ -188,20 +146,6 @@
               <p>The same server routes and database policies support both desktop and mobile. Responsive shells change navigation, card density, and thread composition without creating a separate mobile data path.</p>
               <p>Every major route includes a matching loading skeleton. Forms expose field errors, focus the first invalid control, preserve touch targets, and provide English and French interface copy.</p>
             </div>
-          </div>
-          <div class="case-study-mobile-gallery" role="group" aria-label="Student Market mobile interfaces">
-            <figure>
-              <img src="assets/student-market-browse-mobile.png" alt="Student Market mobile marketplace with responsive listing cards and bottom navigation" width="390" height="844" loading="lazy" />
-              <figcaption>Browse</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/student-market-messages-mobile.png" alt="Student Market mobile conversation showing its listing, participant, message history, and closed composer state" width="390" height="844" loading="lazy" />
-              <figcaption>Listing-linked messaging</figcaption>
-            </figure>
-            <figure>
-              <img src="assets/student-market-profile-mobile.png" alt="Student Market mobile profile with account identity, school, seller information, and account navigation" width="390" height="844" loading="lazy" />
-              <figcaption>Student identity</figcaption>
-            </figure>
           </div>
         </section>
 
@@ -268,7 +212,121 @@
             </article>
           </div>
         </section>
+
+        <section class="case-study-gallery-section" aria-labelledby="interface-gallery-title">
+          <div class="case-study-gallery-heading">
+            <div>
+              <p class="eyebrow">Implementation evidence</p>
+              <h2 id="interface-gallery-title">Explore the implemented system by workflow.</h2>
+            </div>
+            <p>These views and diagrams document how the shared identity, listing, conversation, and moderation models connect across the database, desktop, and mobile interfaces. Open a group to inspect the evidence without turning the technical narrative into a wall of images.</p>
+          </div>
+
+          <div class="case-study-gallery-groups" role="list" aria-label="Student Market implementation galleries">
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="marketplace">
+                <span class="case-study-gallery-cover">
+                  <img src="assets/student-market-browse-desktop.png" alt="" width="1440" height="1000" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">2 views</span>
+                  <strong>Marketplace and listings</strong>
+                  <span>Bounded discovery, listing detail, seller context, and state-aware actions.</span>
+                </span>
+              </button>
+            </article>
+
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="messaging">
+                <span class="case-study-gallery-cover">
+                  <img src="assets/student-market-conversation-desktop.png" alt="" width="1470" height="670" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">2 views</span>
+                  <strong>Messaging and media</strong>
+                  <span>Listing-linked inboxes, bounded history, attachments, reactions, and closed-thread behavior.</span>
+                </span>
+              </button>
+            </article>
+
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="profiles">
+                <span class="case-study-gallery-cover">
+                  <img src="assets/student-market-public-profile-desktop.png" alt="" width="1084" height="983" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">2 views</span>
+                  <strong>Profiles and accounts</strong>
+                  <span>Public seller identity and authenticated profile controls backed by shared account data.</span>
+                </span>
+              </button>
+            </article>
+
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="admin">
+                <span class="case-study-gallery-cover">
+                  <img src="assets/student-market-report-review-current-desktop.png" alt="" width="1470" height="1823" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">6 views</span>
+                  <strong>Admin and moderation</strong>
+                  <span>Operational registries, evidence review, seller feedback, private notes, decisions, and enforcement.</span>
+                </span>
+              </button>
+            </article>
+
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="mobile">
+                <span class="case-study-gallery-cover case-study-gallery-cover--mobile">
+                  <img src="assets/student-market-messages-mobile.png" alt="" width="390" height="844" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">3 views</span>
+                  <strong>Mobile application</strong>
+                  <span>Responsive browse, listing-linked messaging, and student profile workflows.</span>
+                </span>
+              </button>
+            </article>
+
+            <article role="listitem">
+              <button class="case-study-gallery-card" type="button" data-gallery-group="data-model">
+                <span class="case-study-gallery-cover">
+                  <img src="assets/student-market-data-model-overview.jpg" alt="" width="1140" height="786" loading="lazy" />
+                </span>
+                <span class="case-study-gallery-card-copy">
+                  <span class="case-study-gallery-kicker">3 views</span>
+                  <strong>Relational data model</strong>
+                  <span>Connected marketplace, messaging, notification, moderation, and account-lifecycle records.</span>
+                </span>
+              </button>
+            </article>
+          </div>
+        </section>
       </div>
+
+      <dialog class="case-study-lightbox" data-gallery-dialog aria-labelledby="gallery-dialog-title">
+        <div class="case-study-lightbox-shell">
+          <header class="case-study-lightbox-header">
+            <div>
+              <p data-gallery-group-label>Implementation evidence</p>
+              <h2 id="gallery-dialog-title" data-gallery-title>Student Market interface</h2>
+            </div>
+            <button type="button" data-gallery-close aria-label="Close gallery">Close</button>
+          </header>
+
+          <figure class="case-study-lightbox-figure">
+            <img data-gallery-image src="assets/student-market-browse-desktop.png" alt="Student Market marketplace" width="1440" height="1000" />
+            <figcaption data-gallery-caption></figcaption>
+          </figure>
+
+          <div class="case-study-lightbox-controls">
+            <button type="button" data-gallery-prev>Previous</button>
+            <span data-gallery-count aria-live="polite">1 of 2</span>
+            <a data-gallery-original href="assets/student-market-browse-desktop.png" target="_blank" rel="noreferrer">Open full resolution</a>
+            <button type="button" data-gallery-next>Next</button>
+          </div>
+        </div>
+      </dialog>
 
       <section class="case-study-end" aria-label="Student Market project conclusion">
         <div class="case-study-result">
@@ -289,5 +347,6 @@
       <nav class="footer-links" aria-label="Footer navigation"><a href="index.html">Portfolio</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
     </footer>
   </div>
+  <script src="assets/student-market-gallery.js" defer></script>
 </body>
 </html>
