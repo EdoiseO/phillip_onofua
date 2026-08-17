@@ -216,17 +216,25 @@
   let activeGroup = "marketplace";
   let activeIndex = 0;
   let lastTrigger = null;
+  let legacyPinchGesture = null;
+  let legacyTouchStart = null;
   let pointerStart = null;
+  let pinchGesture = null;
+  let zoomFrame = null;
   let zoomLevel = minimumZoom;
+  const activeTouchPoints = new Map();
 
-  const applyZoom = (nextZoom, { resetScroll = false } = {}) => {
+  const applyZoom = (nextZoom, { focusPoint = null, resetScroll = false } = {}) => {
+    const figureBounds = figure.getBoundingClientRect();
+    const focalX = focusPoint ? Math.min(figure.clientWidth, Math.max(0, focusPoint.x - figureBounds.left)) : figure.clientWidth / 2;
+    const focalY = focusPoint ? Math.min(figure.clientHeight, Math.max(0, focusPoint.y - figureBounds.top)) : figure.clientHeight / 2;
     const previousScrollWidth = figure.scrollWidth || figure.clientWidth;
     const previousScrollHeight = figure.scrollHeight || figure.clientHeight;
-    const horizontalCenter = previousScrollWidth > 0 ? (figure.scrollLeft + figure.clientWidth / 2) / previousScrollWidth : 0.5;
-    const verticalCenter = previousScrollHeight > 0 ? (figure.scrollTop + figure.clientHeight / 2) / previousScrollHeight : 0.5;
+    const horizontalCenter = previousScrollWidth > 0 ? (figure.scrollLeft + focalX) / previousScrollWidth : 0.5;
+    const verticalCenter = previousScrollHeight > 0 ? (figure.scrollTop + focalY) / previousScrollHeight : 0.5;
     const gallery = galleries[activeGroup];
 
-    zoomLevel = Math.min(maximumZoom, Math.max(minimumZoom, nextZoom));
+    zoomLevel = Math.round(Math.min(maximumZoom, Math.max(minimumZoom, nextZoom)) * 100) / 100;
 
     const percentage = Math.round(zoomLevel * 100);
     image.style.width = gallery.layout === "mobile" ? `min(${percentage}%, ${390 * zoomLevel}px)` : `${percentage}%`;
@@ -235,17 +243,33 @@
     zoomOutButton.disabled = zoomLevel <= minimumZoom;
     zoomInButton.disabled = zoomLevel >= maximumZoom;
 
+    if (zoomFrame !== null) {
+      cancelAnimationFrame(zoomFrame);
+      zoomFrame = null;
+    }
+
     if (resetScroll) {
       figure.scrollTop = 0;
       figure.scrollLeft = 0;
       return;
     }
 
-    requestAnimationFrame(() => {
-      figure.scrollLeft = Math.max(0, horizontalCenter * figure.scrollWidth - figure.clientWidth / 2);
-      figure.scrollTop = Math.max(0, verticalCenter * figure.scrollHeight - figure.clientHeight / 2);
+    zoomFrame = requestAnimationFrame(() => {
+      figure.scrollLeft = Math.max(0, horizontalCenter * figure.scrollWidth - focalX);
+      figure.scrollTop = Math.max(0, verticalCenter * figure.scrollHeight - focalY);
+      zoomFrame = null;
     });
   };
+
+  const adjustZoom = (direction, focusPoint = null) => {
+    const zoomUnits = zoomLevel / zoomStep;
+    const nextUnits = direction > 0 ? Math.floor(zoomUnits + 0.0001) + 1 : Math.ceil(zoomUnits - 0.0001) - 1;
+    applyZoom(nextUnits * zoomStep, { focusPoint });
+  };
+
+  const getTouchPair = () => Array.from(activeTouchPoints.values()).slice(0, 2);
+
+  const getDistance = (firstPoint, secondPoint) => Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
 
   const buildThumbnails = (gallery) => {
     thumbnails.replaceChildren();
@@ -338,8 +362,8 @@
 
   previousButton.addEventListener("click", () => move(-1));
   nextButton.addEventListener("click", () => move(1));
-  zoomOutButton.addEventListener("click", () => applyZoom(zoomLevel - zoomStep));
-  zoomInButton.addEventListener("click", () => applyZoom(zoomLevel + zoomStep));
+  zoomOutButton.addEventListener("click", () => adjustZoom(-1));
+  zoomInButton.addEventListener("click", () => adjustZoom(1));
   closeButton.addEventListener("click", () => dialog.close());
 
   dialog.addEventListener("click", (event) => {
@@ -361,12 +385,12 @@
 
     if (event.key === "+" || event.key === "=") {
       event.preventDefault();
-      applyZoom(zoomLevel + zoomStep);
+      adjustZoom(1);
     }
 
     if (event.key === "-") {
       event.preventDefault();
-      applyZoom(zoomLevel - zoomStep);
+      adjustZoom(-1);
     }
 
     if (event.key === "0") {
@@ -376,6 +400,24 @@
   });
 
   figure.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch") {
+      activeTouchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (figure.setPointerCapture) {
+        figure.setPointerCapture(event.pointerId);
+      }
+
+      if (activeTouchPoints.size === 2) {
+        const [firstPoint, secondPoint] = getTouchPair();
+        pinchGesture = {
+          distance: getDistance(firstPoint, secondPoint),
+          zoom: zoomLevel
+        };
+        pointerStart = null;
+        return;
+      }
+    }
+
     if (!event.isPrimary || zoomLevel > minimumZoom) {
       pointerStart = null;
       return;
@@ -388,7 +430,49 @@
     }
   });
 
+  figure.addEventListener("pointermove", (event) => {
+    if (event.pointerType !== "touch" || !activeTouchPoints.has(event.pointerId)) {
+      return;
+    }
+
+    activeTouchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (!pinchGesture || activeTouchPoints.size < 2 || pinchGesture.distance <= 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const [firstPoint, secondPoint] = getTouchPair();
+    const distance = getDistance(firstPoint, secondPoint);
+    const focusPoint = {
+      x: (firstPoint.x + secondPoint.x) / 2,
+      y: (firstPoint.y + secondPoint.y) / 2
+    };
+
+    applyZoom(pinchGesture.zoom * (distance / pinchGesture.distance), { focusPoint });
+  });
+
   figure.addEventListener("pointerup", (event) => {
+    const wasPinching = pinchGesture !== null;
+
+    if (event.pointerType === "touch") {
+      activeTouchPoints.delete(event.pointerId);
+
+      if (activeTouchPoints.size < 2) {
+        pinchGesture = null;
+      }
+    }
+
+    if (figure.hasPointerCapture?.(event.pointerId)) {
+      figure.releasePointerCapture(event.pointerId);
+    }
+
+    if (wasPinching) {
+      pointerStart = null;
+      return;
+    }
+
     if (!pointerStart || pointerStart.id !== event.pointerId) {
       return;
     }
@@ -397,16 +481,100 @@
     const distanceY = event.clientY - pointerStart.y;
     pointerStart = null;
 
-    if (figure.hasPointerCapture?.(event.pointerId)) {
-      figure.releasePointerCapture(event.pointerId);
-    }
-
     if (Math.abs(distanceX) >= 45 && Math.abs(distanceX) > Math.abs(distanceY) * 1.25) {
       move(distanceX < 0 ? 1 : -1);
     }
   });
 
+  figure.addEventListener("wheel", (event) => {
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+
+    event.preventDefault();
+    adjustZoom(event.deltaY < 0 ? 1 : -1, { x: event.clientX, y: event.clientY });
+  }, { passive: false });
+
+  if (!("PointerEvent" in window)) {
+    figure.addEventListener("touchstart", (event) => {
+      if (event.touches.length === 1 && zoomLevel <= minimumZoom) {
+        const [touch] = event.touches;
+        legacyTouchStart = { x: touch.clientX, y: touch.clientY };
+        return;
+      }
+
+      if (event.touches.length === 2) {
+        const [firstTouch, secondTouch] = event.touches;
+        const firstPoint = { x: firstTouch.clientX, y: firstTouch.clientY };
+        const secondPoint = { x: secondTouch.clientX, y: secondTouch.clientY };
+
+        legacyTouchStart = null;
+        legacyPinchGesture = {
+          distance: getDistance(firstPoint, secondPoint),
+          zoom: zoomLevel
+        };
+      }
+    });
+
+    figure.addEventListener("touchmove", (event) => {
+      if (!legacyPinchGesture || event.touches.length !== 2 || legacyPinchGesture.distance <= 0) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const [firstTouch, secondTouch] = event.touches;
+      const firstPoint = { x: firstTouch.clientX, y: firstTouch.clientY };
+      const secondPoint = { x: secondTouch.clientX, y: secondTouch.clientY };
+      const distance = getDistance(firstPoint, secondPoint);
+      const focusPoint = {
+        x: (firstPoint.x + secondPoint.x) / 2,
+        y: (firstPoint.y + secondPoint.y) / 2
+      };
+
+      applyZoom(legacyPinchGesture.zoom * (distance / legacyPinchGesture.distance), { focusPoint });
+    }, { passive: false });
+
+    figure.addEventListener("touchend", (event) => {
+      const wasPinching = legacyPinchGesture !== null;
+
+      if (event.touches.length < 2) {
+        legacyPinchGesture = null;
+      }
+
+      if (wasPinching) {
+        legacyTouchStart = null;
+        return;
+      }
+
+      if (!legacyTouchStart || zoomLevel > minimumZoom || event.changedTouches.length === 0) {
+        legacyTouchStart = null;
+        return;
+      }
+
+      const [touch] = event.changedTouches;
+      const distanceX = touch.clientX - legacyTouchStart.x;
+      const distanceY = touch.clientY - legacyTouchStart.y;
+      legacyTouchStart = null;
+
+      if (Math.abs(distanceX) >= 45 && Math.abs(distanceX) > Math.abs(distanceY) * 1.25) {
+        move(distanceX < 0 ? 1 : -1);
+      }
+    });
+
+    figure.addEventListener("touchcancel", () => {
+      legacyPinchGesture = null;
+      legacyTouchStart = null;
+    });
+  }
+
   figure.addEventListener("pointercancel", (event) => {
+    activeTouchPoints.delete(event.pointerId);
+
+    if (activeTouchPoints.size < 2) {
+      pinchGesture = null;
+    }
+
     if (figure.hasPointerCapture?.(event.pointerId)) {
       figure.releasePointerCapture(event.pointerId);
     }
@@ -416,6 +584,16 @@
 
   dialog.addEventListener("close", () => {
     document.body.classList.remove("case-study-gallery-open");
+    activeTouchPoints.clear();
+    legacyPinchGesture = null;
+    legacyTouchStart = null;
+    pinchGesture = null;
+    pointerStart = null;
+
+    if (zoomFrame !== null) {
+      cancelAnimationFrame(zoomFrame);
+      zoomFrame = null;
+    }
 
     if (lastTrigger) {
       lastTrigger.focus();
