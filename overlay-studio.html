@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>How Overlay Studio Works | Phillip Onofua</title>
+  <meta name="description" content="An inside look at Overlay Studio, a Windows application for managing, customizing, and launching animated OBS overlays." />
+  <link rel="canonical" href="https://philliponofua.vercel.app/overlay-studio.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="How Overlay Studio Works" />
+  <meta property="og:description" content="How Overlay Studio connects a desktop overlay library, live customization, Windows media, and OBS browser sources." />
+  <meta property="og:image" content="https://philliponofua.vercel.app/assets/overlay-studio-customizer.png" />
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
+  <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
+  <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/overrides.css" />
+</head>
+<body class="case-study-page">
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="Phillip Onofua portfolio home">
+          <img src="assets/profile-photo.jpg" width="44" height="44" alt="Phillip Onofua" />
+          <span><strong>Phillip Onofua</strong><small>Full-Stack Developer</small></span>
+        </a>
+        <a class="case-study-header-link" href="index.html#projects">Back to projects</a>
+      </div>
+    </header>
+
+    <main class="case-study-main">
+      <section class="case-study-hero" aria-labelledby="case-study-title">
+        <p class="eyebrow">Inside the project · Windows desktop application</p>
+        <h1 id="case-study-title">Overlay Studio</h1>
+        <p class="case-study-lead">A production application that gives streamers one place to manage overlay instances, customize their appearance, preview live data, and prepare browser-source URLs for OBS.</p>
+
+        <dl class="case-study-meta">
+          <div><dt>Role</dt><dd>Product designer and developer</dd></div>
+          <div><dt>Core stack</dt><dd>Python, JavaScript, aiohttp, WebSockets, WebView2, OBS Studio</dd></div>
+          <div><dt>Status</dt><dd>Working production application in active development</dd></div>
+        </dl>
+      </section>
+
+      <div class="case-study-sections">
+        <section class="case-study-row" aria-labelledby="overlay-customizer">
+          <figure class="case-study-media">
+            <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio Platform Badge customizer with a live draft preview and identity controls" width="1280" height="720" />
+            <figcaption>Appearance and content controls update a live draft before the overlay is opened in OBS.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">01 · Customization</p>
+            <h2 id="overlay-customizer">See changes before they reach the stream</h2>
+            <p>Each overlay type has a focused customizer with a live draft. Streamers can adjust content, colors, sizing, and behavior without repeatedly switching between the application and OBS.</p>
+            <p>Saved settings belong to an overlay instance, allowing several versions of the same overlay type to coexist with different identities or visual treatments.</p>
+          </div>
+        </section>
+
+        <section class="case-study-row case-study-row--reverse" aria-labelledby="overlay-library">
+          <figure class="case-study-media">
+            <img src="assets/overlay-studio-library.png" alt="Overlay Studio library with installed social, goal, and now-playing overlay instances" width="1280" height="720" loading="lazy" />
+            <figcaption>The library shows installed instances, status, intended canvas size, and the next useful action.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">02 · Library</p>
+            <h2 id="overlay-library">Manage overlays as reusable instances</h2>
+            <p>The library turns a collection of separate browser sources into a manageable desktop product. A user can create an instance, return to its settings, preview it, and copy the correct URL for OBS.</p>
+            <p>This model also provides a consistent foundation for adding new overlay categories without rebuilding the surrounding workflow.</p>
+          </div>
+        </section>
+
+        <section class="case-study-row" aria-labelledby="overlay-media">
+          <figure class="case-study-media case-study-media--pair case-study-media--equal">
+            <img src="assets/overlay-studio-spotify-customizer.png" alt="Overlay Studio Spotify customizer with current media data and color settings" width="1280" height="720" loading="lazy" />
+            <img src="assets/overlay-studio-spotify-preview.png" alt="Overlay Studio now-playing browser-source preview" width="1280" height="720" loading="lazy" />
+            <figcaption>The application translates the current Windows media session into a configurable now-playing overlay.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">03 · Windows media</p>
+            <h2 id="overlay-media">Turn live media data into an OBS overlay</h2>
+            <p>The now-playing experience reads current Windows media information, presents it inside the customizer, and publishes it to a browser source.</p>
+            <p>Artwork-derived colors and fallback controls keep the overlay useful when source data changes or is incomplete.</p>
+          </div>
+        </section>
+
+        <section class="case-study-row case-study-row--reverse" aria-labelledby="overlay-social">
+          <figure class="case-study-media case-study-media--pair case-study-media--equal">
+            <img src="assets/overlay-studio-social-grouped-customizer.png" alt="Overlay Studio Social Grouped customizer with platforms, handles, and live draft" width="1280" height="720" loading="lazy" />
+            <img src="assets/overlay-studio-social-grouped-preview.png" alt="Overlay Studio grouped social identity browser-source preview" width="1280" height="720" loading="lazy" />
+            <figcaption>Multiple platform identities become one reusable, compact browser source.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">04 · Social identity</p>
+            <h2 id="overlay-social">Group related accounts without editing a scene</h2>
+            <p>The grouped social overlay lets a streamer assemble several platform identities, share handles where appropriate, and control how they appear as one unit.</p>
+            <p>The same draft-to-preview workflow keeps this more complex content model consistent with simpler overlay types.</p>
+          </div>
+        </section>
+
+        <section class="case-study-row" aria-labelledby="overlay-demo">
+          <figure class="case-study-media">
+            <video controls muted playsinline preload="metadata" aria-label="Overlay Studio animated overlay demonstration">
+              <source src="assets/overlay-studio-demo.webm" type="video/webm" />
+              Your browser does not support this video.
+            </video>
+            <figcaption>A recorded demonstration of the animated overlay running in context.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">05 · Live output</p>
+            <h2 id="overlay-demo">Keep the preview and browser source in sync</h2>
+            <p>WebSockets carry live state from the desktop application to the browser-source view. That keeps changes and external media updates visible without recreating the OBS scene.</p>
+            <p>The main technical challenge is coordinating desktop integrations, persistent settings, a local web server, and live browser output as one reliable experience.</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="case-study-end" aria-label="Overlay Studio project conclusion">
+        <div class="case-study-result">
+          <h2>What this project demonstrates</h2>
+          <p>Overlay Studio shows how I approach a desktop product with several technical boundaries: native Windows data, a local Python service, a WebView interface, persistent configuration, and real-time OBS browser sources.</p>
+        </div>
+        <p>Continue exploring</p>
+        <nav aria-label="Project navigation">
+          <a href="student-market.html">Explore how Student Market works</a>
+          <a href="receipt-splitter.html">Explore how Receipt Splitter will work</a>
+          <a href="index.html#projects">All featured projects</a>
+        </nav>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 Phillip Onofua</p>
+      <nav class="footer-links" aria-label="Footer navigation"><a href="index.html">Portfolio</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
+    </footer>
+  </div>
+</body>
+</html>

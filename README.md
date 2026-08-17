@@ -14,10 +14,12 @@ This repository contains the source for my portfolio website. It is delivered as
 
 - Responsive layouts designed for desktop and mobile
 - Animated hero headline with reduced-motion support and screen-reader-friendly text
-- Staggered project reveals and directional product-gallery transitions
-- Project case studies with live links, source code, responsive screenshots, or demos where available
+- Staggered project reveals with restrained interaction motion
+- Dedicated project case studies with alternating screenshot-and-explanation layouts
+- Inline responsive screenshots and recorded product demos without carousel navigation
 - Expandable project details with smooth opening and closing transitions on mobile
-- Sticky navigation and light/dark theme selection with saved preferences
+- Sticky navigation and a consistent dark-only visual presentation
+- Dedicated privacy and terms pages
 - Downloadable résumé and direct contact links
 - Semantic HTML and keyboard-accessible interactions
 - Canonical and social-sharing metadata for consistent link previews
@@ -27,24 +29,29 @@ This repository contains the source for my portfolio website. It is delivered as
 
 ### Student Market of Toronto
 
-A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. Its portfolio gallery demonstrates the responsive marketplace, listing details, buyer–seller messaging, profile management, and protected moderation and report-review workflows. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
+A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. Its case study documents the responsive marketplace, listing details, buyer–seller messaging, profile management, and protected moderation and report-review workflows. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
 
 **Role:** Team lead and full-stack developer
 
 - [Open the live project](https://student-market-of-toronto.vercel.app)
 - [View the source code](https://github.com/EdoiseO/student-market-of-toronto)
+- [Read the portfolio case study](student-market.html)
 
 ### Overlay Studio
 
-A production Windows desktop application for previewing, customizing, and launching animated OBS overlays. The portfolio includes current interface screenshots and a recorded live demo. Its source code is private, and the application is actively maintained as the interface and overlay library continue to evolve.
+A production Windows desktop application for previewing, customizing, and launching animated OBS overlays. Its case study includes current interface screenshots and a recorded live demo. The source code is private, and the application is actively maintained as the interface and overlay library continue to evolve.
 
 **Status:** Production application; active development
+
+- [Read the portfolio case study](overlay-studio.html)
 
 ### Receipt Splitter
 
 A planned mobile app for assigning shared receipt items, tax, and tip to individual people. This project is currently a work in progress.
 
 **Status:** Work in progress
+
+- [Read the product plan](receipt-splitter.html)
 
 ## Built with
 
@@ -74,13 +81,18 @@ Then open [http://localhost:8000](http://localhost:8000).
 .
 ├── _next/static/media/                # Font assets used by the compiled base styles
 ├── index.html                         # Page content and interactions
+├── student-market.html                # Student Market case study
+├── overlay-studio.html                # Overlay Studio case study
+├── receipt-splitter.html              # Work-in-progress product plan
+├── privacy.html                       # Privacy policy
+├── terms.html                         # Terms of use
 ├── assets/
 │   ├── styles.css                     # Base styles
 │   ├── overrides.css                  # Responsive layout and visual refinements
 │   ├── profile-photo.jpg              # Portfolio profile image
 │   ├── portfolio-preview.png          # README portfolio preview
 │   ├── student-market-*.png            # Student Market desktop and mobile screenshots
-│   ├── overlay-studio-*.png            # Overlay Studio product-gallery screenshots
+│   ├── overlay-studio-*.png            # Overlay Studio case-study screenshots
 │   ├── overlay-studio-demo.webm        # Overlay Studio live product demo
 │   ├── tech-logos/                     # Self-hosted technology brand marks
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
