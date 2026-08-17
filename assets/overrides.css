@@ -1898,12 +1898,18 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 }
 
 .case-study-feature-copy ul {
-  margin: 1.1rem 0 0;
-  padding-left: 1.15rem;
+  margin: 1.25rem 0 0;
+  padding-left: 0;
+  border-top: 1px solid var(--border);
+}
+
+.case-study-feature-copy li {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .case-study-feature-copy li + li {
-  margin-top: 0.55rem;
+  margin-top: 0;
 }
 
 .case-study-engineering-grid {
