@@ -304,6 +304,7 @@
             <div>
               <p data-gallery-group-label>Implementation evidence</p>
               <h2 id="gallery-dialog-title" data-gallery-title>Student Market interface</h2>
+              <output data-gallery-count aria-live="polite">1 / 2</output>
             </div>
             <button type="button" data-gallery-close aria-label="Close gallery">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -312,17 +313,27 @@
             </button>
           </header>
 
-          <figure class="case-study-lightbox-figure">
-            <img data-gallery-image src="assets/student-market-browse-desktop.png" alt="Student Market marketplace" width="1440" height="1000" />
-            <figcaption data-gallery-caption></figcaption>
-          </figure>
+          <div class="case-study-lightbox-stage">
+            <figure class="case-study-lightbox-figure">
+              <img data-gallery-image src="assets/student-market-browse-desktop.png" alt="Student Market marketplace" width="1440" height="1000" />
+              <figcaption data-gallery-caption></figcaption>
+            </figure>
 
-          <div class="case-study-lightbox-controls">
-            <div class="case-study-lightbox-slider-meta">
-              <output for="gallery-image-slider" data-gallery-count aria-live="polite">1 / 2</output>
-              <a data-gallery-original href="assets/student-market-browse-desktop.png" target="_blank" rel="noreferrer">Open full resolution</a>
-            </div>
-            <input id="gallery-image-slider" type="range" min="1" max="2" step="1" value="1" data-gallery-slider aria-label="Choose gallery image" />
+            <button class="case-study-lightbox-arrow case-study-lightbox-arrow--previous" type="button" data-gallery-prev aria-label="Show previous image">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7"></path>
+              </svg>
+            </button>
+            <button class="case-study-lightbox-arrow case-study-lightbox-arrow--next" type="button" data-gallery-next aria-label="Show next image">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="case-study-lightbox-footer">
+            <div class="case-study-lightbox-thumbnails" data-gallery-thumbnails role="group" aria-label="Choose gallery image"></div>
+            <a data-gallery-original href="assets/student-market-browse-desktop.png" target="_blank" rel="noreferrer">Open full resolution</a>
           </div>
         </div>
       </dialog>
