@@ -196,7 +196,6 @@
   const figure = dialog.querySelector(".case-study-lightbox-figure");
   const groupLabel = dialog.querySelector("[data-gallery-group-label]");
   const title = dialog.querySelector("[data-gallery-title]");
-  const caption = dialog.querySelector("[data-gallery-caption]");
   const original = dialog.querySelector("[data-gallery-original]");
   const closeButton = dialog.querySelector("[data-gallery-close]");
   const previousButton = dialog.querySelector("[data-gallery-prev]");
@@ -206,7 +205,7 @@
   const zoomInButton = dialog.querySelector("[data-gallery-zoom-in]");
   const zoomLevelOutput = dialog.querySelector("[data-gallery-zoom-level]");
 
-  if (!image || !figure || !groupLabel || !title || !caption || !original || !closeButton || !previousButton || !nextButton || !thumbnails || !zoomOutButton || !zoomInButton || !zoomLevelOutput) {
+  if (!image || !figure || !groupLabel || !title || !original || !closeButton || !previousButton || !nextButton || !thumbnails || !zoomOutButton || !zoomInButton || !zoomLevelOutput) {
     return;
   }
 
@@ -311,7 +310,6 @@
     image.alt = item.alt;
     image.width = item.width;
     image.height = item.height;
-    caption.textContent = item.caption;
     original.href = item.src;
     previousButton.setAttribute("aria-label", `Show previous image in ${gallery.label}`);
     nextButton.setAttribute("aria-label", `Show next image in ${gallery.label}`);
