@@ -192,10 +192,9 @@
   const count = dialog.querySelector("[data-gallery-count]");
   const original = dialog.querySelector("[data-gallery-original]");
   const closeButton = dialog.querySelector("[data-gallery-close]");
-  const previousButton = dialog.querySelector("[data-gallery-prev]");
-  const nextButton = dialog.querySelector("[data-gallery-next]");
+  const slider = dialog.querySelector("[data-gallery-slider]");
 
-  if (!image || !figure || !groupLabel || !title || !caption || !count || !original || !closeButton || !previousButton || !nextButton) {
+  if (!image || !figure || !groupLabel || !title || !caption || !count || !original || !closeButton || !slider) {
     return;
   }
 
@@ -216,11 +215,15 @@
     image.width = item.width;
     image.height = item.height;
     caption.textContent = item.caption;
-    count.textContent = `${activeIndex + 1} of ${gallery.images.length}`;
+    count.textContent = `${activeIndex + 1} / ${gallery.images.length}`;
     original.href = item.src;
-    previousButton.setAttribute("aria-label", `View previous image in ${gallery.label}`);
-    nextButton.setAttribute("aria-label", `View next image in ${gallery.label}`);
-    figure.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    slider.min = "1";
+    slider.max = String(gallery.images.length);
+    slider.value = String(activeIndex + 1);
+    slider.setAttribute("aria-valuetext", `${item.title}, image ${activeIndex + 1} of ${gallery.images.length}`);
+    slider.style.setProperty("--gallery-progress", gallery.images.length === 1 ? "100%" : `${(activeIndex / (gallery.images.length - 1)) * 100}%`);
+    figure.scrollTop = 0;
+    figure.scrollLeft = 0;
   };
 
   const move = (direction) => {
@@ -253,8 +256,11 @@
     trigger.addEventListener("click", () => openGallery(trigger.dataset.galleryGroup, trigger));
   });
 
-  previousButton.addEventListener("click", () => move(-1));
-  nextButton.addEventListener("click", () => move(1));
+  slider.addEventListener("input", () => {
+    activeIndex = Number(slider.value) - 1;
+    render();
+  });
+
   closeButton.addEventListener("click", () => dialog.close());
 
   dialog.addEventListener("click", (event) => {
@@ -264,6 +270,10 @@
   });
 
   dialog.addEventListener("keydown", (event) => {
+    if (event.target === slider) {
+      return;
+    }
+
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       move(-1);
@@ -276,11 +286,19 @@
   });
 
   figure.addEventListener("pointerdown", (event) => {
-    pointerStart = { x: event.clientX, y: event.clientY };
+    if (!event.isPrimary) {
+      return;
+    }
+
+    pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
+
+    if (figure.setPointerCapture) {
+      figure.setPointerCapture(event.pointerId);
+    }
   });
 
   figure.addEventListener("pointerup", (event) => {
-    if (!pointerStart) {
+    if (!pointerStart || pointerStart.id !== event.pointerId) {
       return;
     }
 
@@ -288,12 +306,20 @@
     const distanceY = event.clientY - pointerStart.y;
     pointerStart = null;
 
-    if (Math.abs(distanceX) >= 50 && Math.abs(distanceY) < 80) {
+    if (figure.hasPointerCapture?.(event.pointerId)) {
+      figure.releasePointerCapture(event.pointerId);
+    }
+
+    if (Math.abs(distanceX) >= 45 && Math.abs(distanceX) > Math.abs(distanceY) * 1.25) {
       move(distanceX < 0 ? 1 : -1);
     }
   });
 
-  figure.addEventListener("pointercancel", () => {
+  figure.addEventListener("pointercancel", (event) => {
+    if (figure.hasPointerCapture?.(event.pointerId)) {
+      figure.releasePointerCapture(event.pointerId);
+    }
+
     pointerStart = null;
   });
 
