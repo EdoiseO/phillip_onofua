@@ -1,57 +1,61 @@
-# Phillip Onofua — Developer Portfolio
+# Phillip Onofua | Full-Stack Developer Portfolio
 
-A responsive personal portfolio showcasing my production web and Windows desktop development work, technical skills, education, and contact information.
+A responsive portfolio presenting my full-stack web, Windows desktop, and product-development work.
 
-[View the live portfolio](https://philliponofua.vercel.app)
+[View the live portfolio](https://philliponofua.vercel.app) · [Download my résumé](https://philliponofua.vercel.app/assets/phillip-onofua-resume.pdf)
 
-![Phillip Onofua portfolio homepage](assets/portfolio-preview.png)
+![Phillip Onofua’s dark developer portfolio, showing the animated hero and featured work](assets/portfolio-preview.png)
 
 ## Overview
 
-This repository contains the source for my portfolio website. It is delivered as a static HTML, CSS, and JavaScript site built to present selected work clearly, load quickly, and remain usable across desktop and mobile devices.
+This repository contains the source for my personal portfolio. The site introduces selected work through an editorial homepage and links each project to a dedicated case study with implementation details, real interface captures, and clear status information.
 
-## Technical highlights
+The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
-- Responsive layouts designed for desktop and mobile
-- Animated hero headline with reduced-motion support and screen-reader-friendly text
-- Staggered project reveals with restrained interaction motion
-- Dedicated project case studies with alternating screenshot-and-explanation layouts
-- Inline responsive screenshots and recorded product demos without carousel navigation
-- Expandable project details with smooth opening and closing transitions on mobile
-- Sticky navigation and a consistent dark-only visual presentation
-- Dedicated privacy and terms pages
-- Downloadable résumé and direct contact links
-- Semantic HTML and keyboard-accessible interactions
-- Canonical and social-sharing metadata for consistent link previews
-- Self-hosted technology logos with theme-aware presentation
-
-## Featured projects
+## Featured work
 
 ### Student Market of Toronto
 
-A student-focused marketplace for discovering, listing, saving, and discussing items across Toronto campuses. Its case study documents the responsive marketplace, listing details, buyer–seller messaging, profile management, and protected moderation and report-review workflows. The project uses Next.js, React, Supabase, PostgreSQL, and Tailwind CSS.
+An end-to-end student marketplace connecting catalogue discovery, listing management, messaging, profiles, media storage, and protected moderation workflows.
 
-**Role:** Team lead and full-stack developer
+The engineering case study explains how the product handles request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, data integrity, role capabilities, and auditable report review. It also includes grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model.
 
+- **Role:** Team lead and full-stack developer
+- **Stack:** Next.js, React, Supabase, PostgreSQL, Tailwind CSS, and Vercel
 - [Open the live project](https://student-market-of-toronto.vercel.app)
 - [View the source code](https://github.com/EdoiseO/student-market-of-toronto)
-- [Read the portfolio case study](student-market.html)
+- [Read the engineering case study](https://philliponofua.vercel.app/student-market.html)
 
 ### Overlay Studio
 
-A production Windows desktop application for previewing, customizing, and launching animated OBS overlays. Its case study includes current interface screenshots and a recorded live demo. The source code is private, and the application is actively maintained as the interface and overlay library continue to evolve.
+A Windows desktop application for managing reusable overlay instances, customizing their appearance, previewing live data, and preparing browser-source URLs for OBS.
 
-**Status:** Production application; active development
+The case study shows the instance library, live customizers, Windows media integration, grouped social overlays, persistent settings, and a recorded product demonstration.
 
-- [Read the portfolio case study](overlay-studio.html)
+- **Role:** Product designer and developer
+- **Stack:** Python, JavaScript, aiohttp, WebSockets, WebView2, and OBS Studio
+- **Status:** Working production application in active development
+- [Explore how Overlay Studio works](https://philliponofua.vercel.app/overlay-studio.html)
 
 ### Receipt Splitter
 
-A planned mobile app for assigning shared receipt items, tax, and tip to individual people. This project is currently a work in progress.
+A work-in-progress mobile product concept for assigning shared receipt items, tax, and tip and producing clear totals for each person.
 
-**Status:** Work in progress
+The project page separates the concept from finished work and documents the problem, proposed verification flow, open technical decisions, and next development milestones.
 
-- [Read the product plan](receipt-splitter.html)
+- **Status:** Concept and workflow definition
+- [Review the Receipt Splitter plan](https://philliponofua.vercel.app/receipt-splitter.html)
+
+## Portfolio features
+
+- Dark-only, responsive editorial layout with sticky navigation
+- Animated hero phrase with a static screen-reader label and reduced-motion support
+- Alternating featured-project layouts using real product captures
+- Dedicated case-study pages with project-specific metadata and social previews
+- Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
+- Overlay Studio screenshots and an embedded product demo
+- Semantic HTML, visible keyboard focus, descriptive alternative text, and accessible controls
+- Downloadable résumé, direct contact links, privacy policy, and terms of use
 
 ## Built with
 
@@ -59,13 +63,13 @@ A planned mobile app for assigning shared receipt items, tax, and tip to individ
 - CSS3
 - Vanilla JavaScript
 - Web Animations API
+- Intersection Observer API
+- HTML Dialog API
 - Vercel
 
-The portfolio has no runtime dependencies or build step; all required static assets are committed with the site.
+There is no package installation or build step. All required fonts, images, logos, scripts, and media are committed with the site.
 
 ## Run locally
-
-Clone the repository and start a local static server:
 
 ```bash
 git clone https://github.com/EdoiseO/phillip_onofua.git
@@ -73,39 +77,38 @@ cd phillip_onofua
 python3 -m http.server 8000
 ```
 
-Then open [http://localhost:8000](http://localhost:8000).
+Open [http://localhost:8000](http://localhost:8000).
 
 ## Repository structure
 
 ```text
 .
-├── _next/static/media/                # Font assets used by the compiled base styles
-├── index.html                         # Page content and interactions
-├── student-market.html                # Student Market case study
-├── overlay-studio.html                # Overlay Studio case study
+├── index.html                         # Portfolio homepage
+├── student-market.html                # Student Market engineering case study
+├── overlay-studio.html                # Overlay Studio product case study
 ├── receipt-splitter.html              # Work-in-progress product plan
 ├── privacy.html                       # Privacy policy
 ├── terms.html                         # Terms of use
 ├── assets/
-│   ├── styles.css                     # Base styles
-│   ├── overrides.css                  # Responsive layout and visual refinements
-│   ├── profile-photo.jpg              # Portfolio profile image
-│   ├── portfolio-preview.png          # README portfolio preview
-│   ├── student-market-*.png            # Student Market desktop and mobile screenshots
-│   ├── overlay-studio-*.png            # Overlay Studio case-study screenshots
-│   ├── overlay-studio-demo.webm        # Overlay Studio live product demo
-│   ├── tech-logos/                     # Self-hosted technology brand marks
+│   ├── styles.css                     # Base presentation styles
+│   ├── overrides.css                  # Current layout, responsive, and case-study styles
+│   ├── student-market-gallery.js      # Student Market gallery and zoom interactions
+│   ├── student-market-*.{png,jpg}     # Desktop, mobile, admin, and data-model captures
+│   ├── overlay-studio-*.png           # Overlay Studio interface captures
+│   ├── overlay-studio-demo.webm       # Recorded Overlay Studio demonstration
+│   ├── tech-logos/                    # Self-hosted technology brand marks
+│   ├── portfolio-preview.png          # README and social preview image
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
 └── README.md
 ```
 
 ## Deployment
 
-The production site is deployed on Vercel from the `main` branch.
+Vercel deploys the production site from the `main` branch.
 
 Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simple Icons](https://simpleicons.org). All trademarks belong to their respective owners.
 
 ## Contact
 
 - [GitHub](https://github.com/EdoiseO)
-- [Email Phillip](mailto:philliponofua@gmail.com)
+- [Email](mailto:philliponofua@gmail.com)
