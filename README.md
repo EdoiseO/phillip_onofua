@@ -106,7 +106,7 @@ Open [http://localhost:8000](http://localhost:8000).
 
 Vercel deploys the production site from the `main` branch.
 
-Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simple Icons](https://simpleicons.org). All trademarks belong to their respective owners.
+Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simple Icons](https://simpleicons.org). The résumé document symbol is from [Bootstrap Icons](https://icons.getbootstrap.com/icons/file-earmark-text/). All trademarks belong to their respective owners.
 
 ## Contact
 
