@@ -352,6 +352,7 @@ article[id],
 }
 
 .button-icon--github,
+.button-icon--external,
 .button-icon--resume {
   fill: currentColor;
 }
@@ -2361,6 +2362,10 @@ body.case-study-gallery-open {
   .project-case-study-link {
     margin-top: 0.8rem;
     padding: 0.25rem 0 0;
+  }
+
+  .case-study-actions {
+    gap: 1rem;
   }
 
   .case-study-page .header-inner {
