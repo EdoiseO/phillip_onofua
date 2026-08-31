@@ -1570,13 +1570,18 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-actions .button {
   min-height: auto;
-  padding: 0.35rem 0;
+  padding: 0.35rem 0.25rem 0.35rem 0;
   border: 0;
   border-bottom: 1px solid var(--border-strong);
   border-radius: 0;
   background: transparent;
   color: var(--text-soft);
   transition: color 160ms ease, border-color 160ms ease;
+}
+
+.case-study-actions .button-icon--github {
+  width: 0.82em;
+  height: 0.82em;
 }
 
 .case-study-actions .button--primary {
