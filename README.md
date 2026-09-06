@@ -12,6 +12,12 @@ This repository contains the source for my personal portfolio. The site introduc
 
 The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
+## Current work
+
+**6 September 2026:** the refreshed Student Market case study is prepared on `agent/student-market-case-study-refresh` in [draft PR #3](https://github.com/EdoiseO/phillip_onofua/pull/3). [View the hosted review preview](https://philliponofua-1tjv54dla-edoise-o.vercel.app/student-market.html). The live portfolio still shows the previous version.
+
+The case study separates fresh captures of the live guest catalogue from the implemented moderation preview with demonstration data. Student Market's application rollout is a separate release and remains pending hosted verification. See the [refresh notes](docs/student-market-refresh.md) for screenshot sources, validation evidence, and publication status.
+
 ## Featured work
 
 ### Student Market of Toronto
@@ -52,7 +58,8 @@ The project page separates the concept from finished work and documents the prob
 - Animated hero phrase with a static screen-reader label and reduced-motion support
 - Alternating featured-project layouts using real product captures
 - Dedicated case-study pages with project-specific metadata and social previews
-- Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
+- Student Market product walkthrough, visible mobile moderation captures, and expandable engineering decisions
+- Workflow galleries with thumbnails, image zoom, keyboard navigation, focus restoration, and direct-image fallbacks when JavaScript is unavailable
 - Overlay Studio screenshots and an embedded product demo
 - Semantic HTML, visible keyboard focus, descriptive alternative text, and accessible controls
 - Downloadable résumé, direct contact links, privacy policy, and terms of use
@@ -74,10 +81,12 @@ There is no package installation or build step. All required fonts, images, logo
 ```bash
 git clone https://github.com/EdoiseO/phillip_onofua.git
 cd phillip_onofua
-python3 -m http.server 8000
+python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 Open [http://localhost:8000](http://localhost:8000).
+
+The clone starts on `main`. To review the September refresh locally, check out `agent/student-market-case-study-refresh` and open [the Student Market page](http://localhost:8000/student-market.html). Python 3 is only used for this local server; the deployed site has no Python runtime or build step.
 
 ## Repository structure
 
@@ -92,19 +101,48 @@ Open [http://localhost:8000](http://localhost:8000).
 ├── assets/
 │   ├── styles.css                     # Base presentation styles
 │   ├── overrides.css                  # Current layout, responsive, and case-study styles
+│   ├── student-market-case-study.css  # Styles scoped to the Student Market page
 │   ├── student-market-gallery.js      # Student Market gallery and zoom interactions
-│   ├── student-market-*.{png,jpg}     # Desktop, mobile, admin, and data-model captures
+│   ├── student-market-*-sep2026.png    # Four fresh catalogue and moderation captures
+│   ├── student-market-*.{png,jpg}      # Earlier workflow and data-model captures
 │   ├── overlay-studio-*.png           # Overlay Studio interface captures
 │   ├── overlay-studio-demo.webm       # Recorded Overlay Studio demonstration
 │   ├── tech-logos/                    # Self-hosted technology brand marks
 │   ├── portfolio-preview.png          # README and social preview image
-│   └── phillip-onofua-resume.pdf      # Downloadable résumé
+│   └── phillip-onofua-resume.pdf       # Downloadable résumé
+├── docs/
+│   └── student-market-refresh.md      # Capture provenance, checks, and release notes
 └── README.md
 ```
 
+## Updating the case studies
+
+Edit each project's HTML page for its story, metadata, links, and captions. Shared presentation lives in `assets/styles.css` and `assets/overrides.css`; Student Market's new layout uses its own stylesheet so page-specific changes stay contained.
+
+For Student Market screenshots:
+
+1. Capture the actual interface and identify whether it comes from production, a preview, or a fixture. Use demonstration data for private workflows and record the source in `docs/student-market-refresh.md`.
+2. Save the image under `assets/` with an informative name and the correct file extension. Update its alternative text, caption, and intrinsic dimensions in `student-market.html`.
+3. Add or update the matching group in `assets/student-market-gallery.js`. Gallery links use `data-gallery-group` and an optional zero-based `data-gallery-index`; their `href` must point directly to the same image so the fallback works.
+4. Update dated evidence and release labels only when the corresponding checks or deployment are verified. Update the page's metadata and social preview when the featured content changes.
+
+## Validation
+
+There is no committed automated test runner. Before publishing, serve the site locally and check:
+
+- Layouts at 320, 390, 768, 1024, and 1440 CSS pixels for clipped text and horizontal overflow.
+- Gallery image selection, arrow navigation, zoom, Escape, and focus returning to the opener.
+- Engineering disclosures, mobile navigation, keyboard focus, and reduced-motion behavior.
+- Direct screenshot links with JavaScript disabled, résumé downloads, and project links.
+- Browser console errors, failed image requests, and page titles/social metadata.
+
+The September refresh passed its recorded responsive, gallery, fallback, and browser-error checks. The [refresh notes](docs/student-market-refresh.md) state the tested scope; this does not claim a full device or assistive-technology audit. Student Market's application security tests run in its own repository, not this static portfolio.
+
 ## Deployment
 
-Vercel deploys the production site from the `main` branch.
+Vercel deploys the production site from the `main` branch. Use a feature branch and its Vercel preview to review changes before merging. There are no package-install or build commands to configure for this static site.
+
+After publishing, verify the canonical page, images, galleries, and links, then update any draft/release wording that is no longer accurate. Publishing this repository does not deploy the Student Market application or its database migrations.
 
 Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simple Icons](https://simpleicons.org). The document and external-link symbols are from [Bootstrap Icons](https://icons.getbootstrap.com). All trademarks belong to their respective owners.
 
