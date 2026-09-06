@@ -1,48 +1,5 @@
 (() => {
   const galleries = {
-    catalogue: {
-      label: "Live marketplace demo · captured September 2026",
-      images: [
-        {
-          src: "assets/student-market-catalogue-sep2026.png",
-          width: 1440,
-          height: 1000,
-          title: "Explore the student marketplace",
-          alt: "Public Student Market catalogue with campus listings, category navigation and guest access",
-          caption: "Captured from the live public marketplace in a fresh guest browser session."
-        }
-      ]
-    },
-    september: {
-      label: "September 2026 release preview · demonstration data",
-      layout: "mobile",
-      images: [
-        {
-          src: "assets/student-market-queue-mobile-sep2026.png",
-          width: 390,
-          height: 844,
-          title: "Compact mobile review queue",
-          alt: "September release preview: compact search and status tabs above the listing review queue",
-          caption: "Implemented components with demonstration data; production rollout is pending."
-        },
-        {
-          src: "assets/student-market-review-mobile-sep2026.png",
-          width: 390,
-          height: 844,
-          title: "Focused listing review",
-          alt: "September release preview: listing details, clickable photo and collapsible context",
-          caption: "Implemented components with demonstration data; production rollout is pending."
-        },
-        {
-          src: "assets/student-market-photo-mobile-sep2026.png",
-          width: 390,
-          height: 844,
-          title: "Shared listing photo viewer",
-          alt: "September release preview: full listing photo with zoom and close controls",
-          caption: "Implemented components with demonstration data; production rollout is pending."
-        }
-      ]
-    },
     marketplace: {
       label: "Marketplace and listings",
       images: [
@@ -378,44 +335,28 @@
     render();
   };
 
-  const openGallery = (groupName, trigger, index = 0) => {
+  const openGallery = (groupName, trigger) => {
     const gallery = galleries[groupName];
 
-    if (!Number.isInteger(index) || !gallery?.images?.[index]) {
-      return false;
+    if (!gallery) {
+      return;
     }
 
     if (typeof dialog.showModal !== "function") {
-      if (trigger.matches("a[href]")) {
-        return false;
-      }
-
-      window.open(gallery.images[index].src, "_blank", "noopener");
-      return true;
+      window.open(gallery.images[0].src, "_blank", "noopener");
+      return;
     }
 
     activeGroup = groupName;
-    activeIndex = index;
+    activeIndex = 0;
     lastTrigger = trigger;
     dialog.showModal();
     render();
     document.body.classList.add("case-study-gallery-open");
-    return true;
   };
 
   triggers.forEach((trigger) => {
-    trigger.addEventListener("click", (event) => {
-      if (event.defaultPrevented || (trigger.matches("a[href]") && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey))) {
-        return;
-      }
-
-      // Links keep a direct-image href; the optional index addresses one image in the group.
-      const index = trigger.dataset.galleryIndex === undefined ? 0 : Number(trigger.dataset.galleryIndex);
-
-      if (openGallery(trigger.dataset.galleryGroup, trigger, index)) {
-        event.preventDefault();
-      }
-    });
+    trigger.addEventListener("click", () => openGallery(trigger.dataset.galleryGroup, trigger));
   });
 
   previousButton.addEventListener("click", () => move(-1));
