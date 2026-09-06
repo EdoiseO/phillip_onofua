@@ -18,7 +18,7 @@ The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaSc
 
 An end-to-end student marketplace connecting catalogue discovery, listing management, messaging, profiles, media storage, and protected moderation workflows.
 
-The engineering case study explains how the product handles request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, data integrity, role capabilities, and auditable report review. It also includes grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model.
+The visual case study leads with the student experience and explains three engineering decisions: recoverable listing writes, consistent realtime conversations, and explicit review authority. Four September captures show the live guest catalogue and the implemented mobile moderation preview. Earlier workflow galleries remain available, with image zoom and direct-image fallbacks. The page dates its 322-test validation evidence and distinguishes the release preview from the current live demo.
 
 - **Role:** Team lead and full-stack developer
 - **Stack:** Next.js, React, Supabase, PostgreSQL, Tailwind CSS, and Vercel
