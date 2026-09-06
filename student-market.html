@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark" />
   <title>Student Market of Toronto Engineering Case Study | Phillip Onofua</title>
-  <meta name="description" content="A technical case study of Student Market of Toronto, covering its Next.js architecture, PostgreSQL integrity model, Supabase security boundaries, messaging, media lifecycle, and moderation system." />
+  <meta name="description" content="A visual case study of a Toronto student marketplace: buying and selling, listing-linked messaging, mobile moderation, and the engineering that keeps each workflow consistent." />
   <link rel="canonical" href="https://philliponofua.vercel.app/student-market.html" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="Student Market of Toronto Engineering Case Study" />
   <meta property="og:description" content="How Phillip Onofua engineered a Next.js and PostgreSQL marketplace with recoverable writes, realtime messaging, storage controls, and auditable moderation." />
-  <meta property="og:image" content="https://philliponofua.vercel.app/assets/student-market-browse-desktop.png" />
+  <meta property="og:image" content="https://philliponofua.vercel.app/assets/student-market-catalogue-sep2026.png" />
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
   <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
   <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
   <link rel="stylesheet" href="assets/styles.css" />
   <link rel="stylesheet" href="assets/overrides.css?v=20260823c" />
+  <link rel="stylesheet" href="assets/student-market-case-study.css?v=20260906" />
 </head>
-<body class="case-study-page">
+<body class="case-study-page market-case-study">
+  <a class="market-skip" href="#main-content">Skip to case study</a>
   <div class="site-shell">
     <header class="site-header">
       <div class="header-inner">
@@ -29,208 +31,118 @@
       </div>
     </header>
 
-    <main class="case-study-main">
-      <section class="case-study-hero" aria-labelledby="case-study-title">
-        <p class="eyebrow">Engineering case study · Full-stack marketplace</p>
-        <h1 id="case-study-title">Student Market of Toronto</h1>
-        <p class="case-study-lead">I led and built a marketplace whose technical scope extends well beyond listing cards. The system combines request-scoped authentication, server-rendered catalogue queries, recoverable listing writes, realtime messaging, controlled media storage, and an auditable moderation platform.</p>
-
-        <dl class="case-study-meta">
-          <div><dt>My role</dt><dd>Team lead and full-stack developer</dd></div>
-          <div><dt>Core stack</dt><dd>Next.js, React, Supabase, PostgreSQL, Tailwind CSS, Vercel</dd></div>
-          <div><dt>Repository surface</dt><dd>31 pages, 11 Route Handlers, 50 database migrations, and 57 test files</dd></div>
-        </dl>
-
-        <div class="case-study-actions">
-          <a class="button button--primary button--small" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer">
-            Open live project
-            <svg class="button-icon button-icon--external" viewBox="0 0 16 16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"></path>
-              <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"></path>
-            </svg>
-          </a>
-          <a class="button button--secondary button--small" href="https://github.com/EdoiseO/student-market-of-toronto" target="_blank" rel="noreferrer">
-            View source
-            <svg class="button-icon button-icon--github" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.5 5.9 18.5 6.2 18.5 6.2c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"></path>
-            </svg>
-          </a>
+    <main class="case-study-main" id="main-content">
+      <section class="market-hero" aria-labelledby="case-study-title">
+        <div class="market-hero-copy">
+          <p class="eyebrow">Selected work / Full-stack development</p>
+          <h1 id="case-study-title">Student Market<br>of Toronto<span class="market-title-dot">.</span></h1>
+          <p class="market-hero-intro">A place for Toronto students to find what they need, sell what they don’t, and connect around an item.</p>
+          <p class="market-hero-role">I led the full-stack implementation, from the buying and selling experience to the tools used to review listings and resolve reports.</p>
+          <div class="market-actions">
+            <a class="market-primary-link" href="https://student-market-of-toronto.vercel.app" target="_blank" rel="noreferrer">Explore the live demo <span aria-hidden="true">↗</span></a>
+            <a href="https://github.com/EdoiseO/student-market-of-toronto" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
-
+        <figure class="market-hero-figure">
+          <a class="market-capture" href="assets/student-market-catalogue-sep2026.png" data-gallery-group="catalogue" data-gallery-index="0" aria-haspopup="dialog" aria-label="Enlarge the marketplace demo screenshot">
+            <img src="assets/student-market-catalogue-sep2026.png" alt="Student Market catalogue with campus-based listings, item photos, prices and category navigation" width="1440" height="1000" fetchpriority="high" />
+            <span class="market-enlarge" aria-hidden="true">Inspect the interface ↗</span>
+          </a>
+          <figcaption><span>01 / Discover</span> Live demo · captured September 2026</figcaption>
+        </figure>
       </section>
 
-      <div class="case-study-sections">
-        <section class="case-study-overview" aria-labelledby="market-problem">
-          <div>
-            <p class="eyebrow">System framing</p>
-            <h2 id="market-problem">This is a set of connected state machines, not a storefront mockup.</h2>
-          </div>
-          <div class="case-study-overview-copy">
-            <p>A listing can be a draft, waiting for review, rejected, active, sold, or retired. A conversation can be open, temporarily closed, permanently closed, or reopened. A sanction can be active, acknowledged, appealed, modified, revoked, or expired. Those states affect what each user can read and write.</p>
-            <p>I kept those rules close to the data. The interface explains the current state, but PostgreSQL verifies ownership, current revisions, account standing, role capability, and lifecycle transitions before an important write is accepted.</p>
-          </div>
-        </section>
+      <dl class="market-facts">
+        <div><dt>My role</dt><dd>Team lead &amp; full-stack developer</dd></div>
+        <div><dt>Built with</dt><dd>Next.js · React · Supabase · PostgreSQL</dd></div>
+        <div><dt>Across the experience</dt><dd>Desktop &amp; mobile · English &amp; French</dd></div>
+      </dl>
+      <nav class="market-jump-links" aria-label="Case study sections">
+        <a href="#experience">The experience <span aria-hidden="true">↓</span></a>
+        <a href="#moderation">The new review flow <span aria-hidden="true">↓</span></a>
+        <a href="#engineering">Engineering decisions <span aria-hidden="true">↓</span></a>
+        <a href="#verification">Validation <span aria-hidden="true">↓</span></a>
+      </nav>
 
-        <section class="case-study-system" aria-labelledby="market-system-flow">
-          <p class="eyebrow">Request architecture</p>
-          <h2 id="market-system-flow">How a request reaches durable state.</h2>
-          <ol class="case-study-flow-grid">
-            <li><span>01</span><strong>Authenticate</strong><p>The Next.js proxy refreshes the Supabase session and fails closed when account standing is unavailable or banned.</p></li>
-            <li><span>02</span><strong>Render</strong><p>App Router pages use a cookie-scoped server client for initial data, while growing registries use explicit pagination limits.</p></li>
-            <li><span>03</span><strong>Interact</strong><p>Client Components handle validation, local recovery state, uploads, optimistic feedback, and realtime subscriptions.</p></li>
-            <li><span>04</span><strong>Commit</strong><p>PostgreSQL rechecks the actor, expected state, and payload before changing data or appending immutable history.</p></li>
-          </ol>
-        </section>
+      <section class="market-section market-experience" id="experience" aria-labelledby="experience-title">
+        <div class="market-section-heading">
+          <p class="eyebrow">The product challenge</p>
+          <h2 id="experience-title">Keep the whole exchange connected.</h2>
+          <p>A useful marketplace needs more than a feed. Students need to understand an item, contact its seller, manage a listing, and get help when something needs attention.</p>
+        </div>
+        <ol class="market-journey">
+          <li><span>01</span><h3>Find the right item</h3><p>Browse categories and compare price, condition and campus before opening a listing.</p></li>
+          <li><span>02</span><h3>Talk with the seller</h3><p>Keep the item in view alongside messages, attachments and reactions.</p></li>
+          <li><span>03</span><h3>Keep listings accountable</h3><p>Review submissions and reports with evidence, feedback and a recorded decision.</p></li>
+        </ol>
+        <div class="market-conversation">
+          <figure>
+            <a class="market-capture" href="assets/student-market-conversation-desktop.png" data-gallery-group="messaging" data-gallery-index="1" aria-haspopup="dialog" aria-label="Enlarge the listing-linked conversation screenshot">
+              <img src="assets/student-market-conversation-desktop.png" alt="Existing demo conversation with the item pinned above its messages and a closed-listing notice above the composer" width="1470" height="670" loading="lazy" />
+              <span class="market-enlarge" aria-hidden="true">View conversation ↗</span>
+            </a>
+            <figcaption><span>02 / Connect</span> Existing messaging demo</figcaption>
+          </figure>
+          <div class="market-side-note"><p class="eyebrow">A small detail with a purpose</p><h3>The conversation belongs to the item.</h3><p>The listing stays attached to the thread. When it closes, the history remains readable and the composer explains why new messages are unavailable.</p></div>
+        </div>
+      </section>
 
-        <section class="case-study-feature" aria-labelledby="market-discovery">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">01 · Catalogue and search</p>
-              <h2 id="market-discovery">Bound catalogue work before it reaches the browser.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>The catalogue is rendered on the server from active listings only. The home route fetches a maximum of six records per category and bounds each listing to ten ordered images.</p>
-              <ul>
-                <li>Search normalizes query input and requests 24 records per page through an indexed PostgreSQL function.</li>
-                <li>Category pages use bounded identifier windows before loading their related listing records.</li>
-                <li>Database-managed ranking, price history, timestamps, and catalogue status cannot be forged by a browser write.</li>
-              </ul>
-            </div>
-          </div>
-        </section>
+      <section class="market-section market-review" id="moderation" aria-labelledby="moderation-title">
+        <div class="market-review-heading">
+          <div><p class="eyebrow">September 2026 / Release preview</p><h2 id="moderation-title">Less scrolling.<br>More room to review.</h2></div>
+          <div><p>The moderation redesign reduces the space taken by filters and puts the submitted item and its photos closer to the decision. The same photo viewer is reused across listing and report review.</p><p class="market-preview-note">These are fresh captures of the implemented components with demonstration data. The live demo runs the previous release while final hosted checks and rollout are in progress.</p></div>
+        </div>
+        <div class="market-phone-grid">
+          <figure>
+            <a class="market-capture market-phone" href="assets/student-market-queue-mobile-sep2026.png" data-gallery-group="september" data-gallery-index="0" aria-haspopup="dialog" aria-label="Enlarge the new mobile moderation queue">
+              <img src="assets/student-market-queue-mobile-sep2026.png" alt="September preview of the mobile listing queue with compact search, status tabs and four review records" width="390" height="844" loading="lazy" />
+              <span class="market-enlarge" aria-hidden="true">Enlarge ↗</span>
+            </a>
+            <figcaption><span>01 / Find</span><strong>A queue that gets to the records.</strong>Search and status filters take less space, so the work is visible sooner.</figcaption>
+          </figure>
+          <figure>
+            <a class="market-capture market-phone" href="assets/student-market-review-mobile-sep2026.png" data-gallery-group="september" data-gallery-index="1" aria-haspopup="dialog" aria-label="Enlarge the focused mobile listing review">
+              <img src="assets/student-market-review-mobile-sep2026.png" alt="September preview of a controller listing review with its title, price, clickable photo, description and collapsible history" width="390" height="844" loading="lazy" />
+              <span class="market-enlarge" aria-hidden="true">Enlarge ↗</span>
+            </a>
+            <figcaption><span>02 / Understand</span><strong>The item comes first.</strong>Photos and listing details stay together; context and history open when needed.</figcaption>
+          </figure>
+          <figure>
+            <a class="market-capture market-phone" href="assets/student-market-photo-mobile-sep2026.png" data-gallery-group="september" data-gallery-index="2" aria-haspopup="dialog" aria-label="Enlarge the mobile listing photo viewer">
+              <img src="assets/student-market-photo-mobile-sep2026.png" alt="September preview of the shared image viewer displaying a controller photo with zoom and close controls" width="390" height="844" loading="lazy" />
+              <span class="market-enlarge" aria-hidden="true">Enlarge ↗</span>
+            </a>
+            <figcaption><span>03 / Inspect</span><strong>Open the evidence.</strong>A tap opens the original image in the shared viewer, with zoom and a clear way back.</figcaption>
+          </figure>
+        </div>
+        <p class="market-review-footnote">Designed for touch and keyboard interaction, with shared components and English/French interface copy.</p>
+      </section>
 
-        <section class="case-study-feature" aria-labelledby="listing-flow">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">02 · Listing write protocol</p>
-              <h2 id="listing-flow">Treat listing creation and editing as recoverable operations.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>Each create, edit, status change, or retirement begins with a stable operation identifier and a canonical payload hash. A small local journal keeps only bounded recovery identifiers, while the server stores the durable write intent.</p>
-              <p>Image paths are reserved before upload. The final commit verifies the reservation, owner, listing revision, required fields, and image order in one trusted database path. Ambiguous network failures replay the same operation instead of issuing a second write, and abandoned objects enter a bounded cleanup queue.</p>
-            </div>
-          </div>
-        </section>
+      <section class="market-section" id="engineering" aria-labelledby="engineering-title">
+        <div class="market-section-heading"><p class="eyebrow">Under the interface</p><h2 id="engineering-title">Three decisions that shaped the system.</h2><p>The work connects product behaviour to the data rules that make it consistent when requests fail, people retry, or permissions change.</p></div>
+        <div class="market-decisions">
+          <article><span class="market-decision-number">01</span><div><h3>Make selling recoverable.</h3><p>Listing creation coordinates form data, images and publication state. A stable operation identifier lets an interrupted request retry the original write without creating a second listing.</p><p class="market-tradeoff"><strong>The tradeoff:</strong> More explicit workflow state, in exchange for clearer recovery after a network failure.</p><details><summary>How the write works</summary><p>Creation, editing and retirement use durable write intents. Image paths are reserved before upload; the commit verifies ownership, revision and image order. Status changes use a separate retry-safe operation. Abandoned uploads enter a bounded cleanup queue.</p></details></div></article>
+          <article><span class="market-decision-number">02</span><div><h3>Keep realtime grounded in stored history.</h3><p>Messages and reactions arrive live, while paginated database history remains the source of truth. A thread starts with 40 messages and keeps a bounded client window.</p><p class="market-tradeoff"><strong>The tradeoff:</strong> Older messages load on demand instead of keeping an entire conversation in browser memory.</p><details><summary>How messaging stays consistent</summary><p>Stable message IDs reconcile inserts with existing history. Media sends reserve exact owner and conversation paths before upload. Notification updates use an invalidation signal, then refetch the recipient’s authorized notification data.</p></details></div></article>
+          <article><span class="market-decision-number">03</span><div><h3>Make authority explicit.</h3><p>Review tools connect a decision to its subject, rationale and history. Server checks and database policies enforce the relevant permissions around the workflow.</p><p class="market-tradeoff"><strong>The tradeoff:</strong> More deliberate access checks and recorded transitions, with a clearer account of who can do what.</p><details><summary>How the boundaries are organized</summary><p>Public profiles, participant conversations, moderation context and service operations use separate access paths. Registration checks supported Toronto school email domains. The September implementation adds current-authority checks for private reads and browser-bound password recovery; hosted validation is still in progress.</p></details></div></article>
+        </div>
+      </section>
 
-        <section class="case-study-feature" aria-labelledby="market-messaging">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">03 · Messaging and media</p>
-              <h2 id="market-messaging">Keep realtime fast without making it the source of truth.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>A thread loads 40 messages at a time and retains a bounded 160-message client window. New inserts and reaction changes arrive through unique Supabase Realtime channels, then merge by stable database identifiers.</p>
-              <p>A media send reserves up to three exact conversation and user paths, uploads files, and completes through an idempotent message RPC. If the operation aborts, reservations are released only after Storage cleanup. Closed conversations keep their readable history, but database guards reject new messages, attachments, and reactions even if a client bypasses the disabled composer.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="case-study-feature" aria-labelledby="market-reporting">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">04 · Moderation architecture</p>
-              <h2 id="market-reporting">Make privileged actions narrow, reviewable, and auditable.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>Administrative pages recheck the current Auth user, current application standing, and a role-to-capability matrix before loading a trusted workflow. The service-role client is isolated in a server-only module and is never passed to browser code.</p>
-              <ul>
-                <li>Reports bind to a listing, profile, or exact message and retain the redundant identifiers required to verify that binding.</li>
-                <li>Decision RPCs require a rationale, validate one subject, lock current state, and append immutable decision and audit records.</li>
-                <li>Moderator notes are append-only. Internal reasoning remains private while notifications expose only bounded user-facing text.</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section class="case-study-feature" aria-labelledby="market-responsive">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">05 · Responsive application shell</p>
-              <h2 id="market-responsive">Change the composition without changing the domain rules.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>The same server routes and database policies support both desktop and mobile. Responsive shells change navigation, card density, and thread composition without creating a separate mobile data path.</p>
-              <p>Every major route includes a matching loading skeleton. Forms expose field errors, focus the first invalid control, preserve touch targets, and provide English and French interface copy.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="case-study-feature case-study-engineering" aria-labelledby="market-engineering">
-          <div class="case-study-feature-heading">
-            <div>
-              <p class="eyebrow">06 · Security and reliability</p>
-              <h2 id="market-engineering">Design around trust boundaries and failure boundaries.</h2>
-            </div>
-            <div class="case-study-feature-copy">
-              <p>The repository separates public projections, participant data, staff-only context, and service operations. The important behavior is enforced again at the database layer and exercised through both static contract tests and isolated PostgreSQL tests.</p>
-            </div>
-          </div>
-          <div class="case-study-engineering-grid">
-            <article>
-              <span>Identity</span>
-              <h3>Derive school identity from verified account data.</h3>
-              <p>Registration validates a Toronto school domain in the form and again in a before-user-created Auth hook. Protected identity fields are written only through trusted paths.</p>
-            </article>
-            <article>
-              <span>Authorization</span>
-              <h3>Use the database as the final permission boundary.</h3>
-              <p>RLS, ownership predicates, private schemas, revoked direct execution, and narrow invoker RPCs limit what public, authenticated, staff, and service actors can do.</p>
-            </article>
-            <article>
-              <span>Concurrency</span>
-              <h3>Bind a retry to the original command.</h3>
-              <p>Canonical payload hashes, stable operation identifiers, row locks, expected revisions, replay windows, and tombstones prevent a lost response from becoming a duplicate action.</p>
-            </article>
-            <article>
-              <span>Storage</span>
-              <h3>Bind every object to an owner and record.</h3>
-              <p>Listing and message uploads use path validation, reservations, size and type limits, reference guards, cleanup leases, and account-retirement barriers.</p>
-            </article>
-            <article>
-              <span>Moderation data</span>
-              <h3>Separate internal context from user-safe output.</h3>
-              <p>Immutable audit and decision records retain staff actions. User-safe standing and notification projections intentionally omit private notes, metadata, and worker state.</p>
-            </article>
-            <article>
-              <span>Background work</span>
-              <h3>Make asynchronous operations bounded and resumable.</h3>
-              <p>Announcement delivery and image cleanup use secret-protected worker routes, row leases, small claim windows, stable idempotency keys, and explicit terminal states.</p>
-            </article>
-            <article>
-              <span>Notification privacy</span>
-              <h3>Send an invalidation signal, then refetch authorized data.</h3>
-              <p>Realtime signals contain no sensitive message or moderation text. They tell the recipient client to reload its RLS-scoped notifications, while safety and enforcement notices remain always on.</p>
-            </article>
-            <article>
-              <span>Account lifecycle</span>
-              <h3>Coordinate restrictions and deletion across the system.</h3>
-              <p>Blocks affect conversation entry, bans fail marketplace writes closed, standing records remain readable, and password-confirmed deletion establishes media retirement barriers before removing Auth data.</p>
-            </article>
-            <article>
-              <span>Data windows</span>
-              <h3>Keep reads predictable as records grow.</h3>
-              <p>Catalogue pages, inboxes, message history, report registries, conversations, enforcement records, and audit views all impose explicit limits and stable ordering.</p>
-            </article>
-            <article>
-              <span>Verification</span>
-              <h3>Test contracts at both code and database levels.</h3>
-              <p>The local security command passes 268 tests, including fresh migration-chain execution and isolated PostgreSQL checks. ESLint and the Next.js production build also pass.</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="case-study-gallery-section" aria-labelledby="interface-gallery-title">
+      <section class="market-section market-validation" id="verification" aria-labelledby="validation-title">
+        <div><p class="eyebrow">Evidence / 6 September 2026</p><h2 id="validation-title">Tested beyond<br>the interface.</h2><p>The latest implementation passed the security suite, including native PostgreSQL checks and migration execution. Lint and the production build passed too.</p><a class="market-text-link" href="https://github.com/EdoiseO/student-market-of-toronto/actions/runs/34047072337" target="_blank" rel="noreferrer">Inspect the CI run <span aria-hidden="true">↗</span></a></div>
+        <div class="market-validation-evidence"><div class="market-test-count"><strong>322</strong><span>security tests passed<br>0 failed · 0 skipped</span></div><dl><div><dt>CI environments</dt><dd>Ubuntu &amp; macOS</dd></div><div><dt>Release checks</dt><dd>Lint &amp; production build passed</dd></div><div><dt>Current status</dt><dd>Hosted integration checks pending</dd></div></dl><p>These results describe the tested September implementation, not a security certification or a completed production rollout.</p></div>
+      </section>
+        <section class="case-study-gallery-section" id="gallery" aria-labelledby="interface-gallery-title">
           <div class="case-study-gallery-heading">
             <div>
-              <p class="eyebrow">Implementation evidence</p>
-              <h2 id="interface-gallery-title">Explore the implemented system by workflow.</h2>
+              <p class="eyebrow">The wider application</p>
+              <h2 id="interface-gallery-title">Explore the original demo.</h2>
             </div>
-            <p>These views and diagrams document how the shared identity, listing, conversation, and moderation models connect across the database, desktop, and mobile interfaces. Open a group to inspect the evidence without turning the technical narrative into a wall of images.</p>
+            <p>Earlier demonstration captures cover the rest of the marketplace, messaging, profiles and data model. The September moderation preview is shown separately above.</p>
           </div>
 
           <div class="case-study-gallery-groups" role="list" aria-label="Student Market implementation galleries">
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="marketplace">
+              <a class="case-study-gallery-card" href="assets/student-market-browse-desktop.png" aria-haspopup="dialog" data-gallery-group="marketplace">
                 <span class="case-study-gallery-cover">
                   <img src="assets/student-market-browse-desktop.png" alt="" width="1440" height="1000" loading="lazy" />
                 </span>
@@ -238,11 +150,11 @@
                   <strong>Marketplace and listings</strong>
                   <span>Bounded discovery, listing detail, seller context, and state-aware actions.</span>
                 </span>
-              </button>
+              </a>
             </article>
 
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="messaging">
+              <a class="case-study-gallery-card" href="assets/student-market-conversation-desktop.png" aria-haspopup="dialog" data-gallery-group="messaging" data-gallery-index="1">
                 <span class="case-study-gallery-cover">
                   <img src="assets/student-market-conversation-desktop.png" alt="" width="1470" height="670" loading="lazy" />
                 </span>
@@ -250,11 +162,11 @@
                   <strong>Messaging and media</strong>
                   <span>Listing-linked inboxes, bounded history, attachments, reactions, and closed-thread behavior.</span>
                 </span>
-              </button>
+              </a>
             </article>
 
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="profiles">
+              <a class="case-study-gallery-card" href="assets/student-market-public-profile-desktop.png" aria-haspopup="dialog" data-gallery-group="profiles">
                 <span class="case-study-gallery-cover">
                   <img src="assets/student-market-public-profile-desktop.png" alt="" width="1084" height="983" loading="lazy" />
                 </span>
@@ -262,11 +174,11 @@
                   <strong>Profiles and accounts</strong>
                   <span>Public seller identity and authenticated profile controls backed by shared account data.</span>
                 </span>
-              </button>
+              </a>
             </article>
 
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="admin">
+              <a class="case-study-gallery-card" href="assets/student-market-report-review-current-desktop.png" aria-haspopup="dialog" data-gallery-group="admin" data-gallery-index="2">
                 <span class="case-study-gallery-cover">
                   <img src="assets/student-market-report-review-current-desktop.png" alt="" width="1470" height="1823" loading="lazy" />
                 </span>
@@ -274,11 +186,11 @@
                   <strong>Admin and moderation</strong>
                   <span>Operational registries, evidence review, seller feedback, private notes, decisions, and enforcement.</span>
                 </span>
-              </button>
+              </a>
             </article>
 
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="mobile">
+              <a class="case-study-gallery-card" href="assets/student-market-messages-mobile.png" aria-haspopup="dialog" data-gallery-group="mobile" data-gallery-index="1">
                 <span class="case-study-gallery-cover case-study-gallery-cover--mobile">
                   <img src="assets/student-market-messages-mobile.png" alt="" width="390" height="844" loading="lazy" />
                 </span>
@@ -286,11 +198,11 @@
                   <strong>Mobile application</strong>
                   <span>Responsive browse, listing-linked messaging, and student profile workflows.</span>
                 </span>
-              </button>
+              </a>
             </article>
 
             <article role="listitem">
-              <button class="case-study-gallery-card" type="button" data-gallery-group="data-model">
+              <a class="case-study-gallery-card" href="assets/student-market-data-model-overview.jpg" aria-haspopup="dialog" data-gallery-group="data-model">
                 <span class="case-study-gallery-cover">
                   <img src="assets/student-market-data-model-overview.jpg" alt="" width="1140" height="786" loading="lazy" />
                 </span>
@@ -298,12 +210,10 @@
                   <strong>Relational data model</strong>
                   <span>Connected marketplace, messaging, notification, moderation, and account-lifecycle records.</span>
                 </span>
-              </button>
+              </a>
             </article>
           </div>
         </section>
-      </div>
-
       <dialog class="case-study-lightbox" data-gallery-dialog aria-labelledby="gallery-dialog-title">
         <div class="case-study-lightbox-shell">
           <header class="case-study-lightbox-header">
@@ -355,25 +265,14 @@
         </div>
       </dialog>
 
-      <section class="case-study-end" aria-label="Student Market project conclusion">
-        <div class="case-study-result">
-          <p class="eyebrow">What this project demonstrates</p>
-          <h2>Student Market of Toronto is a full-stack systems project with a marketplace interface.</h2>
-          <p>The screenshots show the application surface. The deeper work is the boundary beneath it: authenticated server rendering, relational state, recoverable writes, controlled storage, realtime synchronization, private moderation data, immutable history, and tests that execute the actual PostgreSQL migration chain.</p>
-        </div>
+
+      <section class="case-study-end" aria-label="Continue exploring">
         <p>Continue exploring</p>
-        <nav aria-label="Project navigation">
-          <a href="overlay-studio.html">Explore how Overlay Studio works</a>
-          <a href="index.html#projects">All featured projects</a>
-        </nav>
+        <nav aria-label="Project navigation"><a href="overlay-studio.html">Explore Overlay Studio</a><a href="index.html#projects">All featured projects</a></nav>
       </section>
     </main>
-
-    <footer class="site-footer">
-      <p>© 2026 Phillip Onofua</p>
-      <nav class="footer-links" aria-label="Footer navigation"><a href="index.html">Portfolio</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav>
-    </footer>
+    <footer class="site-footer"><p>© 2026 Phillip Onofua</p><nav class="footer-links" aria-label="Footer navigation"><a href="index.html">Portfolio</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav></footer>
   </div>
-  <script src="assets/student-market-gallery.js" defer></script>
+  <script src="assets/student-market-gallery.js?v=20260906" defer></script>
 </body>
 </html>
