@@ -727,7 +727,7 @@ button:focus-visible {
 .language-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -735,21 +735,21 @@ button:focus-visible {
 .language-list li {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 10px 15px;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
   border: 1px solid #ffffff0d;
   border-radius: 999px;
   background: #ffffff06;
   color: var(--text-soft, var(--soft));
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.5;
   white-space: nowrap;
 }
 .language-list img,
 .language-list svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 .language-list svg {
