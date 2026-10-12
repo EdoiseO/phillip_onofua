@@ -1,529 +1,636 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="dark" />
-  <title>Phillip Onofua | Full-Stack Developer</title>
-  <meta name="description" content="Phillip Onofua is a Toronto-based full-stack developer building production web and Windows desktop software with Next.js, React, Supabase, and Python." />
-  <link rel="canonical" href="https://philliponofua.vercel.app/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Phillip Onofua" />
-  <meta property="og:title" content="Phillip Onofua | Full-Stack Developer" />
-  <meta property="og:description" content="Production web and Windows desktop software built with Next.js, React, Supabase, and Python." />
-  <meta property="og:url" content="https://philliponofua.vercel.app/" />
-  <meta property="og:image" content="https://philliponofua.vercel.app/assets/portfolio-preview.png" />
-  <meta property="og:image:width" content="1536" />
-  <meta property="og:image:height" content="960" />
-  <meta property="og:image:alt" content="Phillip Onofua developer portfolio" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Phillip Onofua | Full-Stack Developer" />
-  <meta name="twitter:description" content="Production web and Windows desktop software built with Next.js, React, Supabase, and Python." />
-  <meta name="twitter:image" content="https://philliponofua.vercel.app/assets/portfolio-preview.png" />
-  <meta name="twitter:image:alt" content="Phillip Onofua developer portfolio" />
-  <link rel="icon" href="assets/favicon.ico" type="image/x-icon" sizes="16x16" />
-  <link rel="preload" href="assets/font-1.woff" as="font" type="font/woff" crossorigin />
-  <link rel="preload" href="assets/font-2.woff" as="font" type="font/woff" crossorigin />
-  <link rel="preload" href="assets/profile-photo.jpg" as="image" />
-  <link rel="stylesheet" href="assets/styles.css" />
-  <link rel="stylesheet" href="assets/overrides.css" />
-</head>
-<body>
-  <div id="top" class="site-shell">
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="#top" aria-label="Phillip Onofua, back to top">
-          <img src="assets/profile-photo.jpg" width="44" height="44" alt="Phillip Onofua" />
-          <span>
-            <strong>Phillip Onofua</strong>
-            <small>Full-Stack Developer</small>
-          </span>
-        </a>
-
-        <nav class="site-nav" aria-label="Primary navigation">
-          <a href="#projects">Projects</a>
-          <a href="#skills">Skills</a>
-          <a href="#about">About</a>
-          <a href="#education">Education</a>
-          <a href="#contact">Contact</a>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Phillip Onofua | Full-Stack Developer</title>
+    <meta
+      name="description"
+      content="Toronto-based full-stack developer building useful web and Windows desktop software. Explore Phillip Onofua’s projects, engineering case studies, and résumé."
+    />
+    <link rel="canonical" href="https://philliponofua.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Phillip Onofua" />
+    <meta property="og:title" content="Phillip Onofua | Full-Stack Developer" />
+    <meta
+      property="og:description"
+      content="Building full-stack products for real people. Explore my web and Windows desktop projects."
+    />
+    <meta property="og:url" content="https://philliponofua.vercel.app/" />
+    <meta
+      property="og:image"
+      content="https://philliponofua.vercel.app/assets/portfolio-preview.jpg"
+    />
+    <meta property="og:image:width" content="1391" />
+    <meta property="og:image:height" content="951" />
+    <meta
+      property="og:image:alt"
+      content="Phillip Onofua’s portfolio, featuring web and desktop projects"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Phillip Onofua | Full-Stack Developer"
+    />
+    <meta
+      name="twitter:description"
+      content="Building full-stack products for real people. Web and Windows desktop projects."
+    />
+    <meta
+      name="twitter:image"
+      content="https://philliponofua.vercel.app/assets/portfolio-preview.jpg"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Phillip Onofua’s portfolio, featuring web and desktop projects"
+    />
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
+    <link
+      rel="preload"
+      href="assets/font-1.woff"
+      as="font"
+      type="font/woff"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/font-2.woff"
+      as="font"
+      type="font/woff"
+      crossorigin
+    />
+    <link rel="stylesheet" href="assets/home.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="page-wrap" id="top">
+      <header class="header">
+        <a class="identity" href="#top" aria-label="Phillip Onofua, back to top"
+          ><img
+            class="identity-photo"
+            src="assets/profile-photo.jpg"
+            width="44"
+            height="44"
+            alt="Phillip Onofua"
+          /><span
+            >Phillip Onofua<span class="identity-role"
+              >Full-stack developer</span
+            ></span
+          ></a
+        >
+        <nav class="navigation" aria-label="Primary navigation">
+          <a href="#projects">Work</a><a href="#about">About</a
+          ><a href="#contact">Contact <span aria-hidden="true">↗</span></a>
         </nav>
-
-      </div>
-    </header>
-
-    <main>
-      <section class="hero" aria-labelledby="hero-title">
-        <p class="eyebrow">Full-Stack Developer · Toronto</p>
-        <h1 id="hero-title">
-          <span class="sr-only">Building full-stack products for real people</span>
-          <span class="hero-visual" aria-hidden="true">
-            Building <span class="hero-highlight">full-stack products</span>
-            <span class="hero-motion-line"><span id="hero-motion" class="hero-motion-text" data-phrases="for real people|from idea to launch|for web and mobile|with reliable systems">for real people</span></span>
-          </span>
-        </h1>
-        <p class="hero-lead">I’m a Computer Programming and Analysis student at George Brown Polytechnic, building production web and Windows desktop software with Next.js, React, Supabase, and Python.</p>
-
-        <div class="hero-actions">
-          <a class="button button--primary" href="#projects">View featured work <span aria-hidden="true">↓</span></a>
-        </div>
-
-        <div class="hero-facts" aria-label="Quick facts">
-          <span>North York, Toronto</span>
-          <span>George Brown Polytechnic</span>
-          <span>Open to software development opportunities</span>
-        </div>
-      </section>
-
-      <section id="projects" class="section" aria-labelledby="projects-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">01 · Selected work</p>
-            <h2 id="projects-title">Featured projects</h2>
+      </header>
+      <main id="main" tabindex="-1">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <p class="eyebrow">
+              <span class="status-dot" aria-hidden="true"></span> Full-stack
+              developer · Toronto
+            </p>
+            <h1 id="hero-title">
+              <span class="sr-only"
+                >Building full-stack products for real people</span
+              >
+              <span class="hero-visual" aria-hidden="true"
+                >Building<br /><span class="hero-highlight"
+                  >full-stack<br />products</span
+                ><span class="hero-motion-line"
+                  ><span
+                    id="hero-motion"
+                    class="hero-motion-text"
+                    data-phrases="for real people|from idea to launch|for web and mobile|with reliable systems"
+                    >for real people</span
+                  ></span
+                ></span
+              >
+            </h1>
+            <p class="hero-description">
+              I’m Phillip. I build web and Windows desktop software, connecting
+              the details people see with the systems they rely on.
+            </p>
+            <div class="actions">
+              <a class="button primary" href="#projects"
+                >Explore my work <span aria-hidden="true">↓</span></a
+              ><a
+                class="button secondary"
+                href="assets/phillip-onofua-resume.pdf"
+                target="_blank"
+                rel="noreferrer"
+                >View résumé <span aria-hidden="true">↗</span></a
+              >
+            </div>
+            <div class="hero-meta">
+              <p class="availability">
+                <span class="status-dot" aria-hidden="true"></span> Open to
+                software development opportunities
+              </p>
+              <button
+                id="hero-motion-toggle"
+                class="motion-toggle"
+                type="button"
+                hidden
+              >
+                Pause animation
+              </button>
+            </div>
           </div>
+          <div class="hero-work" aria-label="A preview of my selected projects">
+            <span class="preview-label mono"
+              >A FEW THINGS I’VE BUILT <span aria-hidden="true">↘</span></span
+            >
+            <a
+              class="preview-window preview-market"
+              href="student-market.html"
+              aria-label="Read the Student Market of Toronto case study"
+              ><div class="window-bar" aria-hidden="true">
+                <span class="window-dots"><i></i><i></i><i></i></span
+                ><span>Student Market of Toronto</span><span>↗</span>
+              </div>
+              <img
+                src="assets/student-market-browse-desktop.png"
+                alt="Student Market marketplace showing categories and student listings"
+                width="1440"
+                height="1000"
+                fetchpriority="high"
+            /></a>
+            <a
+              class="preview-window preview-overlay"
+              href="overlay-studio.html"
+              aria-label="Read the Overlay Studio case study"
+              ><div class="window-bar" aria-hidden="true">
+                <span class="window-dots"><i></i><i></i><i></i></span
+                ><span>Overlay Studio</span><span>↗</span>
+              </div>
+              <img
+                src="assets/overlay-studio-customizer.png"
+                alt="Overlay Studio’s desktop customizer and live overlay preview"
+                width="1280"
+                height="720"
+            /></a>
+            <div class="preview-note mono">
+              <span aria-hidden="true">↳</span> From browser to desktop.<br /><span
+                class="preview-note-indent"
+                >Built end to end.</span
+              >
+            </div>
+          </div>
+        </section>
+        <div class="hero-bottom">
+          <p>
+            Web applications <span>/</span> Desktop tools <span>/</span> Product
+            thinking
+          </p>
+          <a href="#projects"
+            >Selected work <span aria-hidden="true">↓</span></a
+          >
         </div>
-
-        <div class="project-showcase">
-          <article class="project-feature project-feature--lead">
-            <a class="project-feature__media-link" href="student-market.html" aria-label="Explore how Student Market of Toronto works">
-              <figure class="project-feature__media">
-                <img src="assets/student-market-browse-desktop.png" alt="Student Market of Toronto marketplace with live listings, pricing, and campus details" width="1440" height="1000" decoding="async" />
-                <figcaption>Responsive marketplace · Desktop and mobile</figcaption>
-              </figure>
-            </a>
-
-            <div class="project-feature__content">
-              <div class="project-kicker">
-                <span>Featured full-stack project</span>
-                <span>Team lead · Developer</span>
-              </div>
-              <h3>Student Market of Toronto</h3>
-              <p class="project-feature__lead">A student marketplace connecting discovery, selling, messaging, profiles, and protected moderation across Toronto campuses.</p>
-              <p class="project-feature__detail"><strong>Highlight:</strong> a complete end-to-end product flow backed by authentication, relational data, image storage, responsive interfaces, and role-based administration.</p>
-
-              <div class="project-contribution">
-                <p><strong>My contribution</strong> Led development across the Next.js interface, Supabase data model, authentication, storage, reusable components, messaging, notifications, and administration workflows.</p>
-              </div>
-
-              <div class="tech-list" aria-label="Student Market technologies">
-                <span>Next.js</span><span>React</span><span>Supabase</span><span>PostgreSQL</span><span>Tailwind CSS</span>
-              </div>
-
-              <a class="project-case-study-link" href="student-market.html">
-                <span>Explore how Student Market works</span>
-              </a>
-            </div>
-          </article>
-
-          <article class="project-feature project-feature--reverse">
-            <a class="project-feature__media-link" href="overlay-studio.html" aria-label="Explore how Overlay Studio works">
-              <figure class="project-feature__media">
-                <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio customizer with live draft preview and appearance controls" width="1280" height="720" decoding="async" />
-                <figcaption>Production Windows application · Active development</figcaption>
-              </figure>
-            </a>
-
-            <div class="project-feature__content">
-              <div class="project-kicker">
-                <span>Windows desktop application</span>
-                <span>Production build</span>
-              </div>
-              <h3>Overlay Studio</h3>
-              <p class="project-feature__lead">A desktop application for managing, customizing, previewing, and launching animated OBS browser-source overlays.</p>
-              <p class="project-feature__detail"><strong>Highlight:</strong> one workflow connecting Windows media data, persistent settings, a local service, live browser output, and reusable overlay instances.</p>
-
-              <div class="project-contribution">
-                <p><strong>My contribution</strong> Designed and built the desktop experience, instance-based library, live customizers, saved settings, local service, WebSocket updates, and OBS browser-source workflow.</p>
-              </div>
-
-              <div class="tech-list" aria-label="Overlay Studio technologies">
-                <span>Python</span><span>JavaScript</span><span>aiohttp</span><span>WebSockets</span><span>WebView2</span><span>OBS Studio</span>
-              </div>
-
-              <a class="project-case-study-link" href="overlay-studio.html">
-                <span>Explore how Overlay Studio works</span>
-              </a>
-            </div>
-          </article>
-
-          <article class="project-feature project-feature--planned">
-            <a class="project-feature__media-link" href="receipt-splitter.html" aria-label="Explore how Receipt Splitter will work">
-              <figure class="project-feature__media project-media--concept" role="img" aria-label="Receipt Splitter concept preview">
-                <div class="receipt-concept" aria-hidden="true">
-                  <p>Shared dinner</p>
-                  <div class="receipt-line"><span>Phillip</span><strong>$24.60</strong></div>
-                  <div class="receipt-line"><span>Melvin</span><strong>$31.25</strong></div>
-                  <div class="receipt-line"><span>Wesley</span><strong>$27.15</strong></div>
-                  <div class="receipt-total"><span>Total split</span><strong>$83.00</strong></div>
+        <section
+          id="projects"
+          class="section projects"
+          aria-labelledby="projects-title"
+        >
+          <div class="section-title">
+            <p class="eyebrow">01 / Selected work</p>
+            <h2 id="projects-title">Ideas, made real.</h2>
+            <p>
+              Two projects. Different platforms.<br />The same care from
+              interface to infrastructure.
+            </p>
+          </div>
+          <article class="project project-market">
+            <a
+              class="project-visual"
+              href="student-market.html"
+              aria-label="Explore the Student Market of Toronto case study"
+            >
+              <div class="project-browser">
+                <div class="window-bar" aria-hidden="true">
+                  <span class="window-dots"><i></i><i></i><i></i></span
+                  ><span>student-market-of-toronto.vercel.app</span
+                  ><span>↗</span>
                 </div>
-                <figcaption>Concept preview · Work in progress</figcaption>
-              </figure>
+                <img
+                  src="assets/student-market-browse-desktop.png"
+                  alt="Student Market’s working marketplace with product categories, prices, and campus information"
+                  width="1440"
+                  height="1000"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             </a>
-
-            <div class="project-feature__content">
-              <div class="project-kicker">
-                <span>Planned mobile project</span>
-                <span>Work in progress</span>
+            <div class="project-copy">
+              <p class="project-status">
+                <span class="status-dot" aria-hidden="true"></span> Live web
+                project
+              </p>
+              <h3>
+                Student Market<br />
+                of Toronto
+              </h3>
+              <p>
+                A place for students to buy, sell, and connect across Toronto
+                campuses—with messaging and moderation built into the
+                experience.
+              </p>
+              <div class="contribution">
+                <span class="mono">MY ROLE / TEAM LEAD &amp; DEVELOPER</span>
+                <p>
+                  I led development across the interface, database,
+                  authentication, messaging, and administration workflows.
+                </p>
               </div>
-              <h3>Receipt Splitter</h3>
-              <p class="project-feature__lead">A proposed mobile app for assigning shared receipt items, tax, and tip and producing clear totals for each person.</p>
-              <p class="project-feature__detail"><strong>Current focus:</strong> validating receipt extraction, correction, shared-item calculations, privacy requirements, and the smallest useful mobile flow.</p>
-
-              <div class="project-contribution">
-                <p><strong>My contribution</strong> Defined the problem, mapped the proposed user flow, and identified the calculation, receipt-recognition, and privacy questions that need validation before implementation.</p>
+              <ul class="stack" aria-label="Student Market technologies">
+                <li>Next.js</li>
+                <li>React</li>
+                <li>Supabase</li>
+                <li>PostgreSQL</li>
+              </ul>
+              <div class="project-links">
+                <a class="text-link" href="student-market.html"
+                  >Read case study <span aria-hidden="true">↗</span></a
+                ><a
+                  class="quiet-link"
+                  href="https://student-market-of-toronto.vercel.app/"
+                  target="_blank"
+                  rel="noreferrer"
+                  >Live site <span aria-hidden="true">↗</span></a
+                ><a
+                  class="quiet-link"
+                  href="https://github.com/EdoiseO/student-market-of-toronto"
+                  target="_blank"
+                  rel="noreferrer"
+                  >Source <span aria-hidden="true">↗</span></a
+                >
               </div>
-
-              <div class="tech-list" aria-label="Receipt Splitter planned features">
-                <span>Receipt scanning</span><span>Item assignment</span><span>Tax &amp; tip</span><span>Shareable totals</span>
-              </div>
-
-              <a class="project-case-study-link" href="receipt-splitter.html">
-                <span>Explore how Receipt Splitter will work</span>
-              </a>
             </div>
           </article>
-        </div>
-      </section>
-
-      <section id="skills" class="section" aria-labelledby="skills-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">02 · Technical focus</p>
-            <h2 id="skills-title">What I work with</h2>
+          <article class="project project-overlay">
+            <a
+              class="project-visual"
+              href="overlay-studio.html"
+              aria-label="Explore the Overlay Studio case study"
+            >
+              <div class="project-browser">
+                <div class="window-bar" aria-hidden="true">
+                  <span class="window-dots"><i></i><i></i><i></i></span
+                  ><span>Overlay Studio</span><span>↗</span>
+                </div>
+                <img
+                  src="assets/overlay-studio-customizer.png"
+                  alt="Overlay Studio with appearance controls and a live Twitch badge preview"
+                  width="1280"
+                  height="720"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </a>
+            <div class="project-copy">
+              <p class="project-status">
+                <span
+                  class="status-dot status-dot--blue"
+                  aria-hidden="true"
+                ></span>
+                Working application · Active development
+              </p>
+              <h3>Overlay Studio</h3>
+              <p>
+                A Windows app that helps streamers customize, preview, and
+                manage animated OBS overlays without piecing together separate
+                tools.
+              </p>
+              <div class="contribution">
+                <span class="mono">MY ROLE / DESIGNER &amp; DEVELOPER</span>
+                <p>
+                  I built the desktop interface, reusable overlay library, saved
+                  settings, and the live connection between Windows media and
+                  OBS.
+                </p>
+              </div>
+              <ul class="stack" aria-label="Overlay Studio technologies">
+                <li>Python</li>
+                <li>JavaScript</li>
+                <li>WebSockets</li>
+                <li>WebView2</li>
+              </ul>
+              <div class="project-links">
+                <a class="text-link" href="overlay-studio.html"
+                  >Explore the project <span aria-hidden="true">↗</span></a
+                ><a class="quiet-link" href="overlay-studio.html#overlay-demo"
+                  >Watch demo <span aria-hidden="true">↗</span></a
+                >
+              </div>
+            </div>
+          </article>
+          <aside class="exploration" aria-labelledby="exploration-title">
+            <div>
+              <p class="eyebrow">On the drawing board / Concept</p>
+              <h3 id="exploration-title">Receipt Splitter</h3>
+              <p>
+                Exploring a simpler way to split receipt items, tax, and tip.
+                Currently defining the workflow and validating the technical
+                approach.
+              </p>
+            </div>
+            <a class="quiet-link" href="receipt-splitter.html"
+              >View the concept <span aria-hidden="true">↗</span></a
+            >
+          </aside>
+        </section>
+        <section
+          id="skills"
+          class="section skills"
+          aria-labelledby="skills-title"
+        >
+          <div class="section-title">
+            <p class="eyebrow">02 / Toolkit</p>
+            <h2 id="skills-title">The tools behind the work.</h2>
           </div>
-        </div>
-
-        <div class="skills-grid">
-          <article class="skill-card skill-card--core">
-            <p class="card-label">Core stack</p>
-            <h3>Web product development</h3>
-            <div class="skill-categories">
-              <div class="skill-category">
-                <h4>Languages</h4>
-                <ul class="skill-tags" aria-label="Core languages">
-                  <li><span>JavaScript</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/javascript.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>TypeScript</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/typescript.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>SQL</span><span class="skill-logo skill-logo--interface" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7" ry="3" /><path d="M5 5.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /><path d="M5 11.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></svg></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Frameworks &amp; UI</h4>
-                <ul class="skill-tags" aria-label="Core frameworks and UI technologies">
-                  <li><span>Next.js</span><span class="skill-logo skill-logo--monochrome" aria-hidden="true"><img src="assets/tech-logos/nextjs.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>React</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/react.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>Tailwind CSS</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/tailwindcss.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Data &amp; APIs</h4>
-                <ul class="skill-tags" aria-label="Core data and API technologies">
-                  <li><span>Supabase</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/supabase.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>PostgreSQL</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/postgresql.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>REST APIs</span><span class="skill-logo skill-logo--interface" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" /><path d="M16 5h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" /><path d="M8.5 12h7M13 9.5l2.5 2.5-2.5 2.5" /></svg></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Workflow</h4>
-                <ul class="skill-tags" aria-label="Core development workflow tools">
-                  <li><span>Git</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/git.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>GitHub</span><span class="skill-logo skill-logo--monochrome" aria-hidden="true"><img src="assets/tech-logos/github.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                </ul>
-              </div>
+          <div class="toolkit-grid">
+            <div class="toolkit">
+              <span class="toolkit-number mono">01</span>
+              <h3>Interfaces</h3>
+              <p>
+                Responsive web experiences, from reusable components to complete
+                product flows.
+              </p>
+              <ul>
+                <li>JavaScript &amp; TypeScript</li>
+                <li>React &amp; Next.js</li>
+                <li>Tailwind CSS &amp; shadcn/ui</li>
+              </ul>
+              <a href="student-market.html#market-responsive"
+                >In Student Market <span aria-hidden="true">↗</span></a
+              >
             </div>
-          </article>
-          <article class="skill-card">
-            <p class="card-label">Additional experience</p>
-            <h3>Desktop, backend, and cloud</h3>
-            <div class="skill-categories">
-              <div class="skill-category">
-                <h4>Languages</h4>
-                <ul class="skill-tags" aria-label="Additional programming languages">
-                  <li><span>Python</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/python.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>C#</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/csharp.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>C++</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/cplusplus.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>Java</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/java.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Backend &amp; realtime</h4>
-                <ul class="skill-tags" aria-label="Backend and realtime technologies">
-                  <li><span>aiohttp</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/aiohttp.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>ASP.NET</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/dotnet.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>WebSockets</span><span class="skill-logo skill-logo--interface" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5.5 9.5A8 8 0 0 1 19 7l1 1" /><path d="M18.5 14.5A8 8 0 0 1 5 17l-1-1" /><path d="M20 4v4h-4M4 20v-4h4" /></svg></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Mobile &amp; desktop</h4>
-                <ul class="skill-tags" aria-label="Mobile and desktop technologies">
-                  <li><span>React Native</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/react.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>WebView2</span><span class="skill-logo skill-logo--interface" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 8h18M9 12l-2 2 2 2M15 12l2 2-2 2" /></svg></span></li>
-                  <li><span>OBS integrations</span><span class="skill-logo skill-logo--monochrome" aria-hidden="true"><img src="assets/tech-logos/obsstudio.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                </ul>
-              </div>
-              <div class="skill-category">
-                <h4>Cloud &amp; deployment</h4>
-                <ul class="skill-tags" aria-label="Cloud and deployment platforms">
-                  <li><span>Microsoft Azure</span><span class="skill-logo" aria-hidden="true"><img src="assets/tech-logos/azure.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                  <li><span>Vercel</span><span class="skill-logo skill-logo--monochrome" aria-hidden="true"><img src="assets/tech-logos/vercel.svg" alt="" width="22" height="22" loading="lazy" decoding="async" /></span></li>
-                </ul>
-              </div>
+            <div class="toolkit">
+              <span class="toolkit-number mono">02</span>
+              <h3>Data &amp; backends</h3>
+              <p>
+                The authentication, data models, and realtime features that keep
+                an application connected.
+              </p>
+              <ul>
+                <li>SQL databases &amp; REST APIs</li>
+                <li>Supabase (PostgreSQL, Auth, Storage)</li>
+                <li>Python &amp; WebSockets</li>
+              </ul>
+              <a href="student-market.html#market-system-flow"
+                >Inside the architecture <span aria-hidden="true">↗</span></a
+              >
             </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="about" class="section" aria-labelledby="about-title">
-        <div class="section-heading section-heading--compact">
-          <div>
-            <p class="eyebrow">03 · About</p>
-            <h2 id="about-title">About &amp; education</h2>
+            <div class="toolkit">
+              <span class="toolkit-number mono">03</span>
+              <h3>Beyond the browser</h3>
+              <p>
+                Desktop integrations and the workflow that takes a project from
+                local development to release.
+              </p>
+              <ul>
+                <li>WebView2 &amp; aiohttp</li>
+                <li>Git &amp; GitHub</li>
+                <li>Vercel &amp; Microsoft Azure</li>
+                <li>Vite</li>
+              </ul>
+              <a href="overlay-studio.html"
+                >Inside Overlay Studio <span aria-hidden="true">↗</span></a
+              >
+            </div>
           </div>
-        </div>
-
-        <div class="info-grid">
-          <article class="info-card">
-            <p class="card-label">How I work</p>
-            <p>I turn product ideas and unclear requirements into working interfaces and dependable backends. My work spans thoughtful UX, reusable components, authentication, data modeling, realtime features, deployment, and iteration. I’m looking for opportunities to contribute, learn, and keep shipping useful software.</p>
-          </article>
-
-          <article id="education" class="info-card">
-            <p class="card-label">Education</p>
-            <h3>George Brown Polytechnic</h3>
-            <p class="education-program">Computer Programming and Analysis · Expected 2027</p>
-            <div class="course-list" aria-label="Relevant coursework">
-              <span>Object-Oriented Programming</span>
-              <span>Full-Stack Web Development</span>
-              <span>Database Design</span>
-              <span>Data Structures</span>
-              <span>Agile Development</span>
-              <span>Software Quality Assurance</span>
+          <p class="additional-tools">
+            <span class="mono">ADDITIONAL FRAMEWORKS</span> ASP.NET · React
+            Native
+          </p>
+          <p class="additional-tools">
+            <span class="mono">CONCEPTS &amp; COLLABORATION</span> Data
+            Structures and Algorithms · Authentication · Responsive Design ·
+            Agile collaboration · Code Reviews
+          </p>
+        </section>
+        <section id="about" class="section about" aria-labelledby="about-title">
+          <div class="about-intro">
+            <p class="eyebrow">03 / A little about me</p>
+            <h2 id="about-title">Curious about the whole picture.</h2>
+            <div class="profile">
+              <img
+                src="assets/profile-photo.jpg"
+                width="64"
+                height="64"
+                alt="Phillip Onofua"
+                loading="lazy"
+              />
+              <div>
+                <strong>Phillip Onofua</strong><span>North York, Toronto</span>
+              </div>
             </div>
-          </article>
-        </div>
-      </section>
-
-      <section id="contact" class="contact-section" aria-labelledby="contact-title">
-        <div>
-          <p class="eyebrow">04 · Contact</p>
-          <h2 id="contact-title">Let’s build something useful.</h2>
-          <div class="contact-actions">
-            <a class="contact-link" href="mailto:philliponofua@gmail.com">
-              <svg class="button-icon button-icon--mail" viewBox="0 0 24 24" aria-hidden="true">
+            <section class="languages" aria-labelledby="languages-title">
+              <h3 id="languages-title" class="mono">Languages</h3>
+              <ul class="language-list">
+                <li>
+                  <img
+                    src="assets/tech-logos/javascript.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>JavaScript (ES6+)</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/typescript.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>TypeScript</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <ellipse cx="12" cy="5.5" rx="7" ry="3" />
+                    <path d="M5 5.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
+                    <path d="M5 11.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></svg
+                  ><span>SQL</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/python.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>Python</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/csharp.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>C#</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/cplusplus.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>C++</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/java.svg"
+                    width="20"
+                    height="20"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>Java</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/php.svg"
+                    width="16"
+                    height="16"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>PHP</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/html5.svg"
+                    width="16"
+                    height="16"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>HTML5</span>
+                </li>
+                <li>
+                  <img
+                    src="assets/tech-logos/css3.svg"
+                    width="16"
+                    height="16"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  /><span>CSS3</span>
+                </li>
+              </ul>
+            </section>
+          </div>
+          <div class="about-copy">
+            <p>
+              I’m a Computer Programming and Analysis student at George Brown
+              Polytechnic. I like working across the whole product:
+              understanding a problem, designing the interface, and making the
+              underlying systems work together.
+            </p>
+            <p>
+              My projects have taken me from student marketplaces to desktop
+              tools for streamers. I’m looking for opportunities to contribute,
+              keep learning, and build software people find useful.
+            </p>
+            <div id="education" class="education">
+              <span class="mono">EDUCATION / EXPECTED 2027</span>
+              <h3>George Brown Polytechnic</h3>
+              <p>Computer Programming and Analysis</p>
+              <span class="education-detail"
+                >Full-stack development · Database design · Data structures ·
+                Software quality assurance</span
+              >
+            </div>
+          </div>
+        </section>
+        <section id="contact" class="contact" aria-labelledby="contact-title">
+          <div>
+            <p class="eyebrow">
+              <span class="status-dot" aria-hidden="true"></span> Let’s connect
+            </p>
+            <h2 id="contact-title">
+              Good work starts<br />with a conversation<span>.</span>
+            </h2>
+            <p>
+              Have an opportunity or a project in mind? I’d like to hear about
+              it.
+            </p>
+            <a class="email-link" href="mailto:philliponofua@gmail.com"
+              ><svg
+                class="contact-icon contact-icon--mail"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-              </svg>
-              Email
-            </a>
-            <a class="contact-link" href="https://github.com/EdoiseO" target="_blank" rel="noreferrer">
-              <svg class="button-icon button-icon--github" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.3c-3.3.7-4-1.4-4-1.4-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.5 5.9 18.5 6.2 18.5 6.2c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3Z"></path>
-              </svg>
-              GitHub
-            </a>
-            <a class="contact-link" href="assets/phillip-onofua-resume.pdf" download="Phillip_Onofua_Resume.pdf">
-              <svg class="button-icon button-icon--resume" viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"></path>
-                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"></path>
-              </svg>
-              Download résumé
-            </a>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg
+              ><span>philliponofua@gmail.com</span>
+              <span aria-hidden="true">↗</span></a
+            >
           </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <p>© 2026 Phillip Onofua</p>
-      <nav class="footer-links" aria-label="Legal">
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-      </nav>
-    </footer>
-  </div>
-
-  <script>
-    (() => {
-      const root = document.documentElement;
-      const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-      if (motionQuery.matches) {
-        document.querySelectorAll("video[autoplay]").forEach((video) => {
-          video.pause();
-          video.removeAttribute("autoplay");
-        });
-      }
-
-      const heroMotion = document.getElementById("hero-motion");
-      const heroPhrases = (heroMotion?.dataset.phrases || "")
-        .split("|")
-        .map((phrase) => phrase.trim())
-        .filter(Boolean);
-
-      const renderHeroCharacters = (phrase) => {
-        if (!heroMotion) return;
-
-        const characters = Array.from(phrase);
-        const fragment = document.createDocumentFragment();
-
-        characters.forEach((character, index) => {
-          const span = document.createElement("span");
-          span.className = "hero-motion-character";
-          span.style.setProperty("--char-delay-index", characters.length - index - 1);
-          span.textContent = character === " " ? "\u00a0" : character;
-          fragment.appendChild(span);
-        });
-
-        heroMotion.replaceChildren(fragment);
-      };
-
-      if (heroMotion && heroPhrases.length) {
-        renderHeroCharacters(heroPhrases[0]);
-      }
-
-      if (heroMotion && heroPhrases.length > 1 && !motionQuery.matches) {
-        const enterDuration = 620;
-        const leaveDuration = 520;
-        const characterStagger = 34;
-        const phraseHold = 4200;
-        let phraseIndex = 0;
-
-        const rotateHeroPhrase = () => {
-          heroMotion.classList.add("is-leaving");
-
-          const outgoingDuration = leaveDuration + Math.max(heroPhrases[phraseIndex].length - 1, 0) * characterStagger;
-          window.setTimeout(() => {
-            phraseIndex = (phraseIndex + 1) % heroPhrases.length;
-            heroMotion.classList.remove("is-leaving");
-            renderHeroCharacters(heroPhrases[phraseIndex]);
-            heroMotion.classList.add("is-entering");
-
-            const incomingDuration = enterDuration + Math.max(heroPhrases[phraseIndex].length - 1, 0) * characterStagger;
-            window.setTimeout(() => {
-              heroMotion.classList.remove("is-entering");
-              window.setTimeout(rotateHeroPhrase, phraseHold);
-            }, incomingDuration + 80);
-          }, outgoingDuration + 80);
-        };
-
-        window.setTimeout(rotateHeroPhrase, phraseHold);
-      }
-
-      const projectDetails = document.querySelectorAll(".project-details");
-      const projectDetailsQuery = window.matchMedia("(min-width: 761px)");
-      const activeDetailsAnimations = new WeakMap();
-
-      const setDetailsOpen = (details, shouldOpen) => {
-        const activeAnimation = activeDetailsAnimations.get(details);
-        if (activeAnimation) {
-          activeAnimation.cancel();
-          activeDetailsAnimations.delete(details);
-        }
-
-        details.classList.remove("is-opening", "is-closing");
-        details.open = shouldOpen;
-      };
-
-      const animateDetails = (details, shouldOpen) => {
-        const content = details.querySelector(".project-points");
-
-        if (!content || motionQuery.matches) {
-          setDetailsOpen(details, shouldOpen);
-          return;
-        }
-
-        if (activeDetailsAnimations.has(details)) return;
-
-        if (shouldOpen) {
-          details.open = true;
-          details.classList.add("is-opening");
-        } else {
-          details.classList.add("is-closing");
-        }
-
-        const contentHeight = content.scrollHeight;
-        const keyframes = shouldOpen
-          ? [
-              { height: "0px", opacity: 0, transform: "translateY(-0.4rem)" },
-              { height: `${contentHeight}px`, opacity: 1, transform: "translateY(0)" }
-            ]
-          : [
-              { height: `${contentHeight}px`, opacity: 1, transform: "translateY(0)" },
-              { height: "0px", opacity: 0, transform: "translateY(-0.4rem)" }
-            ];
-
-        const animation = content.animate(keyframes, {
-          duration: shouldOpen ? 360 : 280,
-          easing: "cubic-bezier(0.22, 1, 0.36, 1)"
-        });
-
-        activeDetailsAnimations.set(details, animation);
-
-        animation.onfinish = () => {
-          if (activeDetailsAnimations.get(details) !== animation) return;
-          activeDetailsAnimations.delete(details);
-          details.classList.remove("is-opening", "is-closing");
-          details.open = shouldOpen;
-        };
-
-        animation.oncancel = () => {
-          details.classList.remove("is-opening", "is-closing");
-        };
-      };
-
-      const syncProjectDetails = (event) => {
-        projectDetails.forEach((details) => {
-          setDetailsOpen(details, event.matches);
-        });
-      };
-
-      projectDetails.forEach((details) => {
-        const summary = details.querySelector("summary");
-        summary?.addEventListener("click", (event) => {
-          if (projectDetailsQuery.matches) return;
-          event.preventDefault();
-          animateDetails(details, !details.open);
-        });
-      });
-
-      syncProjectDetails(projectDetailsQuery);
-      projectDetailsQuery.addEventListener("change", syncProjectDetails);
-
-      const projectCards = document.querySelectorAll(".project-showcase .project-feature");
-
-      if (projectCards.length && !motionQuery.matches && "IntersectionObserver" in window) {
-        root.classList.add("motion-ready");
-
-        projectCards.forEach((card, index) => {
-          card.style.setProperty("--reveal-delay", `${index * 110}ms`);
-        });
-
-        const revealObserver = new IntersectionObserver((entries, observer) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-
-            const card = entry.target;
-            const delay = Number.parseInt(card.style.getPropertyValue("--reveal-delay"), 10) || 0;
-            card.classList.add("is-visible");
-            window.setTimeout(() => card.classList.add("has-revealed"), 760 + delay);
-            observer.unobserve(card);
-          });
-        }, {
-          threshold: 0.16,
-          rootMargin: "0px 0px -6%"
-        });
-
-        window.requestAnimationFrame(() => {
-          projectCards.forEach((card) => revealObserver.observe(card));
-        });
-
-        motionQuery.addEventListener("change", (event) => {
-          if (!event.matches) return;
-          revealObserver.disconnect();
-          root.classList.remove("motion-ready");
-          projectCards.forEach((card) => card.classList.add("is-visible", "has-revealed"));
-        }, { once: true });
-      }
-
-    })();
-  </script>
-</body>
+          <div class="contact-links">
+            <a
+              href="assets/phillip-onofua-resume.pdf"
+              download="Phillip_Onofua_Resume.pdf"
+              ><span class="contact-link-label"
+                ><svg
+                  class="contact-icon"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"
+                  ></path>
+                  <path
+                    d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"
+                  ></path></svg
+                >Download résumé</span
+              ><span aria-hidden="true">↓</span></a
+            ><a
+              href="https://github.com/EdoiseO"
+              target="_blank"
+              rel="noreferrer"
+              ><span class="contact-link-label"
+                ><svg
+                  class="contact-icon"
+                  aria-hidden="true"
+                  viewBox="0 0 128 128"
+                >
+                  <g fill="currentColor">
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M64 5.103c-33.347 0-60.388 27.035-60.388 60.388 0 26.682 17.303 49.317 41.297 57.303 3.017.56 4.125-1.31 4.125-2.905 0-1.44-.056-6.197-.082-11.243-16.8 3.653-20.345-7.125-20.345-7.125-2.747-6.98-6.705-8.836-6.705-8.836-5.48-3.748.413-3.67.413-3.67 6.063.425 9.257 6.223 9.257 6.223 5.386 9.23 14.127 6.562 17.573 5.02.542-3.903 2.107-6.568 3.834-8.076-13.413-1.525-27.514-6.704-27.514-29.843 0-6.593 2.36-11.98 6.223-16.21-.628-1.52-2.695-7.662.584-15.98 0 0 5.07-1.623 16.61 6.19C53.7 35 58.867 34.327 64 34.304c5.13.023 10.3.694 15.127 2.033 11.526-7.813 16.59-6.19 16.59-6.19 3.287 8.317 1.22 14.46.593 15.98 3.872 4.23 6.215 9.617 6.215 16.21 0 23.194-14.127 28.3-27.574 29.796 2.167 1.874 4.097 5.55 4.097 11.183 0 8.08-.07 14.583-.07 16.572 0 1.607 1.088 3.49 4.148 2.897 23.98-7.994 41.263-30.622 41.263-57.294C124.388 32.14 97.35 5.104 64 5.104z"
+                    />
+                    <path
+                      d="M26.484 91.806c-.133.3-.605.39-1.035.185-.44-.196-.685-.605-.543-.906.13-.31.603-.395 1.04-.188.44.197.69.61.537.91zm2.446 2.729c-.287.267-.85.143-1.232-.28-.396-.42-.47-.983-.177-1.254.298-.266.844-.14 1.24.28.394.426.472.984.17 1.255zM31.312 98.012c-.37.258-.976.017-1.35-.52-.37-.538-.37-1.183.01-1.44.373-.258.97-.025 1.35.507.368.545.368 1.19-.01 1.452zm3.261 3.361c-.33.365-1.036.267-1.552-.23-.527-.487-.674-1.18-.343-1.544.336-.366 1.045-.264 1.564.23.527.486.686 1.18.333 1.543zm4.5 1.951c-.147.473-.825.688-1.51.486-.683-.207-1.13-.76-.99-1.238.14-.477.823-.7 1.512-.485.683.206 1.13.756.988 1.237zm4.943.361c.017.498-.563.91-1.28.92-.723.017-1.308-.387-1.315-.877 0-.503.568-.91 1.29-.924.717-.013 1.306.387 1.306.88zm4.598-.782c.086.485-.413.984-1.126 1.117-.7.13-1.35-.172-1.44-.653-.086-.498.422-.997 1.122-1.126.714-.123 1.354.17 1.444.663zm0 0"
+                    />
+                  </g></svg
+                >Find me on GitHub</span
+              ><span aria-hidden="true">↗</span></a
+            >
+          </div>
+        </section>
+      </main>
+      <footer class="footer">
+        <p>© 2026 Phillip Onofua</p>
+        <span class="footer-note">Designed with care. Built to work.</span>
+        <nav aria-label="Footer navigation">
+          <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a
+          ><a href="#top" aria-label="Back to top">↑</a>
+        </nav>
+      </footer>
+    </div>
+    <script src="assets/hero-motion.js" defer></script>
+  </body>
 </html>

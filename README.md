@@ -4,11 +4,11 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 [View the live portfolio](https://philliponofua.vercel.app) · [Download my résumé](https://philliponofua.vercel.app/assets/phillip-onofua-resume.pdf)
 
-![Phillip Onofua’s dark developer portfolio, showing the animated hero and featured work](assets/portfolio-preview.png)
+![Phillip Onofua’s dark developer portfolio and featured work](assets/portfolio-preview.jpg)
 
 ## Overview
 
-This repository contains the source for my personal portfolio. The site introduces selected work through an editorial homepage and links each project to a dedicated case study with implementation details, real interface captures, and clear status information.
+This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline with real product previews, direct résumé access, and two featured projects. Each project links to a dedicated case study with implementation details, real interface captures, and clear status information; the Receipt Splitter concept appears separately as work in exploration.
 
 The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
@@ -18,7 +18,7 @@ The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaSc
 
 An end-to-end student marketplace connecting catalogue discovery, listing management, messaging, profiles, media storage, and protected moderation workflows.
 
-The engineering case study explains how the product handles request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, data integrity, role capabilities, and auditable report review. It also includes grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model.
+The case study opens with the working interface, a summary of the problem and my contribution, and grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model. The engineering sections explain request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, and auditable report review. An expandable technical-notes section preserves the deeper implementation detail.
 
 - **Role:** Team lead and full-stack developer
 - **Stack:** Next.js, React, Supabase, PostgreSQL, Tailwind CSS, and Vercel
@@ -48,13 +48,15 @@ The project page separates the concept from finished work and documents the prob
 
 ## Portfolio features
 
-- Dark-only, responsive editorial layout with sticky navigation
-- Animated hero phrase with a static screen-reader label and reduced-motion support
-- Alternating featured-project layouts using real product captures
+- Dark-only, responsive editorial layout with clear navigation
+- Original letter-by-letter hero animation, product previews, and prominent résumé access
+- Animation pause control, reduced-motion support, and a readable fallback without JavaScript
+- Two featured projects using real product captures, with concepts presented separately
 - Dedicated case-study pages with project-specific metadata and social previews
+- Product-first Student Market case study with expandable technical notes
 - Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
 - Overlay Studio screenshots and an embedded product demo
-- Semantic HTML, visible keyboard focus, descriptive alternative text, and accessible controls
+- Semantic HTML, skip links on the refreshed pages, visible keyboard focus, descriptive alternative text, and reduced-motion support
 - Downloadable résumé, direct contact links, privacy policy, and terms of use
 
 ## Built with
@@ -62,8 +64,6 @@ The project page separates the concept from finished work and documents the prob
 - HTML5
 - CSS3
 - Vanilla JavaScript
-- Web Animations API
-- Intersection Observer API
 - HTML Dialog API
 - Vercel
 
@@ -91,13 +91,16 @@ Open [http://localhost:8000](http://localhost:8000).
 ├── terms.html                         # Terms of use
 ├── assets/
 │   ├── styles.css                     # Base presentation styles
-│   ├── overrides.css                  # Current layout, responsive, and case-study styles
+│   ├── overrides.css                  # Shared case-study and supporting-page styles
+│   ├── home.css                       # Self-contained responsive homepage styles
+│   ├── hero-motion.js                 # Letter animation and motion preferences
+│   ├── case-study-refresh.css         # Student Market product-first layout and technical notes
 │   ├── student-market-gallery.js      # Student Market gallery and zoom interactions
 │   ├── student-market-*.{png,jpg}     # Desktop, mobile, admin, and data-model captures
 │   ├── overlay-studio-*.png           # Overlay Studio interface captures
 │   ├── overlay-studio-demo.webm       # Recorded Overlay Studio demonstration
 │   ├── tech-logos/                    # Self-hosted technology brand marks
-│   ├── portfolio-preview.png          # README and social preview image
+│   ├── portfolio-preview.jpg          # README and social preview image
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
 └── README.md
 ```
