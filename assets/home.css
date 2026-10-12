@@ -746,6 +746,50 @@ button:focus-visible {
   color: var(--muted);
   margin-top: 5px;
 }
+.languages {
+  margin-top: 28px;
+}
+.languages h3 {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.language-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.language-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #111720;
+  color: var(--text-soft, var(--soft));
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.language-list img,
+.language-list svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.language-list svg {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
 .about-copy > p {
   font-size: 14px;
   color: var(--soft);
@@ -817,6 +861,24 @@ button:focus-visible {
 .email-link:hover {
   text-decoration: underline;
   text-underline-offset: 6px;
+}
+.contact-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+.contact-icon--mail {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.contact-link-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }
 .contact-links {
   display: flex;
@@ -1132,6 +1194,14 @@ button:focus-visible {
   }
 }
 @media (max-width: 420px) {
+  .contact-links {
+    flex-direction: column;
+    gap: 12px;
+    max-width: 300px;
+  }
+  .contact-links a {
+    font-size: 12px;
+  }
   .page-wrap {
     padding: 0 20px;
   }
@@ -1231,6 +1301,10 @@ button:focus-visible {
   }
 }
 @media (max-width: 360px) {
+  .email-link {
+    font-size: 16px;
+    gap: 8px;
+  }
   .header {
     height: auto;
     min-height: 82px;
