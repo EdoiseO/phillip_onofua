@@ -481,36 +481,10 @@ button:focus-visible {
 }
 .project-visual {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  padding: 26px 24px 22px;
-  border-radius: 7px;
-  border: 1px solid #283748;
-  background: #122032;
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-.project-visual:hover {
-  border-color: #6589b6;
-}
-.project-overlay .project-visual {
-  background: #142624;
-  border-color: #30483f;
-}
-.project-overlay .project-visual:hover {
-  border-color: #609888;
-}
-.visual-topline {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 8px;
-  letter-spacing: 1px;
-  color: #a7bad3;
+  display: block;
 }
 .project-browser {
-  border: 1px solid #50627c;
+  border: 1px solid var(--border);
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 0 15px 36px #050a1270;
@@ -529,13 +503,6 @@ button:focus-visible {
   aspect-ratio: 1.6;
   object-fit: cover;
   object-position: center;
-}
-.visual-caption {
-  font-size: 10px;
-  color: #b6c6da;
-}
-.project-overlay .visual-caption {
-  color: #b7cfc5;
 }
 .project-status {
   color: var(--muted);
@@ -770,10 +737,10 @@ button:focus-visible {
   align-items: center;
   gap: 9px;
   min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: #111720;
+  padding: 10px 15px;
+  border: 1px solid #ffffff0d;
+  border-radius: 999px;
+  background: #ffffff06;
   color: var(--text-soft, var(--soft));
   font-size: 12px;
   line-height: 1.5;
@@ -982,10 +949,6 @@ button:focus-visible {
   .project-copy h3 {
     font-size: 29px;
   }
-  .project-visual {
-    padding: 20px 17px;
-    gap: 24px;
-  }
   .about {
     gap: 50px;
   }
@@ -1079,10 +1042,6 @@ button:focus-visible {
   }
   .project + .project {
     padding-top: 38px;
-  }
-  .project-visual {
-    padding: 22px;
-    gap: 24px;
   }
   .project-copy h3 {
     font-size: 34px;
@@ -1270,17 +1229,6 @@ button:focus-visible {
   }
   .section-title h2 {
     font-size: 30px;
-  }
-  .project-visual {
-    padding: 18px 14px;
-    gap: 19px;
-  }
-  .visual-topline {
-    font-size: 7px;
-    letter-spacing: 0.7px;
-  }
-  .visual-caption {
-    font-size: 9px;
   }
   .project-copy h3 {
     font-size: 30px;
