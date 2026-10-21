@@ -1,5 +1,5 @@
 import {stickerPack} from './stickers.js?v=17.0';
-import {createRuler} from './ruler-control.js?v=18.0';
+import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   const $=id=>document.getElementById(id),dialog=$('sticker-studio'),anchor=document.createComment('Sticker studio return point');
@@ -8,6 +8,19 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   const options={size:1,angle:-8,finish:'gloss'};
   const sizeRuler=createRuler($('sticker-size'),{ticks:49,start:'SMALL',end:'LARGE',format:value=>`${Math.round(value*100)} percent`});
   const angleRuler=createRuler($('sticker-angle'),{ticks:61,start:'−180°',end:'+180°',format:value=>`${value} degrees`});
+  const adjustmentFields=dialog.querySelector('.sticker-adjustments'),adjustmentAnchor=document.createComment('Desktop sticker controls');
+  adjustmentFields.before(adjustmentAnchor);
+  const mobileControls=matchMedia(mobileControlsQuery);
+  function moveRulers(){
+    if(mobileControls.matches)$('sticker-mobile-rail').append(adjustmentFields);
+    else adjustmentAnchor.after(adjustmentFields);
+  }
+  function rulerControl(control){
+    dialog.dataset.ruler=control;
+    for(const name of ['size','angle'])$(`sticker-ruler-${name}`).setAttribute('aria-pressed',String(control===name));
+  }
+  for(const control of ['size','angle'])$(`sticker-ruler-${control}`).addEventListener('click',()=>rulerControl(control));
+  mobileControls.addEventListener('change',moveRulers);moveRulers();rulerControl('size');
   function toolsTab(value,focus=false){
     dialog.dataset.tools=value;
     for(const tab of ['pack','adjust']){const button=$(`sticker-tab-${tab}`);button.setAttribute('aria-selected',String(tab===value));button.tabIndex=tab===value?0:-1;}
