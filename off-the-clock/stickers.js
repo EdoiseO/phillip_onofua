@@ -93,7 +93,9 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
   function clearDraft(){removeMesh(draft);draft=null;invalidate();}
   function setDraft(data){clearDraft();draft=make(data,true);invalidate();return {...draft.data};}
   function pick(x,y){
-    const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);
+    const r=stage.getBoundingClientRect();
+    if(!r.width||!r.height||x<r.left||x>r.right||y<r.top||y>r.bottom)return null;
+    raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);
     const candidates=[];
     for(const [parent,surface] of [[body,'wall'],[lid,'lid']]){
       parent.updateWorldMatrix(true,false);inverse.copy(parent.matrixWorld).invert();localRay.copy(raycaster.ray).applyMatrix4(inverse);
