@@ -1,4 +1,4 @@
-import {stickerPack} from './stickers.js?v=23.0';
+import {stickerPack} from './stickers.js?v=26.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 export function createStickerStudio({stage,box,beforeOpen,afterClose}){
@@ -13,15 +13,19 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   const mobileControls=matchMedia(mobileControlsQuery);
   const faceControls=dialog.querySelector('.sticker-faces'),faceAnchor=document.createComment('Desktop surface controls');
   faceControls.before(faceAnchor);
+  const collectionHeading=$('sticker-pack-heading'),collectionAnchor=document.createComment('Desktop sticker collections');
+  collectionHeading.before(collectionAnchor);
   function moveMobileControls(){
     const order=mobileControls.matches?['front','back','left','right','lid']:['front','right','back','left','lid'];
     for(const face of order)faceControls.append($(`sticker-face-${face}`));
     if(mobileControls.matches){
       $('sticker-mobile-rail').append(adjustmentFields);
       $('sticker-view-dock').append(faceControls);
+      $('sticker-collection-dock').append(collectionHeading);
     }else{
       adjustmentAnchor.after(adjustmentFields);
       faceAnchor.after(faceControls);
+      collectionAnchor.after(collectionHeading);
     }
   }
   let selectedFace;
@@ -65,6 +69,19 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     button.addEventListener('lostpointercapture',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
     $('sticker-pack').append(button);return button;
   });
+  let collection='originals';
+  function showCollection(value){
+    collection=value;
+    for(const name of ['originals','code'])$(`sticker-collection-${name}`).setAttribute('aria-pressed',String(name===value));
+    buttons.forEach((button,i)=>{button.hidden=stickerPack[i].collection!==value;});
+    $('sticker-pack').setAttribute('aria-label',value==='code'?'Choose a code sticker':'Choose an original sticker');
+  }
+  for(const name of ['originals','code'])$(`sticker-collection-${name}`).addEventListener('click',()=>showCollection(name));
+  showCollection(collection);
+  function focusPack(){
+    const chosen=buttons[stickerPack.indexOf(selected)];
+    (chosen.hidden?buttons.find(button=>!button.hidden):chosen).focus({preventScroll:true});
+  }
   function say(text){$('sticker-feedback').textContent=text;}
   function refresh(){
     const draft=system.draft(),busy=!!drag?.moved,editable=ready&&!!draft&&!busy;
@@ -160,7 +177,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     const previous=releaseDrag();if(!previous)return;
     if(previous.moved){restorePreview(previous);say('Drag cancelled. Your preview is unchanged.');}refresh();
   }
-  function focusSelection(){buttons[stickerPack.indexOf(selected)].focus({preventScroll:true});}
+  function focusSelection(){focusPack();}
   function cancelPreview(){system.clearDraft();stage.classList.remove('can-move-sticker');say('Preview cancelled. Pick a sticker to try again.');refresh();focusSelection();}
   function adjust(){if(system.draft()){const wanted=options.size;preview();if(options.size<wanted-.005)say(`Sized to ${Math.round(options.size*100)} percent to fit this surface. Choose Stick here when ready.`);}else refresh();}
   async function open(){
@@ -170,7 +187,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     const current=++loadId;
     try{await system.ready();if(!active||current!==loadId)return;ready=true;refresh();say('Pick a sticker to preview it on the box. Adjust size and angle, move it, then choose Stick here.');}
     catch(error){console.error('Unable to prepare the sticker pack',error);say('The stickers could not load. Close and reopen the pack to try again.');}
-    if(active)buttons[0].focus({preventScroll:true});
+    if(active)focusPack();
   }
   function close(){
     if(!active)return;active=false;++loadId;releaseDrag();releaseTurn();system.clearDraft();box.decorate(false);box.hold(false);stage.classList.remove('can-move-sticker');
