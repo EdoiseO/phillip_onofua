@@ -9,8 +9,8 @@
   <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="./style.css?v=22.0">
   <link rel="stylesheet" href="../assets/site-header.css">
-  <link rel="stylesheet" href="./sticker-studio.css?v=23.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=25.0">
+  <link rel="stylesheet" href="./sticker-studio.css?v=26.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=26.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -110,9 +110,10 @@
       <section class="sticker-panel" aria-label="Sticker pack and placement controls">
         <div class="sticker-view-dock" id="sticker-view-dock"><span class="sticker-view-label">BOX VIEW</span></div>
         <div class="sticker-panel-tabs" role="tablist" aria-label="Sticker tools"><button id="sticker-tab-pack" role="tab" aria-selected="true" aria-controls="sticker-pack-panel">Stickers</button><button id="sticker-tab-adjust" role="tab" aria-selected="false" aria-controls="sticker-adjust-panel" tabindex="-1">Adjust</button></div>
+        <div class="sticker-collection-dock" id="sticker-collection-dock"></div>
         <div class="sticker-panel-scroll">
         <div id="sticker-pack-panel" class="sticker-tool-panel" role="tabpanel" aria-labelledby="sticker-tab-pack">
-        <div class="sticker-panel-heading"><p class="eyebrow">01 / PICK YOUR FAVOURITES</p><span id="sticker-count">00 / 24</span></div>
+        <div class="sticker-panel-heading" id="sticker-pack-heading"><div class="sticker-collections" role="group" aria-label="Sticker collection"><button id="sticker-collection-originals" aria-pressed="true" aria-controls="sticker-pack">Originals</button><button id="sticker-collection-code" aria-pressed="false" aria-controls="sticker-pack">Code <span>06</span></button></div><span id="sticker-count">00 / 24</span></div>
         <div class="sticker-pack" id="sticker-pack" role="group" aria-label="Choose a sticker"></div>
         <div class="sticker-selected"><h3 id="sticker-selected-name">Choose a sticker</h3><p id="sticker-selected-note">See it on the box before you stick it.</p></div>
         </div>
@@ -141,6 +142,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=25.0"></script>
+  <script type="module" src="./main.js?v=26.0"></script>
 </body>
 </html>
