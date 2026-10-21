@@ -88,6 +88,26 @@ test('24 overlapping stickers keep insertion order through animation, save, relo
   try{verify();assert.equal(f.system.pick(-1,300),null);assert.equal(f.system.pick(300,601),null);}finally{f.cleanup();}
 });
 
+test('switching Holo on and off restores Gloss without rebuilding on every adjustment',async()=>{
+  const f=await stickerFixture();
+  try{
+    f.system.setDraft(placement);
+    const mesh=f.body.children[0],material=mesh.material,geometry=mesh.geometry;
+    const gloss={roughness:material.roughness,metalness:material.metalness,clearcoatRoughness:material.clearcoatRoughness};
+    f.system.setDraft({...placement,finish:'holo'});
+    assert.ok(material.iridescence>0);
+    const compiledVersion=material.version;
+    for(let angle=0;angle<40;angle++)f.system.setDraft({...placement,finish:'holo',angle});
+    assert.equal(material.version,compiledVersion,'moving a Holo sticker should not recompile its shader');
+    f.system.setDraft(placement);
+    assert.equal(material.iridescence,0);
+    for(const [key,value] of Object.entries(gloss))assert.equal(material[key],value);
+    assert.equal(f.body.children[0],mesh);
+    assert.equal(mesh.geometry,geometry);
+    assert.equal(mesh.material,material);
+  }finally{f.cleanup();}
+});
+
 test('a rotated lid preview fits, keeps its reported size on repeated edits, and saves exactly that transform',async()=>{
   const f=await stickerFixture();
   try{
