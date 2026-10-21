@@ -110,11 +110,12 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
     ctx.fillStyle = ink; ctx.textBaseline = 'top';
     ctx.font = '600 42px monospace'; ctx.fillText('PERSONAL COLLECTION', 65, 53);
     ctx.save(); ctx.translate(62, 132); ctx.rotate(-.012);
-    ctx.font = '900 184px Arial, sans-serif'; ctx.fillText('COMICS', 0, 0); ctx.restore();
-    ctx.fillStyle = '#555b50'; ctx.font = '41px monospace'; ctx.fillText('ISSUES & VARIANTS', 65, 388);
-    ctx.strokeStyle = '#7f816e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(65, 468); ctx.lineTo(960, 468); ctx.stroke();
-    ctx.font = '500 38px monospace'; ctx.fillText('OFF THE CLOCK', 65, 514);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#687581'; ctx.fillText('BOX 001', 960, 514);
+    ctx.font = '900 102px Arial, sans-serif'; ctx.fillText("PHILLIP’S", 0, 0);
+    ctx.font = '900 172px Arial, sans-serif'; ctx.fillText('COMICS', 0, 98); ctx.restore();
+    ctx.fillStyle = '#555b50'; ctx.font = '41px monospace'; ctx.fillText('ISSUES & VARIANTS', 65, 432);
+    ctx.strokeStyle = '#7f816e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(65, 510); ctx.lineTo(960, 510); ctx.stroke();
+    ctx.font = '500 38px monospace'; ctx.fillText('OFF THE CLOCK', 65, 550);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#687581'; ctx.fillText('BOX 001', 960, 550);
   }));
   plane(body, 1.65, 1.03, paperMaterial(labelTexture), [0, 1.27, D / 2 + T / 2 + .009], [0, 0, -.018]);
 

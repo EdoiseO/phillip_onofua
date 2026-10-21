@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=15.0';
-import {createBox} from './model.js?v=15.0';
+import {createBox} from './model.js?v=16.1';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
