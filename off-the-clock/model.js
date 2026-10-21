@@ -100,7 +100,10 @@ export async function createBox(stage,comics){
     return {group:g,book,booklet,sleeve,bag,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
   });
   const shadowMap=canvasTexture(256,256,(c,w,h)=>{const gradient=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);gradient.addColorStop(0,'rgba(0,0,0,.8)');gradient.addColorStop(.4,'rgba(0,0,0,.45)');gradient.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gradient;c.fillRect(0,0,w,h);});
-  addMesh(world,new THREE.PlaneGeometry(6.5,6.5),new THREE.MeshBasicMaterial({map:shadowMap,transparent:true,depthWrite:false}),[.1,-.012,.1],[-Math.PI/2,0,0]);
+  // Shadow helpers belong to the scene, not the rotating box. In particular,
+  // the transparent contact plane must never cast a solid rectangular shadow.
+  const contactShadow=new THREE.Mesh(new THREE.PlaneGeometry(6.5,6.5),new THREE.MeshBasicMaterial({map:shadowMap,transparent:true,depthWrite:false}));
+  contactShadow.rotation.x=-Math.PI/2;contactShadow.castShadow=false;contactShadow.receiveShadow=false;scene.add(contactShadow);
   const ground=addMesh(scene,new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({opacity:.22}),[0,-.02,0],[-Math.PI/2,0,0]);ground.castShadow=false;
   // A soft studio halo sits behind the book, outside the fitted model bounds.
   const haloMap=canvasTexture(128,128,(c,w,h)=>{
@@ -184,10 +187,22 @@ export async function createBox(stage,comics){
     yaw=damp(yaw,desiredYaw,dt,5);pitch=damp(pitch,desiredPitch,dt,5);
     world.rotation.y=(-.13+yaw)*(1-focus);world.rotation.x=pitch*(1-focus);
     scene.environmentRotation.y=yaw*.32;
+    world.updateWorldMatrix(true,true);
+    overviewBounds[0].setFromObject(body);overviewBounds[1].setFromObject(lid);
+    // The invisible floor stays horizontal and below both parts at every
+    // tilt, including the lid travelling to either side. It cannot slice
+    // through the box when a lower corner rotates beneath the original floor.
+    const boxBounds=overviewBounds[0],floorY=Math.min(0,boxBounds.min.y,overviewBounds[1].min.y)-.02;
+    ground.position.y=floorY;
+    contactShadow.position.set((boxBounds.min.x+boxBounds.max.x)/2,floorY+.008,(boxBounds.min.z+boxBounds.max.z)/2);
+    contactShadow.scale.set(Math.max(3,boxBounds.max.x-boxBounds.min.x+1.8)/6.5,Math.max(3,boxBounds.max.z-boxBounds.min.z+1.8)/6.5,1);
+    const shadowVisibility=1-smooth(0,.45,focus);
+    contactShadow.material.opacity=shadowVisibility*(1-.55*Math.abs(Math.sin(world.rotation.x)));
+    contactShadow.visible=shadowVisibility>.001;
+    ground.material.opacity=.22*shadowVisibility;ground.visible=shadowVisibility>.001;
     if(focus<=.0001){
       // Fit the actual lid, box and raised comic, especially on narrow screens.
-      world.updateWorldMatrix(true,true);
-      [body,lid,cards[selected].group].forEach((object,i)=>overviewBounds[i].setFromObject(object));
+      overviewBounds[2].setFromObject(cards[selected].group);
       const anchor=decorating?decorationTarget:homeTarget;
       let n=0,minX=Infinity,maxX=-Infinity;
       for(const bounds of overviewBounds)for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
@@ -250,7 +265,6 @@ export async function createBox(stage,comics){
     }
     stage.dataset.idleMotion=inspecting&&!reduced&&floatStrength>.001?'floating':'still';
     stage.dataset.halo=halo.visible?'on':'off';
-    ground.visible=focus<.995;
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001;
     stage.dataset.motionSettled=String(settled);
     const stickersMoving=stickerSystem.tick(dt,reduced);
