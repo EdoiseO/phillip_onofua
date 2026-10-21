@@ -1,10 +1,11 @@
 import {comics} from './comics.js?v=15.0';
-import {createBox} from './model.js?v=21.0';
-import {createStickerStudio} from './sticker-studio.js?v=20.0';
-import {createRuler} from './ruler-control.js?v=19.0';
+import {createBox} from './model.js?v=22.0';
+import {createStickerStudio} from './sticker-studio.js?v=22.0';
+import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
+const mobileCollection=matchMedia(mobileControlsQuery);
 // Pointer focus keeps keyboard controls active without framing the 3D scene.
 // Switch back immediately when the user resumes keyboard navigation.
 document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},true);
@@ -89,11 +90,10 @@ $('inspect-button').addEventListener('click',()=>enterInspection());$('return-bu
 for(const view of ['front','spine','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='spine'?'Spine and staple detail.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
 dialog.addEventListener('cancel',e=>{e.preventDefault();leaveInspection();});
 $('previous').addEventListener('click',()=>step(-1));$('next').addEventListener('click',()=>step(1));
-$('reset-view').addEventListener('click',e=>{e.stopPropagation();inspectionView='front';box?.reset();if(!inspecting){lidSide=1;lidTilt=0;}render();});
 $('motion-toggle').addEventListener('click',()=>{reduced=!reduced;updateMotion();});
 media.addEventListener('change',e=>{reduced=e.matches;updateMotion();});
 stage.addEventListener('wheel',e=>{
-  if(!box||Math.abs(e.deltaY)<Math.abs(e.deltaX))return;
+  if(!box||(!inspecting&&mobileCollection.matches)||Math.abs(e.deltaY)<Math.abs(e.deltaX))return;
   e.preventDefault();if(inspecting)return;
   const now=performance.now();if(now-lastWheel<600)return;
   if(now-lastWheelInput>180)wheelSum=0;lastWheelInput=now;
@@ -114,24 +114,31 @@ stage.addEventListener('keydown',e=>{
   if(e.key==='Escape')setOpen(false);
   if(e.key==='Home')select(0);if(e.key==='End')select(comics.length-1);
   if(e.key.toLowerCase()==='i'&&opened)enterInspection();
+  if(e.key.toLowerCase()==='r'){box?.reset();lidSide=1;lidTilt=0;render();}
 });
 stage.addEventListener('pointerdown',e=>{
-  if(e.target.closest('button')||e.button>0)return;
+  if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary)return;
   const hit=box?.hit(e.clientX,e.clientY);
   box?.hold(true);
-  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};stage.setPointerCapture(e.pointerId);
+  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,mobilePan:mobileCollection.matches&&!inspecting,axis:null,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
   const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);
+  if(pointer.mobilePan){
+    const x=e.clientX-pointer.x,y=e.clientY-pointer.y;
+    if(!pointer.axis&&Math.hypot(x,y)>6)pointer.axis=Math.abs(y)>Math.abs(x)?'scroll':'turn';
+    if(pointer.axis!=='turn')return;
+  }
   if(pointer.moved>5){if(pointer.lid)positionLid(lidSide+dx*.009,lidTilt+dy*.003);else box?.rotate(dx*(inspecting ? .007 : .005),inspecting?dy*.006:pointer.type==='touch'?0:dy*.0008);}
   pointer.lastX=e.clientX;pointer.lastY=e.clientY;
 });
 stage.addEventListener('pointerup',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
   const gesture=pointer;pointer=null;box?.hold(false);if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+  if(gesture.mobilePan&&gesture.axis==='scroll'){lastTap=null;return;}
   if(gesture.lid){lastTap=null;if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
-  if(!inspecting&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
+  if(!inspecting&&!gesture.mobilePan&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
   if(gesture.moved>=7){lastTap=null;return;}
   const hit=box?.hit(e.clientX,e.clientY);
   if(inspecting){
@@ -151,8 +158,10 @@ stage.addEventListener('pointerup',e=>{
   }
 });
 stage.addEventListener('dblclick',e=>{e.preventDefault();clearTimeout(clickTimer);if(inspecting)return;const hit=box?.hit(e.clientX,e.clientY);if(hit?.comic!==undefined)enterInspection(hit.comic);});
-stage.addEventListener('pointercancel',()=>{pointer=null;lastTap=null;box?.hold(false);});
-stage.addEventListener('lostpointercapture',()=>{box?.hold(false);});
+function cancelPointer(){const previous=pointer;pointer=null;lastTap=null;clearTimeout(clickTimer);box?.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
+stage.addEventListener('pointercancel',cancelPointer);
+stage.addEventListener('lostpointercapture',()=>{if(pointer)cancelPointer();});
+window.addEventListener('blur',cancelPointer);
 try{
   box=await createBox(stage,comics);box.select(0);box.setOpen(false);updateMotion();render();seriesSelect.disabled=false;openButton.disabled=false;$('loading').hidden=true;
   createStickerStudio({stage,box,beforeOpen:()=>{if(inspecting)leaveInspection();setOpen(false);},afterClose:()=>{stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag to turn. Escape closes.');render();}});

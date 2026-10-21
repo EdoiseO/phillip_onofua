@@ -42,10 +42,7 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     if(textures)return;
     if(!loading)loading=Promise.all(stickerPack.map(async art=>{
       const map=await loader.loadAsync(art.src);map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=8;
-      const c=document.createElement('canvas');c.width=map.image.width;c.height=map.image.height;
-      const ctx=c.getContext('2d');ctx.drawImage(map.image,0,0);ctx.globalCompositeOperation='source-in';ctx.fillStyle='white';ctx.fillRect(0,0,c.width,c.height);
-      const paper=new THREE.CanvasTexture(c);paper.colorSpace=THREE.SRGBColorSpace;
-      return [art.id,{map,paper,ratio:map.image.height/map.image.width}];
+      return [art.id,{map,ratio:map.image.height/map.image.width}];
     })).then(entries=>{textures=new Map(entries);}).catch(error=>{loading=null;throw error;});
     await loading;
   }
@@ -59,39 +56,55 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     const maxSize=Math.min(1,(W+.1)/Math.max(.01,extentX*2),(D+.06)/Math.max(.01,extentY*2));
     return {...data,size:size*maxSize,u:clamp(data.u,-(W+.1)/2+extentX*maxSize,(W+.1)/2-extentX*maxSize),v:clamp(data.v,-(D+.06)/2+extentY*maxSize,(D+.06)/2-extentY*maxSize)};
   }
-  function make(data,isDraft=false){
-    data=constrain(data);
-    const art=stickerPack.find(s=>s.id===data.art),tex=textures.get(data.art);
-    // Small cells keep corner-crossing triangles outside the cardboard shell.
-    const g=new THREE.PlaneGeometry(art.width*data.size,art.width*data.size*tex.ratio,96,64);
-    const p=g.attributes.position,n=g.attributes.normal,angle=data.angle*Math.PI/180;
+  function make(data,isDraft=false,layer=items.length){
+    // Keep a fine grid for corner wrapping, but use one cutout mesh rather than
+    // two nearly coplanar transparent faces. The reverse is plain sticker paper.
+    const g=new THREE.PlaneGeometry(1,1,96,64);
+    g.attributes.position.setUsage(THREE.DynamicDrawUsage);g.attributes.normal.setUsage(THREE.DynamicDrawUsage);
+    const material=new THREE.MeshPhysicalMaterial({alphaTest:.35,alphaToCoverage:true,transparent:true,forceSinglePass:true,depthWrite:false,roughness:.27,clearcoat:1,clearcoatRoughness:.12,iridescenceIOR:1.35,iridescenceThicknessRange:[140,460],envMapIntensity:.85,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nif (!gl_FrontFacing) diffuseColor.rgb = vec3(0.96);');};
+    material.customProgramCacheKey=()=>'sticker-paper-reverse-v1';
+    const mesh=new THREE.Mesh(g,material);mesh.userData.sticker=true;mesh.receiveShadow=false;
+    const item={data:null,mesh,base:new Float32Array(g.attributes.position.array.length),press:isDraft?.18:0,isDraft,layer};
+    project(item,data);return item;
+  }
+  function project(item,data){
+    data=constrain(data);item.data=data;
+    const art=stickerPack.find(s=>s.id===data.art),tex=textures.get(data.art),g=item.mesh.geometry;
+    const p=g.attributes.position,n=g.attributes.normal,uv=g.attributes.uv,angle=data.angle*Math.PI/180;
+    const w=art.width*data.size,h=w*tex.ratio,cos=Math.cos(angle),sin=Math.sin(angle);
     for(let i=0;i<p.count;i++){
-      const x=p.getX(i),y=p.getY(i),u=data.u+x*Math.cos(angle)-y*Math.sin(angle),v=data.v+x*Math.sin(angle)+y*Math.cos(angle);
+      const x=(uv.getX(i)-.5)*w,y=(uv.getY(i)-.5)*h,u=data.u+x*cos-y*sin,v=data.v+x*sin+y*cos;
       const point=data.surface==='wall'?wallPoint(u,v,width,depth):{position:[u,.125,-v],normal:[0,1,0]};
-      p.setXYZ(i,...point.position);n.setXYZ(i,...point.normal);
+      item.base.set(point.position,i*3);n.setXYZ(i,...point.normal);
     }
-    const base=Float32Array.from(p.array);
-    const material=new THREE.MeshPhysicalMaterial({map:tex.map,transparent:true,alphaTest:.05,roughness:.27,metalness:data.finish==='holo'?.12:0,clearcoat:1,clearcoatRoughness:.12,iridescence:data.finish==='holo'?.85:0,iridescenceIOR:1.35,iridescenceThicknessRange:[140,460],envMapIntensity:.85,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3,opacity:isDraft?.82:1});
-    const mesh=new THREE.Mesh(g,material);mesh.userData.sticker=true;mesh.renderOrder=isDraft?40:3;mesh.receiveShadow=false;
-    const paper=new THREE.Mesh(g.clone(),new THREE.MeshStandardMaterial({map:tex.paper,transparent:true,alphaTest:.05,roughness:.65,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));paper.renderOrder=2;
-    const parent=data.surface==='wall'?body:lid;parent.add(paper,mesh);
-    const item={data,mesh,paper,base,press:isDraft?.18:0,isDraft};shape(item);return item;
+    n.needsUpdate=true;
+    const material=item.mesh.material,holo=data.finish==='holo';
+    if((material.iridescence>0)!==holo)material.needsUpdate=true;
+    material.map=tex.map;material.metalness=holo?.12:0;material.iridescence=holo?.85:0;
+    const parent=data.surface==='wall'?body:lid;if(item.mesh.parent!==parent)parent.add(item.mesh);
+    // Box depth still occludes hidden faces. Among cutouts, explicit insertion
+    // order wins at every viewing angle, even during overlapping peel motions.
+    item.mesh.renderOrder=item.isDraft?100:10+item.layer;
+    shape(item);
   }
   function shape(item){
-    const p=item.mesh.geometry.attributes.position,n=item.mesh.geometry.attributes.normal,uv=item.mesh.geometry.attributes.uv;
-    const back=item.paper.geometry.attributes.position;
-    const layer=.022+(item.isDraft?.006+items.length*.0007:items.indexOf(item)*.0007);
+    const g=item.mesh.geometry,p=g.attributes.position,n=g.attributes.normal,uv=g.attributes.uv;
+    const layer=.024+item.layer*.001;
     for(let i=0;i<p.count;i++){
       const curl=Math.pow(uv.getX(i),3)*.22*item.press;
       for(let axis=0;axis<3;axis++){
-        const j=i*3+axis;p.array[j]=item.base[j]+n.array[j]*(layer+curl);back.array[j]=item.base[j]+n.array[j]*(layer+curl-.003);
+        const j=i*3+axis;p.array[j]=item.base[j]+n.array[j]*(layer+curl);
       }
     }
-    p.needsUpdate=true;back.needsUpdate=true;item.mesh.geometry.computeBoundingSphere();item.paper.geometry.computeBoundingSphere();
+    p.needsUpdate=true;g.computeBoundingBox();g.computeBoundingSphere();
   }
-  function removeMesh(item){if(!item)return;for(const mesh of [item.mesh,item.paper]){mesh.removeFromParent();mesh.geometry.dispose();mesh.material.dispose();}}
-  function clearDraft(){removeMesh(draft);draft=null;invalidate();}
-  function setDraft(data){clearDraft();draft=make(data,true);invalidate();return {...draft.data};}
+  function removeMesh(item){if(!item)return;item.mesh.removeFromParent();item.mesh.geometry.dispose();item.mesh.material.dispose();}
+  function clearDraft(){if(!draft)return;removeMesh(draft);draft=null;invalidate();}
+  function setDraft(data){
+    if(draft){project(draft,data);}else{draft=make(data,true);}
+    invalidate();return {...draft.data};
+  }
   function pick(x,y){
     const r=stage.getBoundingClientRect();
     if(!r.width||!r.height||x<r.left||x>r.right||y<r.top||y>r.bottom)return null;
@@ -122,18 +135,18 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     return [width/2,width/2+depth,width*1.5+depth,width*1.5+2*depth,-width/2].some(edge=>Math.abs(data.u-edge)<extent);
   }
   return {
-    async ready(){await prepare();if(stored.length){items=stored.map(s=>make(s));stored=[];items.forEach(shape);invalidate();}},
+    async ready(){await prepare();if(stored.length){items=stored.map((s,i)=>make(s,false,i));stored=[];invalidate();}},
     setDraft,clearDraft,pick,
     draft(){return draft?{...draft.data}:null;},
     wraps(){return wraps(draft?.data);},
     count(){return items.length;},
     saved(){return saved;},
     canUndo(){return history.length>0;},
-    place(){if(!draft||items.length>=24)return false;remember();const data=draft.data;clearDraft();const item=make(data);items.push(item);item.press=1;shape(item);save();invalidate();return true;},
-    undo(){if(!history.length)return;clearDraft();items.forEach(removeMesh);items=history.pop().map(s=>make(s));items.forEach(shape);save();invalidate();},
+    place(){if(!draft||items.length>=24)return false;remember();const item=draft;draft=null;item.isDraft=false;item.layer=items.length;item.mesh.renderOrder=10+item.layer;items.push(item);item.press=1;shape(item);save();invalidate();return true;},
+    undo(){if(!history.length)return;clearDraft();items.forEach(removeMesh);items=history.pop().map((s,i)=>make(s,false,i));save();invalidate();},
     reset(){if(!items.length)return;remember();clearDraft();items.forEach(removeMesh);items=[];save();invalidate();},
     tick(dt,reduced){let moving=false;for(const item of items){if(item.press>0){item.press=reduced?0:item.press*Math.exp(-dt*8);if(item.press<.001)item.press=0;shape(item);moving=true;}}return moving;},
     hasSaved:stored.length>0,
-    dispose(){clearDraft();items.forEach(removeMesh);if(textures)for(const tex of textures.values()){tex.map.dispose();tex.paper.dispose();}}
+    dispose(){clearDraft();items.forEach(removeMesh);if(textures)for(const tex of textures.values()){tex.map.dispose();}}
   };
 }
