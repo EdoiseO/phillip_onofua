@@ -9,6 +9,7 @@
   <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="./style.css?v=16.0">
   <link rel="stylesheet" href="../assets/site-header.css">
+  <link rel="stylesheet" href="./sticker-studio.css?v=17.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -38,6 +39,7 @@
         <div class="actions">
           <button class="primary" id="open-button" disabled>Preparing the box… <span aria-hidden="true">↗</span></button>
           <button class="inspect-button" id="inspect-button" hidden>Inspect this comic <span aria-hidden="true">⤢</span></button>
+          <button class="decorate-button" id="decorate-button" disabled><span class="sticker-icon" aria-hidden="true">✦</span> Make it yours <span class="sticker-button-note">STICKER PACK / 01</span></button>
           <p class="small-hint" id="left-hint">A SMALL COLLECTION. A FEW BIG ADVENTURES.</p>
         </div>
         <div class="reading-progress" id="reading-progress" hidden><span id="issue-count">01 / 05</span><div class="progress-track"><div id="progress-fill"></div></div><span>THE COLLECTION</span></div>
@@ -81,6 +83,42 @@
       <span class="sleeve-status" id="sleeve-status">BAGGED & BOARDED</span>
     </footer>
   </dialog>
-  <script type="module" src="./main.js?v=16.2"></script>
+  <dialog class="sticker-studio" id="sticker-studio" aria-labelledby="sticker-studio-title" aria-describedby="sticker-feedback">
+    <header class="sticker-studio-header">
+      <button class="back-button" id="sticker-close">← <span>Back to the box</span></button>
+      <div><p class="eyebrow">A LITTLE MORE YOU</p><h2 id="sticker-studio-title">Make it yours<span>.</span></h2></div>
+      <span class="sticker-edition">THE STICKER CLUB <span>/ 001</span></span>
+    </header>
+    <div class="sticker-workspace">
+      <section class="sticker-canvas-area" aria-label="Decorate your comic box">
+        <div class="sticker-stage" id="sticker-stage"></div>
+        <div class="sticker-canvas-controls">
+          <p id="sticker-placement-note">Pick a sticker to begin</p>
+          <div class="sticker-mode" role="group" aria-label="Sticker interaction">
+            <button id="sticker-turn" aria-pressed="true">↔ Turn box</button><button id="sticker-position" aria-pressed="false">✦ Position sticker</button>
+          </div>
+          <p id="sticker-stage-hint">Drag to turn the box · Choose a side below</p>
+          <div class="sticker-faces" role="group" aria-label="View a box surface"><button id="sticker-face-front">Front</button><button id="sticker-face-right">Right</button><button id="sticker-face-back">Back</button><button id="sticker-face-left">Left</button><button id="sticker-face-lid">Lid ↗</button></div>
+        </div>
+      </section>
+      <section class="sticker-panel" aria-label="Sticker pack and placement controls">
+        <div class="sticker-panel-heading"><p class="eyebrow">01 / PICK YOUR FAVOURITES</p><span id="sticker-count">00 / 24</span></div>
+        <div class="sticker-pack" id="sticker-pack" role="group" aria-label="Choose a sticker"></div>
+        <div class="sticker-selected"><h3 id="sticker-selected-name">Omnitrix</h3><p id="sticker-selected-note">Hero time.</p></div>
+        <div class="sticker-adjustments">
+          <label for="sticker-size"><span>Size</span><output id="sticker-size-value" for="sticker-size">100%</output></label>
+          <input id="sticker-size" type="range" min="0.45" max="1.65" step="0.05" value="1">
+          <label for="sticker-angle"><span>Angle</span><output id="sticker-angle-value" for="sticker-angle">−8°</output></label>
+          <input id="sticker-angle" type="range" min="-180" max="180" step="1" value="-8">
+        </div>
+        <div class="sticker-finish" role="group" aria-label="Sticker finish"><span>Finish</span><button id="sticker-gloss" aria-pressed="true">Gloss</button><button id="sticker-holo" aria-pressed="false">✧ Holo</button></div>
+        <button class="primary sticker-place" id="sticker-place" disabled>Place sticker <span aria-hidden="true">↘</span></button>
+        <div class="sticker-history"><button id="sticker-undo" disabled>↶ Undo</button><button id="sticker-clear" disabled>Clear box</button></div>
+        <p class="sticker-feedback" id="sticker-feedback" aria-live="polite">Pick a sticker. Find its spot. Make it yours.</p>
+        <p class="sticker-save-note" id="sticker-save-note">Saved on this device. Your box, your stickers.</p>
+      </section>
+    </div>
+  </dialog>
+  <script type="module" src="./main.js?v=17.0"></script>
 </body>
 </html>
