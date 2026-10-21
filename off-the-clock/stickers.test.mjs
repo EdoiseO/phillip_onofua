@@ -121,3 +121,23 @@ test('preview picking ignores transparent cutouts, hidden surfaces, and hidden d
     assert.equal(f.system.hitDraft(300,300),false);
   }finally{f.cleanup();}
 });
+
+test('developer stickers save and reload alongside the original collection',async()=>{
+  const storage=new Map();let f=await stickerFixture(storage);
+  const arts=['marvel','javascript','typescript','python','cplusplus','html5','css3'];
+  try{
+    for(const [i,art] of arts.entries()){
+      const data=f.system.setDraft({...placement,art,surface:i%2?'lid':'wall',finish:i%2?'holo':'gloss'});
+      assert.ok(validSticker(data));assert.ok(f.system.place());
+    }
+    assert.deepEqual(JSON.parse(storage.get(STORAGE_KEY)).map(item=>item.art),arts);
+  }finally{f.cleanup();}
+  f=await stickerFixture(storage);
+  try{
+    assert.equal(f.system.count(),arts.length);
+    assert.equal(f.body.children.length+f.lid.children.length,arts.length);
+    f.system.setDraft({...placement,art:'python'});assert.ok(f.system.place());
+    f.system.undo();assert.equal(f.system.count(),arts.length);
+    assert.deepEqual(JSON.parse(storage.get(STORAGE_KEY)).map(item=>item.art),arts);
+  }finally{f.cleanup();}
+});

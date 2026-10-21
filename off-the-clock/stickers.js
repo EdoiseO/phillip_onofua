@@ -4,8 +4,14 @@ export const stickerPack = [
   {id:'batman',name:'The Dark Knight',note:'Gotham after hours.',width:1.45},
   {id:'spider-man',name:'Spider-Man',note:'Your friendly neighbour.',width:1.05},
   {id:'dino',name:'Offline Dino',note:'No signal. Still running.',width:.85},
-  {id:'openai',name:'OpenAI',note:'Stay curious.',width:.95}
-].map(sticker=>({...sticker,src:`./assets/stickers/${sticker.id}.png`}));
+  {id:'openai',name:'OpenAI',note:'Stay curious.',width:.95},
+  {id:'javascript',name:'JavaScript',note:'One more idea. One more script.',width:.95,collection:'code',extension:'svg'},
+  {id:'typescript',name:'TypeScript',note:'A little more type safety.',width:.95,collection:'code',extension:'svg'},
+  {id:'python',name:'Python',note:'Small scripts. Big ideas.',width:1.05,collection:'code',extension:'svg'},
+  {id:'cplusplus',name:'C++',note:'Close to the metal.',width:.95,collection:'code',extension:'svg'},
+  {id:'html5',name:'HTML5',note:'It starts with a little markup.',width:.9,collection:'code',extension:'svg'},
+  {id:'css3',name:'CSS3',note:'Make it feel right.',width:.9,collection:'code',extension:'svg'}
+].map(sticker=>({...sticker,collection:sticker.collection??'originals',src:`./assets/stickers/${sticker.id}.${sticker.extension??'png'}`}));
 
 export const STORAGE_KEY='phillip-shortbox-stickers-v1';
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
