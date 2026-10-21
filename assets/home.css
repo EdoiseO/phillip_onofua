@@ -1292,3 +1292,10 @@ button:focus-visible {
     transform: none;
   }
 }
+
+/* Keep all four navigation destinations reachable on narrow screens. */
+@media (max-width: 600px) {
+  .header { height: auto; min-height: 82px; flex-wrap: wrap; gap: 8px; padding-block: 16px 4px; }
+  .navigation { width: 100%; justify-content: space-between; gap: 12px; }
+  .navigation a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
+}
