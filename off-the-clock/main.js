@@ -1,7 +1,7 @@
 import {comics} from './comics.js?v=15.0';
 import {createBox} from './model.js?v=17.0';
-import {createStickerStudio} from './sticker-studio.js?v=18.0';
-import {createRuler} from './ruler-control.js?v=18.0';
+import {createStickerStudio} from './sticker-studio.js?v=19.0';
+import {createRuler} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
@@ -19,7 +19,7 @@ const media=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=media.matches;
 const seriesSelect=$('series-select');
 const comicRuler=$('comic-ruler');comicRuler.max=String(comics.length-1);
-const collectionRuler=createRuler(comicRuler,{ticks:comics.length*2-1,start:'FIRST ISSUE',end:'LATEST ADDITION',format:value=>`${value+1} of ${comics.length}. ${comics[value].title}, ${comics[value].variant}`});
+const collectionRuler=createRuler(comicRuler,{ticks:comics.length*2-1,start:'FIRST',end:'LAST',format:value=>`${value+1} of ${comics.length}. ${comics[value].title}, ${comics[value].variant}`});
 comicRuler.addEventListener('input',()=>select(Number(comicRuler.value)));
 for(const series of new Set(comics.map(c=>c.series))){const option=document.createElement('option');option.value=series;option.textContent=series;seriesSelect.append(option);}
 seriesSelect.addEventListener('change',()=>select(comics.findIndex(c=>c.series===seriesSelect.value)));
@@ -33,7 +33,7 @@ function render(){
   const comic=comics[index];renderLid();
   comicRuler.value=String(index);comicRuler.disabled=!box;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
-  $('comic-ruler-note').textContent=opened?comic.variant:'Slide to open the box and explore.';
+  $('comic-ruler-note').textContent=opened?comic.variant:'Slide down to explore.';
   $('eyebrow').textContent=opened?'04 / FROM MY COLLECTION':'04 / OFF THE CLOCK';
   $('title').replaceChildren();
   $('title').classList.toggle('series-title',opened);
