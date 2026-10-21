@@ -32,8 +32,6 @@
   .sticker-ruler-field{display:flex;flex-direction:column;align-items:center;flex:1;min-height:0;width:100%}
   .sticker-studio[data-ruler=size] #sticker-angle-field,.sticker-studio[data-ruler=angle] #sticker-size-field{display:none}
   .sticker-canvas-controls>p:first-child{font-size:8px;margin:0 0 5px;min-height:12px}
-  .sticker-mode{padding:3px;border-radius:9px}
-  .sticker-mode button{min-height:40px;padding:9px 8px}
   .sticker-canvas-controls #sticker-stage-hint{display:none}
   .sticker-faces{margin-top:5px;gap:5px}
   .sticker-faces button{min-height:34px;font-size:9px;padding:6px 5px}
@@ -130,7 +128,6 @@
   .sticker-studio[data-tools] #sticker-pack-panel,.sticker-studio[data-tools] #sticker-adjust-panel{display:block}
   .sticker-canvas-controls{padding-bottom:8px}
   .sticker-canvas-controls #sticker-stage-hint{display:none}
-  .sticker-mode button{padding:8px;min-height:36px;font-size:10px}
   .sticker-faces{margin-top:6px}
   .experience{grid-template-columns:215px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:18px}
   .story{align-self:center;grid-template-rows:16px 65px auto;padding:0}
@@ -146,3 +143,11 @@
   .off-clock-page .footer{display:none}
 }
 @media(prefers-reduced-motion:reduce){.ruler-scale i{transition:none}}
+
+@media(max-width:700px),(pointer:coarse) and (max-width:950px) and (max-height:500px){
+  .sticker-drag-help{font-size:12px;letter-spacing:0;margin:4px 0 9px}
+  .sticker-drop-help,.sticker-preview-actions{min-height:44px}
+  .sticker-drop-help{font-size:12px;gap:3px}
+  .sticker-drop-help span{font-size:9px}
+  .sticker-drag-ghost img{width:72px;height:72px}
+}
