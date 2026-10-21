@@ -35,17 +35,18 @@ test('saved stickers reject corrupt, unbounded, or unknown data',()=>{
 import * as THREE from './vendor/three.module.js';
 import {createStickerSystem,STORAGE_KEY} from './stickers.js';
 
-async function stickerFixture(storage=new Map()){
+async function stickerFixture(storage=new Map(),image={width:512,height:512}){
   const descriptor=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
   Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)}});
-  const body=new THREE.Group(),lid=new THREE.Group();
+  const body=new THREE.Group(),lid=new THREE.Group(),camera=new THREE.PerspectiveCamera(40,1,.1,30);
+  camera.position.set(0,1.3,8);camera.lookAt(0,1.3,0);camera.updateMatrixWorld();
   const system=await createStickerSystem({
-    THREE:{...THREE,TextureLoader:class{async loadAsync(){return new THREE.Texture({width:512,height:512});}}},
-    body,lid,stage:{getBoundingClientRect:()=>({left:0,top:0,right:600,bottom:600,width:600,height:600})},camera:new THREE.PerspectiveCamera(),
+    THREE:{...THREE,TextureLoader:class{async loadAsync(){return new THREE.Texture(image);}}},
+    body,lid,stage:{getBoundingClientRect:()=>({left:0,top:0,right:600,bottom:600,width:600,height:600})},camera,
     W:2.16,H:2.9,D:4.15,T:.068,invalidate:()=>{}
   });
   await system.ready();
-  return {body,lid,system,storage,cleanup(){system.dispose();if(descriptor)Object.defineProperty(globalThis,'localStorage',descriptor);else delete globalThis.localStorage;}};
+  return {body,lid,camera,system,storage,cleanup(){system.dispose();if(descriptor)Object.defineProperty(globalThis,'localStorage',descriptor);else delete globalThis.localStorage;}};
 }
 const placement={art:'marvel',surface:'wall',u:.9,v:1.3,size:1,angle:-12,finish:'gloss'};
 
@@ -85,4 +86,38 @@ test('24 overlapping stickers keep insertion order through animation, save, relo
   }finally{f.cleanup();}
   f=await stickerFixture(storage);
   try{verify();assert.equal(f.system.pick(-1,300),null);assert.equal(f.system.pick(300,601),null);}finally{f.cleanup();}
+});
+
+test('a rotated lid preview fits, keeps its reported size on repeated edits, and saves exactly that transform',async()=>{
+  const f=await stickerFixture();
+  try{
+    let data=f.system.setDraft({...placement,art:'batman',surface:'lid',u:1,v:2,size:1.65,angle:45});
+    assert.ok(data.size<1.65);assert.ok(Math.abs(Math.round(data.size*100)-data.size*100)<1e-8);
+    const original={...data};
+    for(let i=0;i<50;i++){data=f.system.setDraft(data);assert.equal(data.size,original.size);assert.equal(data.angle,original.angle);assert.ok(Math.abs(data.u-original.u)<1e-10&&Math.abs(data.v-original.v)<1e-10);}
+    const mesh=f.lid.children[0],bounds=mesh.geometry.boundingBox;
+    assert.ok(bounds.min.x>=-1.13001&&bounds.max.x<=1.13001);
+    assert.ok(bounds.min.z>=-2.10501&&bounds.max.z<=2.10501);
+    const positions=mesh.geometry.attributes.position.array.slice();
+    assert.equal(f.system.count(),0);assert.equal(f.storage.has(STORAGE_KEY),false);
+    assert.ok(f.system.place());f.system.tick(1,true);
+    assert.deepEqual(mesh.geometry.attributes.position.array,positions);
+    assert.deepEqual(JSON.parse(f.storage.get(STORAGE_KEY)),[data]);
+  }finally{f.cleanup();}
+});
+
+test('preview picking ignores transparent cutouts, hidden surfaces, and hidden drafts',async()=>{
+  const pixels=new Uint8ClampedArray(4*4*4);
+  for(const i of [5,6,9,10])pixels[i*4+3]=255;
+  const f=await stickerFixture(new Map(),{width:4,height:4,data:pixels});
+  const screen=point=>{const p=new THREE.Vector3(...point).project(f.camera);return [(p.x+1)*300,(1-p.y)*300];};
+  try{
+    f.system.setDraft({...placement,u:0,angle:0});
+    assert.equal(f.system.hitDraft(300,300),true);
+    assert.equal(f.system.hitDraft(...screen([.5,1.8,depth/2+.024])),false);
+    f.system.showDraft(false);assert.equal(f.system.hitDraft(300,300),false);assert.equal(f.system.place(),false);
+    f.system.showDraft(true);assert.equal(f.system.hitDraft(300,300),true);
+    f.system.setDraft({...placement,u:width+depth,angle:0});
+    assert.equal(f.system.hitDraft(300,300),false);
+  }finally{f.cleanup();}
 });

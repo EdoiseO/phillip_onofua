@@ -42,19 +42,28 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     if(textures)return;
     if(!loading)loading=Promise.all(stickerPack.map(async art=>{
       const map=await loader.loadAsync(art.src);map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=8;
-      return [art.id,{map,ratio:map.image.height/map.image.width}];
+      // Read the cutout once so picking a preview ignores its transparent corners.
+      let pixels=map.image.data;
+      if(!pixels&&typeof document!=='undefined'){
+        const canvas=document.createElement('canvas');canvas.width=map.image.width;canvas.height=map.image.height;
+        const context=canvas.getContext('2d');context.drawImage(map.image,0,0);pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+      }
+      return [art.id,{map,pixels,ratio:map.image.height/map.image.width}];
     })).then(entries=>{textures=new Map(entries);}).catch(error=>{loading=null;throw error;});
     await loading;
   }
   function constrain(data){
-    const art=stickerPack.find(s=>s.id===data.art),size=clamp(data.size,.45,1.65);
+    const art=stickerPack.find(s=>s.id===data.art),size=clamp(Math.round(data.size*100)/100,.45,1.65);
     const w=art.width*size,h=w*textures.get(data.art).ratio,angle=data.angle*Math.PI/180;
     const extentX=(Math.abs(Math.cos(angle))*w+Math.abs(Math.sin(angle))*h)/2;
     const extentY=(Math.abs(Math.sin(angle))*w+Math.abs(Math.cos(angle))*h)/2;
-    if(data.surface==='wall')return {...data,size,u:((data.u+width/2)%perimeter+perimeter)%perimeter-width/2,v:clamp(data.v,extentY+.12,H-extentY-.16)};
+    // Fit the rotated artwork, then return its actual size to the controls.
+    // Round down to the ruler's 1% step so applying that value is idempotent.
+    const fit=data.surface==='wall'?Math.min(1,(H-.28)/(extentY*2)):Math.min(1,(W+.1)/(extentX*2),(D+.06)/(extentY*2));
+    const fittedSize=Math.floor(size*fit*100+1e-8)/100,scale=fittedSize/size;
+    if(data.surface==='wall')return {...data,size:fittedSize,u:((data.u+width/2)%perimeter+perimeter)%perimeter-width/2,v:clamp(data.v,extentY*scale+.12,H-extentY*scale-.16)};
     // Keep lid stickers on the removable lid; they never bridge the opening.
-    const maxSize=Math.min(1,(W+.1)/Math.max(.01,extentX*2),(D+.06)/Math.max(.01,extentY*2));
-    return {...data,size:size*maxSize,u:clamp(data.u,-(W+.1)/2+extentX*maxSize,(W+.1)/2-extentX*maxSize),v:clamp(data.v,-(D+.06)/2+extentY*maxSize,(D+.06)/2-extentY*maxSize)};
+    return {...data,size:fittedSize,u:clamp(data.u,-(W+.1)/2+extentX*scale,(W+.1)/2-extentX*scale),v:clamp(data.v,-(D+.06)/2+extentY*scale,(D+.06)/2-extentY*scale)};
   }
   function make(data,isDraft=false,layer=items.length){
     // Keep a fine grid for corner wrapping, but use one cutout mesh rather than
@@ -65,7 +74,7 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nif (!gl_FrontFacing) diffuseColor.rgb = vec3(0.96);');};
     material.customProgramCacheKey=()=>'sticker-paper-reverse-v1';
     const mesh=new THREE.Mesh(g,material);mesh.userData.sticker=true;mesh.receiveShadow=false;
-    const item={data:null,mesh,base:new Float32Array(g.attributes.position.array.length),press:isDraft?.18:0,isDraft,layer};
+    const item={data:null,mesh,base:new Float32Array(g.attributes.position.array.length),press:0,isDraft,layer};
     project(item,data);return item;
   }
   function project(item,data){
@@ -103,6 +112,7 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
   function clearDraft(){if(!draft)return;removeMesh(draft);draft=null;invalidate();}
   function setDraft(data){
     if(draft){project(draft,data);}else{draft=make(data,true);}
+    draft.mesh.visible=true;
     invalidate();return {...draft.data};
   }
   function pick(x,y){
@@ -128,6 +138,18 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     }
     return candidates.sort((a,b)=>a.distance-b.distance)[0]??null;
   }
+  function hitDraft(x,y){
+    if(!draft||!draft.mesh.visible)return false;
+    const r=stage.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return false;
+    const surface=pick(x,y);draft.mesh.updateWorldMatrix(true,false);
+    for(const hit of raycaster.intersectObject(draft.mesh)){
+      if(surface&&hit.distance>surface.distance+.1)continue;
+      const tex=textures.get(draft.data.art),image=tex.map.image;
+      const u=clamp(Math.floor(hit.uv.x*image.width),0,image.width-1),v=clamp(Math.floor((1-hit.uv.y)*image.height),0,image.height-1);
+      if(!tex.pixels||tex.pixels[(v*image.width+u)*4+3]>=90)return true;
+    }
+    return false;
+  }
   function wraps(data){
     if(!data||data.surface!=='wall')return false;
     const art=stickerPack.find(s=>s.id===data.art),r=textures.get(data.art).ratio,a=data.angle*Math.PI/180;
@@ -136,13 +158,14 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
   }
   return {
     async ready(){await prepare();if(stored.length){items=stored.map((s,i)=>make(s,false,i));stored=[];invalidate();}},
-    setDraft,clearDraft,pick,
+    setDraft,clearDraft,pick,hitDraft,
+    showDraft(value){if(draft&&draft.mesh.visible!==value){draft.mesh.visible=value;invalidate();}},
     draft(){return draft?{...draft.data}:null;},
     wraps(){return wraps(draft?.data);},
     count(){return items.length;},
     saved(){return saved;},
     canUndo(){return history.length>0;},
-    place(){if(!draft||items.length>=24)return false;remember();const item=draft;draft=null;item.isDraft=false;item.layer=items.length;item.mesh.renderOrder=10+item.layer;items.push(item);item.press=1;shape(item);save();invalidate();return true;},
+    place(){if(!draft||!draft.mesh.visible||items.length>=24)return false;remember();const item=draft;draft=null;item.isDraft=false;item.layer=items.length;item.mesh.renderOrder=10+item.layer;items.push(item);item.press=.18;shape(item);save();invalidate();return true;},
     undo(){if(!history.length)return;clearDraft();items.forEach(removeMesh);items=history.pop().map((s,i)=>make(s,false,i));save();invalidate();},
     reset(){if(!items.length)return;remember();clearDraft();items.forEach(removeMesh);items=[];save();invalidate();},
     tick(dt,reduced){let moving=false;for(const item of items){if(item.press>0){item.press=reduced?0:item.press*Math.exp(-dt*8);if(item.press<.001)item.press=0;shape(item);moving=true;}}return moving;},

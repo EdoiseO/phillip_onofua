@@ -29,3 +29,7 @@ body.is-decorating{overflow:hidden}.sticker-studio{position:fixed;inset:0;width:
 .sticker-drag-ghost.is-over-box span{background:#d8e9d8;color:#1a3425;border-color:#d8e9d8}
 .is-dragging-sticker,.is-dragging-sticker *{cursor:grabbing!important;user-select:none!important;-webkit-user-select:none!important}
 @media(prefers-reduced-motion:reduce){.sticker-choice.is-dragging img{transform:none}}
+
+.sticker-stage .stage.can-move-sticker{cursor:grab}
+.sticker-adjustments input:disabled{opacity:.35;cursor:default}
+.sticker-finish button:disabled{opacity:.35;cursor:default}
