@@ -1,11 +1,18 @@
 import {comics} from './comics.js?v=15.0';
 import {createBox} from './model.js?v=23.0';
-import {createStickerStudio} from './sticker-studio.js?v=23.0';
+import {createStickerStudio} from './sticker-studio.js?v=24.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
 const mobileCollection=matchMedia(mobileControlsQuery);
+const lidControls=$('lid-controls'),lidAnchor=document.createComment('Desktop lid controls');
+lidControls.before(lidAnchor);
+function moveLidControls(){
+  if(mobileCollection.matches)$('series-jump').before(lidControls);
+  else lidAnchor.after(lidControls);
+}
+mobileCollection.addEventListener('change',moveLidControls);moveLidControls();
 // Pointer focus keeps keyboard controls active without framing the 3D scene.
 // Switch back immediately when the user resumes keyboard navigation.
 document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},true);
