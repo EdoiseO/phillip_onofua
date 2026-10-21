@@ -5,6 +5,7 @@ import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1'
 import { createComicSleeve } from './comic-sleeve.js?v=15.0';
 import { createComicBook } from './comic-book.js?v=15.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
+import { createStickerSystem } from './stickers.js?v=17.0';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -111,7 +112,10 @@ export async function createBox(stage,comics){
   halo.visible=false;scene.add(halo);
   let lidSide=1,wantedLidSide=1,lidTilt=0,wantedLidTilt=0,lidProgress=0;
   const lidMotion={progress:0,velocity:0};
-  let opened=false,selected=0,openProgress=0,yaw=0,pitch=0,desiredYaw=0,desiredPitch=0,reduced=false,frame=0,last=performance.now(),visible=true,dirty=true;
+  let opened=false,selected=0,openProgress=0,yaw=0,pitch=0,desiredYaw=0,desiredPitch=0,reduced=false,frame=0,last=performance.now(),visible=true,dirty=true,decorating=false;
+  const stickerSystem=await createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,invalidate:()=>{dirty=true;}});
+  if(stickerSystem.hasSaved)await stickerSystem.ready().catch(error=>console.warn('Saved stickers could not load',error));
+  const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
   let floatTime=0,floatStrength=0,held=false;
   const lerp=THREE.MathUtils.lerp;
@@ -184,12 +188,13 @@ export async function createBox(stage,comics){
       // Fit the actual lid, box and raised comic, especially on narrow screens.
       world.updateWorldMatrix(true,true);
       [body,lid,cards[selected].group].forEach((object,i)=>overviewBounds[i].setFromObject(object));
+      const anchor=decorating?decorationTarget:homeTarget;
       let n=0,minX=Infinity,maxX=-Infinity;
       for(const bounds of overviewBounds)for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
-        const p=overviewCorners[n++].set(x,y,z);relative.copy(p).sub(homeTarget);const px=relative.dot(overviewRight);minX=Math.min(minX,px);maxX=Math.max(maxX,px);
+        const p=overviewCorners[n++].set(x,y,z);relative.copy(p).sub(anchor);const px=relative.dot(overviewRight);minX=Math.min(minX,px);maxX=Math.max(maxX,px);
       }
-      overviewTarget.copy(homeTarget).addScaledVector(overviewRight,(minX+maxX)/2*smooth(0,1,Math.max(openProgress,lidProgress)));
-      let distance=homeCamera.distanceTo(homeTarget);const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
+      overviewTarget.copy(anchor).addScaledVector(overviewRight,(minX+maxX)/2*smooth(0,1,Math.max(openProgress,lidProgress)));
+      let distance=decorating?7:homeCamera.distanceTo(homeTarget);const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
       for(const point of overviewCorners){relative.copy(point).sub(overviewTarget);const depth=relative.dot(overviewDirection);distance=Math.max(distance,depth+Math.abs(relative.dot(overviewRight))*1.1/tanH,depth+Math.abs(relative.dot(overviewUp))*1.08/tanV);}
       overviewCamera.copy(overviewTarget).addScaledVector(overviewDirection,distance);
     }
@@ -248,7 +253,8 @@ export async function createBox(stage,comics){
     ground.visible=focus<.995;
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001;
     stage.dataset.motionSettled=String(settled);
-    if(dirty||!settled||floatStrength>.0001){renderer.render(scene,camera);dirty=false;}
+    const stickersMoving=stickerSystem.tick(dt,reduced);
+    if(dirty||!settled||floatStrength>.0001||stickersMoving){renderer.render(scene,camera);dirty=false;}
   }
   frame=requestAnimationFrame(update);
   const raycaster=new THREE.Raycaster();
@@ -256,7 +262,10 @@ export async function createBox(stage,comics){
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
     select(index){selected=index;dirty=true;stage.dataset.activeIndex=String(index);},
-    rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
+    rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
+    stickers:stickerSystem,
+    decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
+    decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
     inspectView(view){if(!inspecting)return;wantedDetail=view==='spine'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:view==='spine'?1.13:.08;wantedInspectPitch=view==='spine'?-.12:-.025;dirty=true;},
     focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{focusProgress=0;unwrapProgress=0;}dirty=true;},
@@ -264,6 +273,6 @@ export async function createBox(stage,comics){
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());}
+    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());}
   };
 }
