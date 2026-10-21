@@ -1,10 +1,23 @@
 import {stickerPack} from './stickers.js?v=17.0';
+import {createRuler} from './ruler-control.js?v=18.0';
 
 export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   const $=id=>document.getElementById(id),dialog=$('sticker-studio'),anchor=document.createComment('Sticker studio return point');
   const system=box.stickers;
   let active=false,ready=false,mode='turn',selected=stickerPack[0],gesture=null,lastPlacement={surface:'wall',u:.87,v:1.05},loadId=0;
   const options={size:1,angle:-8,finish:'gloss'};
+  const sizeRuler=createRuler($('sticker-size'),{ticks:49,start:'SMALL',end:'LARGE',format:value=>`${Math.round(value*100)} percent`});
+  const angleRuler=createRuler($('sticker-angle'),{ticks:61,start:'−180°',end:'+180°',format:value=>`${value} degrees`});
+  function toolsTab(value,focus=false){
+    dialog.dataset.tools=value;
+    for(const tab of ['pack','adjust']){const button=$(`sticker-tab-${tab}`);button.setAttribute('aria-selected',String(tab===value));button.tabIndex=tab===value?0:-1;}
+    if(focus)$(`sticker-tab-${value}`).focus({preventScroll:true});
+  }
+  for(const tab of ['pack','adjust']){
+    $(`sticker-tab-${tab}`).addEventListener('click',()=>toolsTab(tab));
+    $(`sticker-tab-${tab}`).addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();toolsTab(e.key==='Home'?'pack':e.key==='End'?'adjust':tab==='pack'?'adjust':'pack',true);}});
+  }
+  toolsTab('pack');
   const buttons=stickerPack.map((art,i)=>{
     const button=document.createElement('button');button.className='sticker-choice';button.type='button';button.setAttribute('aria-label',art.name);button.setAttribute('aria-pressed',String(i===0));
     const img=document.createElement('img');img.src=art.src;img.alt='';img.width=96;img.height=96;img.loading='lazy';
@@ -24,6 +37,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     $('sticker-placement-note').classList.toggle('is-wrap',system.wraps());
     $('sticker-stage-hint').textContent=mode==='turn'?'Drag to turn the box · Choose a side below':'Tap or drag on the box to position · Place when it feels right';
     $('sticker-size-value').textContent=`${Math.round(options.size*100)}%`;$('sticker-angle-value').textContent=`${options.angle}°`;
+    sizeRuler.update();angleRuler.update();
     stage.setAttribute('aria-label',mode==='turn'?'Sticker studio. Drag or use arrow keys to turn the box. Choose Position sticker to place it.':'Sticker studio. Tap or drag on the box to preview a sticker. Arrow keys nudge it. Enter places it. Escape returns to the box.');
   }
   function preview(){

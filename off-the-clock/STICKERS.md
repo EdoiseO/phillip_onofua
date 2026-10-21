@@ -18,3 +18,9 @@ The four box walls share a continuous perimeter coordinate. Stickers crossing a 
 Arrangements are capped at 24 stickers and saved only in this browser's local storage (`phillip-shortbox-stickers-v1`). There are no uploads or shared public changes. Undo retains the last 20 changes during the session, including clearing the box. Stored entries are validated before loading. Storage failure falls back to a session-only arrangement.
 
 Run the geometric and saved-data checks with `node --test off-the-clock/stickers.test.mjs` from the repository root. Visual checks should include a rotated sticker across a front/side corner, the rear and left corners, a lid sticker while opening the box, undo/clear, reload persistence, and the phone layout.
+
+## Mobile controls
+
+The mobile ruler treatment is inspired by https://www.bubbbly.com/app/flower-life.html#magnolia. It is an original HTML/CSS implementation over native range inputs: graduated ticks, a moving marker, and value badges. Comic browsing snaps to each edition and stays synchronized with the series selector. Sticker size and angle use the same visual treatment, with native keyboard controls and spoken values.
+
+On phones, the collection fills the viewport without moving the scene when the selected title changes. The sticker studio has a fixed scene above a separate tools tray, mobile Stickers/Adjust tabs, and an always-visible placement button. Only the tools content scrolls; landscape uses a side tray. Desktop navigation and range controls keep their existing layout.
