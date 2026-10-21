@@ -1,4 +1,4 @@
-import {comics} from './comics.js?v=15.0';
+import {comics} from './comics.js?v=31.0';
 import {createBox} from './model.js?v=30.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
@@ -109,7 +109,7 @@ $('previous').addEventListener('click',()=>step(-1));$('next').addEventListener(
 $('motion-toggle').addEventListener('click',()=>{reduced=!reduced;updateMotion();});
 media.addEventListener('change',e=>{reduced=e.matches;updateMotion();});
 stage.addEventListener('wheel',e=>{
-  if(!box||(!inspecting&&mobileCollection.matches)||Math.abs(e.deltaY)<Math.abs(e.deltaX))return;
+  if(!box||!opened||(!inspecting&&mobileCollection.matches)||Math.abs(e.deltaY)<Math.abs(e.deltaX))return;
   e.preventDefault();if(inspecting)return;
   const now=performance.now();if(now-lastWheel<600)return;
   if(now-lastWheelInput>180)wheelSum=0;lastWheelInput=now;
