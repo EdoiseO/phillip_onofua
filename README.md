@@ -49,6 +49,7 @@ The project page separates the concept from finished work and documents the prob
 ## Portfolio features
 
 - Dark-only, responsive editorial layout with clear navigation
+- **Off the clock:** an interactive 3D comic collection with a movable lid, glossy sleeves, separate backing boards, verified rear artwork, close-up rotation, and a gentle hover/glow
 - Original letter-by-letter hero animation, product previews, and prominent résumé access
 - Animation pause control, reduced-motion support, and a readable fallback without JavaScript
 - Two featured projects using real product captures, with concepts presented separately
@@ -65,6 +66,7 @@ The project page separates the concept from finished work and documents the prob
 - CSS3
 - Vanilla JavaScript
 - HTML Dialog API
+- Self-hosted Three.js for the Off the clock collection
 - Vercel
 
 There is no package installation or build step. All required fonts, images, logos, scripts, and media are committed with the site.
@@ -84,6 +86,7 @@ Open [http://localhost:8000](http://localhost:8000).
 ```text
 .
 ├── index.html                         # Portfolio homepage
+├── off-the-clock/                     # Self-contained 3D comic collection
 ├── student-market.html                # Student Market engineering case study
 ├── overlay-studio.html                # Overlay Studio product case study
 ├── receipt-splitter.html              # Work-in-progress product plan
@@ -115,3 +118,9 @@ Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simp
 
 - [GitHub](https://github.com/EdoiseO)
 - [Email](mailto:philliponofua@gmail.com)
+
+## Off the clock
+
+The collection at `/off-the-clock/` is imported from the approved Short Box prototype, commit `241a5afaba0734fc72a39c3aa32fdd413fb31f9e`. Its 24 editions, cover sources, physical model, sleeve interactions, and reduced-motion support are preserved. The page and all textures, fonts, and Three.js modules are served from this repository; the homepage does not load the 3D assets.
+
+Collection metadata is a saved snapshot. It includes no inventory order details or prices. Rear imagery is verified for 22 of 24 entries (21 actual comic backs and one mystery-bag wrapper); Ben 10 #2 Cover F packaging and incoming Absolute Green Arrow #6 remain clearly marked unavailable. Artwork remains credited to its original sources in `off-the-clock/comics.js`; the Three.js license is included in `off-the-clock/vendor/THREE-LICENSE.txt`.
