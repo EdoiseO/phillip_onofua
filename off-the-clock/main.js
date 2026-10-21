@@ -1,6 +1,6 @@
 import {comics} from './comics.js?v=15.0';
-import {createBox} from './model.js?v=29.0';
-import {createStickerStudio} from './sticker-studio.js?v=26.0';
+import {createBox} from './model.js?v=30.0';
+import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);

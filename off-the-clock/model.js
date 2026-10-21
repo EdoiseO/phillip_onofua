@@ -5,7 +5,7 @@ import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1'
 import { createComicSleeve } from './comic-sleeve.js?v=15.0';
 import { createComicBook } from './comic-book.js?v=15.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
-import { createStickerSystem } from './stickers.js?v=26.0';
+import { createStickerSystem } from './stickers.js?v=30.0';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
