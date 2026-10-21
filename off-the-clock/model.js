@@ -5,7 +5,7 @@ import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1'
 import { createComicSleeve } from './comic-sleeve.js?v=15.0';
 import { createComicBook } from './comic-book.js?v=15.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
-import { createStickerSystem } from './stickers.js?v=20.0';
+import { createStickerSystem } from './stickers.js?v=22.0';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -83,6 +83,8 @@ export async function createBox(stage,comics){
   for(const x of [-1,1])block(lid,.065,.29,D+.21,board,[x*(W+.18)/2,-.065,0]);
   for(const z of [-1,1])block(lid,W+.24,.29,.065,board,[0,-.065,z*(D+.15)/2]);
   addBoxDetails({THREE,body,lid,W,H,D,T});
+  // Cardboard, not animated sticker curls, determines camera framing and the floor.
+  const bodyLocalBounds=new THREE.Box3().setFromObject(body),lidLocalBounds=new THREE.Box3().setFromObject(lid);
   lid.position.y=lidClosedY;
   const textureLoader=new THREE.TextureLoader();
   const textures=await Promise.all(comics.map(c=>textureLoader.loadAsync(c.cover).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;})));
@@ -120,7 +122,7 @@ export async function createBox(stage,comics){
   if(stickerSystem.hasSaved)await stickerSystem.ready().catch(error=>console.warn('Saved stickers could not load',error));
   const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
-  let floatTime=0,floatStrength=0,held=false;
+  let floatTime=0,floatStrength=0,held=false,wasSettled=false;
   const lerp=THREE.MathUtils.lerp;
   const resize=()=>{const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.83?40:33;camera.updateProjectionMatrix();dirty=true;};
   const ro=new ResizeObserver(resize);ro.observe(stage);resize();
@@ -136,6 +138,8 @@ export async function createBox(stage,comics){
   function update(now){
     frame=requestAnimationFrame(update);const dt=Math.min((now-last)/1000,.035);last=now;
     if(document.hidden||!visible)return;
+    const stickersMoving=stickerSystem.tick(dt,reduced);
+    if(!dirty&&wasSettled&&floatStrength<=.0001&&!stickersMoving)return;
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     focusProgress=reduced?Number(inspecting):damp(focusProgress,Number(inspecting),dt,5);
     unwrapProgress=reduced?Number(unwrapped):damp(unwrapProgress,Number(unwrapped),dt,3.9);
@@ -188,7 +192,7 @@ export async function createBox(stage,comics){
     world.rotation.y=(-.13+yaw)*(1-focus);world.rotation.x=pitch*(1-focus);
     scene.environmentRotation.y=yaw*.32;
     world.updateWorldMatrix(true,true);
-    overviewBounds[0].setFromObject(body);overviewBounds[1].setFromObject(lid);
+    overviewBounds[0].copy(bodyLocalBounds).applyMatrix4(body.matrixWorld);overviewBounds[1].copy(lidLocalBounds).applyMatrix4(lid.matrixWorld);
     // The invisible floor stays horizontal and below both parts at every
     // tilt, including the lid travelling to either side. It cannot slice
     // through the box when a lower corner rotates beneath the original floor.
@@ -267,7 +271,7 @@ export async function createBox(stage,comics){
     stage.dataset.halo=halo.visible?'on':'off';
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001;
     stage.dataset.motionSettled=String(settled);
-    const stickersMoving=stickerSystem.tick(dt,reduced);
+    wasSettled=settled;
     if(dirty||!settled||floatStrength>.0001||stickersMoving){renderer.render(scene,camera);dirty=false;}
   }
   frame=requestAnimationFrame(update);
