@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=15.0';
-import {createBox} from './model.js?v=26.0';
+import {createBox} from './model.js?v=29.0';
 import {createStickerStudio} from './sticker-studio.js?v=26.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -75,7 +75,7 @@ function render(){
   $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Drag box to turn <span class="hint-dot">·</span> Drag lid to move; click to close <span class="hint-dot">·</span> Double-click to inspect':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
   stage.dataset.state=inspecting?'inspecting':opened?'open':'closed';stage.dataset.activeIndex=String(index);stage.dataset.sleeve=unwrapped?'removed':'on';
   if(inspecting){
-    for(const view of ['front','spine','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
+    for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
     $('back-image-note').hidden=inspectionView!=='back'&&!!comic.backCover;$('back-image-note').textContent=inspectionView==='back'&&!unwrapped?'The backing board is inside the sleeve. Slide out the comic to view its back.':comic.backCover?`${backImageLabel(comic)}${comic.backQualityNote?' · '+comic.backQualityNote:''}`:comic.blindBag?'Packaging rear not found; enclosed comic variants are unknown.':comic.collectionStatus==='Incoming'?'Exact back image not yet available for this incoming issue.':'Exact back image not found for this edition.';
     $('inspection-title').textContent=comic.title;$('inspection-variant').textContent=comic.variant+(comic.issue==='Ashcan'?' · smaller format':'')+(comic.collectionStatus==='Incoming'?' · Incoming':comic.quantity>1?` · ${comic.quantity} copies`:'');
     $('inspection-number').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
@@ -103,7 +103,7 @@ function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped
 function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
 openButton.addEventListener('click',()=>setOpen(!opened));
 $('inspect-button').addEventListener('click',()=>enterInspection());$('return-button').addEventListener('click',leaveInspection);$('sleeve-button').addEventListener('click',toggleSleeve);
-for(const view of ['front','spine','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='spine'?'Spine and staple detail.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
+for(const view of ['front','comic','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
 dialog.addEventListener('cancel',e=>{e.preventDefault();leaveInspection();});
 $('previous').addEventListener('click',()=>step(-1));$('next').addEventListener('click',()=>step(1));
 $('motion-toggle').addEventListener('click',()=>{reduced=!reduced;updateMotion();});

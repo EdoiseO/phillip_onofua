@@ -126,7 +126,7 @@ export async function createBox(stage,comics){
   const lerp=THREE.MathUtils.lerp;
   const resize=()=>{const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.83?40:33;camera.updateProjectionMatrix();dirty=true;};
   const ro=new ResizeObserver(resize);ro.observe(stage);resize();
-  const bookBounds=new THREE.Box3(),spineTarget=new THREE.Vector3();
+  const bookBounds=new THREE.Box3();
   const inspectionBounds=new THREE.Box3(),inspectionCenter=new THREE.Vector3(),inspectionCamera=new THREE.Vector3();
   const sleeveBounds=new THREE.Box3(),sleeveOffset=new THREE.Vector3(),inverseCardRotation=new THREE.Quaternion();
   const overviewCamera=homeCamera.clone(),overviewTarget=homeTarget.clone();
@@ -228,9 +228,7 @@ export async function createBox(stage,comics){
         inspectionBounds.min.lerp(bookBounds.min,bookFocus);inspectionBounds.max.lerp(bookBounds.max,bookFocus);
         inspectionBounds.getCenter(inspectionCenter);
       }
-      if(detailProgress>0){spineTarget.set(-.89,0,0);cards[selected].book.localToWorld(spineTarget);inspectionCenter.lerp(spineTarget,.35*bookFocus);}
-      // Fit both ends of the booklet, including perspective depth. The old
-      // detail zoom multiplied a fitted distance by .52 and clipped the spine.
+      // Center the entire extracted comic and keep every edge in view as it turns.
       const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
       const extentX=Math.max(Math.abs(inspectionBounds.min.x-inspectionCenter.x),Math.abs(inspectionBounds.max.x-inspectionCenter.x));
       const extentY=Math.max(Math.abs(inspectionBounds.min.y-inspectionCenter.y),Math.abs(inspectionBounds.max.y-inspectionCenter.y));
@@ -238,9 +236,8 @@ export async function createBox(stage,comics){
       inspectionCamera.copy(inspectionCenter);inspectionCamera.z+=distance;
       camera.position.copy(overviewCamera).lerp(inspectionCamera,focus);
       cameraTarget.copy(overviewTarget).lerp(inspectionCenter,focus);
-      // Set the bag and its board aside in the dedicated spine view. Offset
-      // in screen-horizontal direction after fitting, so they cannot obscure
-      // the binding or inflate the detail camera's bounds as the view turns.
+      // Set the bag and its board aside in the comic close-up. Offset in screen
+      // space so they cannot obscure the cover or enlarge its camera framing.
       if(bookFocus>0){
         sleeveBounds.setFromObject(cards[selected].sleeve,true);
         const parkX=Math.min(0,inspectionCenter.x-sleeveBounds.max.x-(inspectionCamera.z-sleeveBounds.min.z)*tanH*1.08);
@@ -285,7 +282,7 @@ export async function createBox(stage,comics){
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
     decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
-    inspectView(view){if(!inspecting)return;wantedDetail=view==='spine'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:view==='spine'?1.13:.08;wantedInspectPitch=view==='spine'?-.12:-.025;dirty=true;},
+    inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
     focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{focusProgress=0;unwrapProgress=0;}dirty=true;},
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
