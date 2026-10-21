@@ -907,7 +907,7 @@ export const comics = [
     "publisher": "Marvel",
     "year": 2026,
     "collectionStatus": "Owned",
-    "quantity": 2,
+    "quantity": 1,
     "cover": "./assets/covers/midnight-spider-man-1-cover-a.jpg",
     "description": "Cover A by Steve Beach, from the 2026 Midnight Spider-Man series.",
     "blindBag": false,
