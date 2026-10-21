@@ -1,0 +1,103 @@
+/* Shared identity, navigation, and page width across the portfolio. */
+.portfolio-width {
+  width: 100%;
+  max-width: 1280px;
+  padding: 0 48px;
+  margin: 0 auto;
+}
+.portfolio-header-wrap {
+  flex-shrink: 0;
+}
+.portfolio-header {
+  position: relative;
+  z-index: 4;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  gap: 24px;
+}
+.portfolio-header .identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+.portfolio-header .identity-photo {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border: 1px solid #42536b;
+  border-radius: 11px;
+}
+.portfolio-header .identity-role {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 4px;
+  letter-spacing: 0;
+}
+.portfolio-header .navigation {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+  font-size: 12px;
+  color: var(--soft, #bbc3cf);
+}
+.portfolio-header .navigation a {
+  padding: 12px 0;
+}
+.portfolio-header .navigation a:hover,
+.portfolio-header .navigation [aria-current="page"] {
+  color: var(--accent);
+}
+.portfolio-header .navigation a:last-child span {
+  color: var(--accent);
+  margin-left: 8px;
+}
+.portfolio-header a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+@media (max-width: 1050px) {
+  .portfolio-width { padding: 0 32px; }
+}
+@media (max-width: 760px) {
+  .portfolio-width { padding: 0 24px; }
+  .portfolio-header { height: 82px; }
+  .portfolio-header .navigation { gap: 22px; }
+}
+@media (max-width: 600px) {
+  .portfolio-header {
+    height: auto;
+    min-height: 82px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block: 16px 4px;
+  }
+  .portfolio-header .navigation {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .portfolio-header .navigation a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 420px) {
+  .portfolio-width { padding: 0 20px; }
+  .portfolio-header .identity { font-size: 12px; gap: 9px; }
+  .portfolio-header .identity-photo { width: 34px; height: 38px; border-radius: 8px; }
+  .portfolio-header .identity-role { font-size: 9px; }
+  .portfolio-header .navigation { font-size: 11px; }
+}

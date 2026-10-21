@@ -64,11 +64,6 @@ button:focus-visible {
   background: var(--accent);
   color: var(--bg);
 }
-.page-wrap {
-  max-width: 1280px;
-  padding: 0 48px;
-  margin: auto;
-}
 .mono,
 .eyebrow {
   font-family: GeistMono, monospace;
@@ -106,53 +101,6 @@ button:focus-visible {
 }
 .skip-link:focus {
   transform: none;
-}
-.header {
-  height: 96px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  gap: 24px;
-}
-.identity {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-}
-.identity-photo {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border: 1px solid #42536b;
-  border-radius: 11px;
-}
-.identity-role {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 400;
-  margin-top: 4px;
-  letter-spacing: 0;
-}
-.navigation {
-  display: flex;
-  gap: 35px;
-  font-size: 12px;
-  color: var(--soft);
-}
-.navigation a {
-  padding: 12px 0;
-}
-.navigation a:hover {
-  color: var(--accent);
-}
-.navigation a:last-child span {
-  color: var(--accent);
-  margin-left: 8px;
 }
 .hero {
   display: grid;
@@ -918,9 +866,6 @@ button:focus-visible {
   }
 }
 @media (max-width: 1050px) {
-  .page-wrap {
-    padding: 0 32px;
-  }
   .hero {
     gap: 25px;
   }
@@ -963,15 +908,6 @@ button:focus-visible {
   }
 }
 @media (max-width: 760px) {
-  .page-wrap {
-    padding: 0 24px;
-  }
-  .header {
-    height: 82px;
-  }
-  .navigation {
-    gap: 22px;
-  }
   .hero {
     grid-template-columns: 1fr;
     padding: 52px 0 34px;
@@ -1161,25 +1097,6 @@ button:focus-visible {
   .contact-links a {
     font-size: 12px;
   }
-  .page-wrap {
-    padding: 0 20px;
-  }
-  .identity {
-    font-size: 12px;
-    gap: 9px;
-  }
-  .identity-photo {
-    width: 34px;
-    height: 38px;
-    border-radius: 8px;
-  }
-  .identity-role {
-    font-size: 9px;
-  }
-  .navigation {
-    gap: 15px;
-    font-size: 11px;
-  }
   .hero h1 {
     font-size: 54px;
   }
@@ -1253,23 +1170,6 @@ button:focus-visible {
     font-size: 16px;
     gap: 8px;
   }
-  .header {
-    height: auto;
-    min-height: 82px;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding-block: 16px;
-  }
-  .identity {
-    white-space: nowrap;
-  }
-  .navigation {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .navigation a {
-    min-height: 44px;
-  }
   .hero h1 {
     font-size: 49px;
   }
@@ -1291,11 +1191,4 @@ button:focus-visible {
   .preview-overlay {
     transform: none;
   }
-}
-
-/* Keep all four navigation destinations reachable on narrow screens. */
-@media (max-width: 600px) {
-  .header { height: auto; min-height: 82px; flex-wrap: wrap; gap: 8px; padding-block: 16px 4px; }
-  .navigation { width: 100%; justify-content: space-between; gap: 12px; }
-  .navigation a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
 }
