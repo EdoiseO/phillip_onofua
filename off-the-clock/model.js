@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createCardboardTextures, addBoxDetails } from './box-details.js?v=15.0';
+import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
 import { createComicSleeve } from './comic-sleeve.js?v=15.0';
 import { createComicBook } from './comic-book.js?v=15.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
