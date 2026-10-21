@@ -11,16 +11,31 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   const adjustmentFields=dialog.querySelector('.sticker-adjustments'),adjustmentAnchor=document.createComment('Desktop sticker controls');
   adjustmentFields.before(adjustmentAnchor);
   const mobileControls=matchMedia(mobileControlsQuery);
-  function moveRulers(){
-    if(mobileControls.matches)$('sticker-mobile-rail').append(adjustmentFields);
-    else adjustmentAnchor.after(adjustmentFields);
+  const faceControls=dialog.querySelector('.sticker-faces'),faceAnchor=document.createComment('Desktop surface controls');
+  faceControls.before(faceAnchor);
+  function moveMobileControls(){
+    const order=mobileControls.matches?['front','back','left','right','lid']:['front','right','back','left','lid'];
+    for(const face of order)faceControls.append($(`sticker-face-${face}`));
+    if(mobileControls.matches){
+      $('sticker-mobile-rail').append(adjustmentFields);
+      $('sticker-view-dock').append(faceControls);
+    }else{
+      adjustmentAnchor.after(adjustmentFields);
+      faceAnchor.after(faceControls);
+    }
   }
+  let selectedFace;
+  function selectFace(face=null){
+    if(selectedFace===face)return;selectedFace=face;
+    for(const name of ['front','right','back','left','lid'])$(`sticker-face-${name}`).setAttribute('aria-pressed',String(name===face));
+  }
+  selectFace();
   function rulerControl(control){
     dialog.dataset.ruler=control;
     for(const name of ['size','angle'])$(`sticker-ruler-${name}`).setAttribute('aria-pressed',String(control===name));
   }
   for(const control of ['size','angle'])$(`sticker-ruler-${control}`).addEventListener('click',()=>rulerControl(control));
-  mobileControls.addEventListener('change',moveRulers);moveRulers();rulerControl('size');
+  mobileControls.addEventListener('change',moveMobileControls);moveMobileControls();rulerControl('size');
   function toolsTab(value,focus=false){
     dialog.dataset.tools=value;
     for(const tab of ['pack','adjust']){const button=$(`sticker-tab-${tab}`);button.setAttribute('aria-selected',String(tab===value));button.tabIndex=tab===value?0:-1;}
@@ -150,7 +165,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   function adjust(){if(system.draft()){const wanted=options.size;preview();if(options.size<wanted-.005)say(`Sized to ${Math.round(options.size*100)} percent to fit this surface. Choose Stick here when ready.`);}else refresh();}
   async function open(){
     if(active)return;active=true;beforeOpen();stage.before(anchor);$('sticker-stage').append(stage);
-    dialog.showModal();document.body.classList.add('is-decorating');box.decorate(true);
+    dialog.showModal();document.body.classList.add('is-decorating');box.decorate(true);selectFace();
     $('sticker-place').disabled=true;say('Unpacking the sticker pack…');refresh();
     const current=++loadId;
     try{await system.ready();if(!active||current!==loadId)return;ready=true;refresh();say('Pick a sticker to preview it on the box. Adjust size and angle, move it, then choose Stick here.');}
@@ -173,7 +188,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   $('sticker-angle').addEventListener('input',e=>{options.angle=Number(e.target.value);adjust();});
   for(const finish of ['gloss','holo'])$(`sticker-${finish}`).addEventListener('click',()=>{options.finish=finish;adjust();});
   for(const face of ['front','right','back','left','lid'])$(`sticker-face-${face}`).addEventListener('click',()=>{
-    box.decorationFace(face);
+    box.decorationFace(face);selectFace(face);
     const poses={front:{surface:'wall',u:0,v:1.1},right:{surface:'wall',u:3.22,v:1.1},back:{surface:'wall',u:6.45,v:1.1},left:{surface:'wall',u:9.67,v:1.1},lid:{surface:'lid',u:0,v:0}};
     lastPlacement=poses[face];if(system.draft())preview();
     say(`${face==='lid'?'Lid':face+' side'} in view. ${system.draft()?'Adjust the preview, then Stick here.':'Pick a sticker to try here.'}`);
@@ -191,7 +206,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     if(!gesture){if(!drag&&e.pointerType==='mouse')stage.classList.toggle('can-move-sticker',system.hitDraft(e.clientX,e.clientY));return;}
     if(gesture.id!==e.pointerId)return;
     if(!gesture.moved&&Math.hypot(e.clientX-gesture.startX,e.clientY-gesture.startY)<6)return;
-    gesture.moved=true;box.rotate((e.clientX-gesture.x)*.009,(e.clientY-gesture.y)*.006);gesture.x=e.clientX;gesture.y=e.clientY;
+    gesture.moved=true;selectFace();box.rotate((e.clientX-gesture.x)*.009,(e.clientY-gesture.y)*.006);gesture.x=e.clientX;gesture.y=e.clientY;
   },true);
   function releaseTurn(){const previous=gesture;gesture=null;box.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
   function end(e){
@@ -212,7 +227,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     if(e.key==='Escape'){if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();return;}if(e.key==='Enter'||e.key===' '){place();return;}
     const dx=e.key==='ArrowLeft'?-.08:e.key==='ArrowRight'?.08:0,dy=e.key==='ArrowUp'?.08:e.key==='ArrowDown'?-.08:0;
     if(!dx&&!dy)return;
-    if(!system.draft())box.rotate(dx,-dy);else{lastPlacement.u+=dx;lastPlacement.v+=dy;preview();}
+    if(!system.draft()){selectFace();box.rotate(dx,-dy);}else{lastPlacement.u+=dx;lastPlacement.v+=dy;preview();}
   },true);
   return {open,close,get active(){return active;}};
 }
