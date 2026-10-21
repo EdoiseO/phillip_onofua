@@ -1,4 +1,4 @@
-import {stickerPack} from './stickers.js?v=22.0';
+import {stickerPack} from './stickers.js?v=23.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 export function createStickerStudio({stage,box,beforeOpen,afterClose}){
@@ -33,137 +33,183 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
   toolsTab('pack');
   const ghost=document.createElement('div');ghost.className='sticker-drag-ghost';ghost.hidden=true;ghost.setAttribute('aria-hidden','true');
   const ghostArt=document.createElement('img'),ghostLabel=document.createElement('span');ghostArt.alt='';ghostArt.draggable=false;ghost.append(ghostArt,ghostLabel);dialog.append(ghost);
-  const buttons=stickerPack.map((art,i)=>{
-    const button=document.createElement('button');button.className='sticker-choice';button.type='button';button.setAttribute('aria-label',art.name);button.setAttribute('aria-pressed',String(i===0));button.setAttribute('aria-describedby','sticker-drag-help');
+  const buttons=stickerPack.map(art=>{
+    const button=document.createElement('button');button.className='sticker-choice';button.type='button';button.setAttribute('aria-label',art.name);button.setAttribute('aria-pressed','false');button.setAttribute('aria-describedby','sticker-drag-help');
     const img=document.createElement('img');img.src=art.src;img.alt='';img.width=96;img.height=96;img.loading='lazy';img.draggable=false;
     const label=document.createElement('span');label.textContent=art.name;button.append(img,label);
     let suppressClickUntil=0;
     button.addEventListener('click',e=>{if(e.detail&&performance.now()<suppressClickUntil){e.preventDefault();return;}choose(art);});
-    button.addEventListener('dragstart',e=>e.preventDefault());
-    button.addEventListener('contextmenu',e=>e.preventDefault());
+    button.addEventListener('dragstart',e=>e.preventDefault());button.addEventListener('contextmenu',e=>e.preventDefault());
     button.addEventListener('pointerdown',e=>{
       if(!active||!ready||drag||gesture||e.button>0||!e.isPrimary||system.count()>=24)return;
-      drag={id:e.pointerId,button,art,x:e.clientX,y:e.clientY,moved:false,valid:false,frame:0,suppressClick:()=>{suppressClickUntil=performance.now()+600;}};
-      button.setPointerCapture(e.pointerId);box.hold(true);
+      beginDrag(e,button,art,'pack',()=>{suppressClickUntil=performance.now()+600;});
     });
-    button.addEventListener('pointermove',e=>{
-      if(drag?.id!==e.pointerId||drag.button!==button)return;
-      if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
-      if(!drag.moved){drag.moved=true;selected=art;system.clearDraft();ghostArt.src=art.src;button.classList.add('is-dragging');dialog.classList.add('is-dragging-sticker');say(`${art.name} picked up. Drag onto the box and release to stick.`);}
-      e.preventDefault();drag.nextX=e.clientX;drag.nextY=e.clientY;
-      if(!drag.frame)drag.frame=requestAnimationFrame(()=>{if(drag){drag.frame=0;updateDrag(drag.nextX,drag.nextY);}});
-    });
-    button.addEventListener('pointerup',e=>{
-      if(drag?.id!==e.pointerId||drag.button!==button)return;
-      const moved=drag.moved;
-      if(moved){suppressClickUntil=performance.now()+600;updateDrag(e.clientX,e.clientY);}
-      const valid=drag.valid;releaseDrag();
-      if(moved){if(valid)place();else{system.clearDraft();say('Sticker returned to the pack. Drop it on a surface of the box.');refresh();}}
-    });
-    button.addEventListener('pointercancel',e=>{if(drag?.id===e.pointerId){suppressClickUntil=performance.now()+600;cancelDrag();}});
-    button.addEventListener('lostpointercapture',e=>{if(drag?.id===e.pointerId)cancelDrag();});
+    button.addEventListener('pointermove',e=>{if(drag?.owner===button)moveDrag(e);});
+    button.addEventListener('pointerup',e=>{if(drag?.owner===button)finishDrag(e);});
+    button.addEventListener('pointercancel',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
+    button.addEventListener('lostpointercapture',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
     $('sticker-pack').append(button);return button;
   });
   function say(text){$('sticker-feedback').textContent=text;}
   function refresh(){
-    const draft=system.draft();dialog.classList.toggle('has-sticker-preview',!!draft);
-    $('sticker-selected-name').textContent=selected.name;$('sticker-selected-note').textContent=selected.note;
-    buttons.forEach((button,i)=>{button.setAttribute('aria-pressed',String(stickerPack[i].id===selected.id));button.disabled=!ready||system.count()>=24;});
-    $('sticker-place').disabled=!draft||!ready||system.count()>=24;
-    $('sticker-cancel').disabled=!draft;
-    $('sticker-undo').disabled=!system.canUndo();$('sticker-clear').disabled=system.count()===0;
+    const draft=system.draft(),busy=!!drag?.moved,editable=ready&&!!draft&&!busy;
+    dialog.classList.toggle('has-sticker-preview',!!draft);
+    $('sticker-selected-name').textContent=draft?selected.name:'Choose a sticker';
+    $('sticker-selected-note').textContent=draft?selected.note:'See it on the box before you stick it.';
+    buttons.forEach((button,i)=>{button.setAttribute('aria-pressed',String(!!draft&&stickerPack[i].id===selected.id));button.disabled=!ready||system.count()>=24;});
+    $('sticker-place').disabled=!editable||system.count()>=24;$('sticker-cancel').disabled=!draft||busy;
+    $('sticker-undo').disabled=!system.canUndo()||busy;$('sticker-clear').disabled=system.count()===0||busy;
     $('sticker-count').textContent=`${String(system.count()).padStart(2,'0')} / 24`;
-    $('sticker-save-note').textContent=system.saved()?'Saved on this device. Your box, your stickers.':'Kept for this session. Device storage is unavailable.';
-    $('sticker-placement-note').textContent=system.count()>=24?'Box full · undo or clear to make room':draft?(system.wraps()?'Wrapping around the corner':draft.surface==='lid'?'On the lid · moves with it':'Preview on the box'):'Drag a sticker onto the box';
+    $('sticker-save-note').textContent=draft?'Preview only · Stick here to save.':system.saved()?'Saved on this device. Your box, your stickers.':'Kept for this session. Device storage is unavailable.';
+    $('sticker-placement-note').textContent=system.count()>=24?'Box full · undo or clear to make room':draft?(system.wraps()?'Preview · wrapping around the corner':draft.surface==='lid'?'Preview on the lid':'Preview on the box'):'Pick a sticker to see it on the box';
+    if(draft)$('sticker-placement-note').textContent+=` · ${Math.round(options.size*100)}% · ${options.angle}°`;
     $('sticker-placement-note').classList.toggle('is-wrap',system.wraps());
-    $('sticker-stage-hint').textContent=draft?'Tap the box to stick · Arrow keys adjust the preview':'Drag the box to turn it · Drop stickers on any side or the lid';
+    $('sticker-drag-help').textContent=draft?'Adjust it. Move it. Stick here.':'Pick a sticker. Try it on.';
+    $('sticker-stage-hint').textContent=draft?'Drag the sticker to move · Drag the box to turn':'Tap a sticker to preview · Or drag one onto the box';
+    $('sticker-size').value=String(options.size);$('sticker-angle').value=String(options.angle);
+    $('sticker-size').disabled=!editable;$('sticker-angle').disabled=!editable;
     $('sticker-size-value').textContent=`${Math.round(options.size*100)}%`;$('sticker-angle-value').textContent=`${options.angle}°`;
+    for(const finish of ['gloss','holo']){const button=$(`sticker-${finish}`);button.disabled=!editable;button.setAttribute('aria-pressed',String(options.finish===finish));}
     sizeRuler.update();angleRuler.update();
-    stage.setAttribute('aria-label',draft?'Sticker preview. Tap the box to stick it, or use arrow keys to adjust and Enter to place. Escape cancels the preview. Drag to turn the box.':'Sticker studio. Drag or use arrow keys to turn the box. Drag a sticker from the pack onto a surface, or select a sticker to preview it. Escape returns to the box.');
+    stage.setAttribute('aria-label',draft?'Sticker preview. Drag the sticker to move it. Drag the box to turn. Size and angle change this preview. Arrow keys move it; Enter sticks it; Escape cancels.':'Sticker studio. Drag or use arrow keys to turn the box. Pick or drag a sticker to preview it. Escape returns to the box.');
   }
   function preview(){
     if(!ready||system.count()>=24)return;
-    const data=system.setDraft({...lastPlacement,...options,art:selected.id});lastPlacement={surface:data.surface,u:data.u,v:data.v};refresh();
+    const data=system.setDraft({...lastPlacement,...options,art:selected.id});
+    lastPlacement={surface:data.surface,u:data.u,v:data.v};
+    Object.assign(options,{size:data.size,angle:data.angle,finish:data.finish});
+    refresh();return data;
   }
-  function choose(art){if(!ready||system.count()>=24)return;selected=art;preview();say(`${art.name} selected. Tap the box to stick it. Or focus the box, adjust with arrow keys, and press Enter.`);}
-  function position(x,y){const hit=system.pick(x,y);if(!hit)return false;lastPlacement={surface:hit.surface,u:hit.u,v:hit.v};preview();return true;}
+  function choose(art){
+    if(!ready||drag||system.count()>=24)return;
+    if(!system.draft()){
+      // Begin on a visible surface, including after the box has been turned.
+      const r=stage.getBoundingClientRect(),hit=system.pick(r.left+r.width/2,r.top+r.height/2);
+      if(hit)lastPlacement={surface:hit.surface,u:hit.u,v:hit.v};
+    }
+    selected=art;preview();
+    say(`${art.name} preview. Adjust its size and angle, drag it to a spot, then choose Stick here.`);
+  }
+  function position(x,y,grab=null){
+    const hit=system.pick(x,y);if(!hit)return false;
+    const offset=grab?.surface===hit.surface?grab:{u:0,v:0};
+    lastPlacement={surface:hit.surface,u:hit.u+offset.u,v:hit.v+offset.v};preview();return true;
+  }
+  function beginDrag(e,owner,art,source,suppressClick=()=>{}){
+    const before=system.draft(),hit=source==='preview'?system.pick(e.clientX,e.clientY):null;
+    drag={id:e.pointerId,owner,art,source,x:e.clientX,y:e.clientY,moved:false,valid:false,frame:0,suppressClick,before,previousArt:selected,previousOptions:{...options},previousPlacement:{...lastPlacement},grab:hit&&before&&hit.surface===before.surface?{surface:hit.surface,u:before.u-hit.u,v:before.v-hit.v}:null};
+    owner.setPointerCapture(e.pointerId);box.hold(true);
+  }
+  function moveDrag(e){
+    if(drag?.id!==e.pointerId)return;
+    if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
+    if(!drag.moved){
+      drag.moved=true;selected=drag.art;ghostArt.src=selected.src;drag.owner.classList.add('is-dragging');dialog.classList.add('is-dragging-sticker');
+      say(`${selected.name} picked up. Release on the box to preview it.`);
+    }
+    e.preventDefault();drag.nextX=e.clientX;drag.nextY=e.clientY;
+    if(!drag.frame)drag.frame=requestAnimationFrame(()=>{if(drag){drag.frame=0;updateDrag(drag.nextX,drag.nextY);}});
+  }
   function updateDrag(x,y){
     if(!drag)return;
-    drag.valid=position(x,y);
-    if(!drag.valid){system.clearDraft();refresh();}
+    // Passing across a smaller surface may fit the preview temporarily; it must
+    // not permanently shrink the sticker before the final drop location is known.
+    Object.assign(options,drag.previousOptions);
+    drag.valid=position(x,y,drag.grab);system.showDraft(drag.valid);if(!drag.valid)refresh();
     ghost.hidden=false;ghost.style.left=`${x}px`;ghost.style.top=`${y}px`;
-    ghost.classList.toggle('is-over-box',drag.valid);ghostLabel.textContent=drag.valid?'Release to stick':'Drop onto the box';
+    ghostArt.style.transform=`rotate(${-options.angle}deg) scale(${options.size})`;
+    ghost.classList.toggle('is-over-box',drag.valid);ghostLabel.textContent=drag.valid?'Release to preview':'Drop onto the box';
   }
   function releaseDrag(){
-    if(!drag)return;
+    if(!drag)return null;
     const previous=drag;drag=null;cancelAnimationFrame(previous.frame);if(previous.moved)previous.suppressClick();
-    previous.button.classList.remove('is-dragging');dialog.classList.remove('is-dragging-sticker');ghost.hidden=true;
-    if(previous.button.hasPointerCapture(previous.id))previous.button.releasePointerCapture(previous.id);
-    box.hold(false);
+    previous.owner.classList.remove('is-dragging');dialog.classList.remove('is-dragging-sticker');ghost.hidden=true;
+    if(previous.owner.hasPointerCapture(previous.id))previous.owner.releasePointerCapture(previous.id);
+    box.hold(false);return previous;
   }
-  function cancelDrag(){const moved=drag?.moved;releaseDrag();if(moved){system.clearDraft();say('Drag cancelled. The sticker is back in the pack.');}refresh();}
-  function cancelPreview(){system.clearDraft();say('Preview cancelled. Drag a sticker from the pack to try again.');refresh();}
-  function adjust(){if(system.draft())preview();else refresh();}
+  function restorePreview(previous){
+    selected=previous.previousArt;Object.assign(options,previous.previousOptions);lastPlacement=previous.previousPlacement;
+    if(previous.before)system.setDraft(previous.before);else system.clearDraft();
+  }
+  function finishDrag(e){
+    if(drag?.id!==e.pointerId)return;
+    if(drag.moved)updateDrag(e.clientX,e.clientY);
+    const previous=releaseDrag();
+    if(previous.moved){
+      if(previous.valid)say(`${selected.name} preview. Fine-tune size and angle, drag to move, then Stick here.`);
+      else{restorePreview(previous);say(previous.before?'Drop cancelled. Your previous preview is restored.':'Drop cancelled. Choose a sticker or drop it on the box.');}
+    }
+    refresh();
+  }
+  function cancelDrag(){
+    const previous=releaseDrag();if(!previous)return;
+    if(previous.moved){restorePreview(previous);say('Drag cancelled. Your preview is unchanged.');}refresh();
+  }
+  function focusSelection(){buttons[stickerPack.indexOf(selected)].focus({preventScroll:true});}
+  function cancelPreview(){system.clearDraft();stage.classList.remove('can-move-sticker');say('Preview cancelled. Pick a sticker to try again.');refresh();focusSelection();}
+  function adjust(){if(system.draft()){const wanted=options.size;preview();if(options.size<wanted-.005)say(`Sized to ${Math.round(options.size*100)} percent to fit this surface. Choose Stick here when ready.`);}else refresh();}
   async function open(){
     if(active)return;active=true;beforeOpen();stage.before(anchor);$('sticker-stage').append(stage);
     dialog.showModal();document.body.classList.add('is-decorating');box.decorate(true);
     $('sticker-place').disabled=true;say('Unpacking the sticker pack…');refresh();
     const current=++loadId;
-    try{await system.ready();if(!active||current!==loadId)return;ready=true;refresh();say('Drag a sticker from the pack onto the box. Release to stick. You can also tap a sticker, then tap the box.');}
+    try{await system.ready();if(!active||current!==loadId)return;ready=true;refresh();say('Pick a sticker to preview it on the box. Adjust size and angle, move it, then choose Stick here.');}
     catch(error){console.error('Unable to prepare the sticker pack',error);say('The stickers could not load. Close and reopen the pack to try again.');}
     if(active)buttons[0].focus({preventScroll:true});
   }
   function close(){
-    if(!active)return;active=false;++loadId;releaseDrag();releaseTurn();system.clearDraft();box.decorate(false);box.hold(false);
+    if(!active)return;active=false;++loadId;releaseDrag();releaseTurn();system.clearDraft();box.decorate(false);box.hold(false);stage.classList.remove('can-move-sticker');
     dialog.close();document.body.classList.remove('is-decorating');anchor.replaceWith(stage);afterClose();$('decorate-button').focus({preventScroll:true});
   }
   function place(){
-    if(!system.place())return;
-    say(`${selected.name} placed${lastPlacement.surface==='lid'?' on the lid':''}. Pick another sticker or undo the last change.`);refresh();
+    if(drag||!system.place())return;
+    stage.classList.remove('can-move-sticker');say(`${selected.name} stuck${lastPlacement.surface==='lid'?' on the lid':''}. Choose another sticker or undo the last change.`);refresh();if(system.count()<24)focusSelection();else $('sticker-undo').focus({preventScroll:true});
   }
   $('decorate-button').addEventListener('click',open);$('sticker-close').addEventListener('click',close);dialog.addEventListener('cancel',e=>{e.preventDefault();if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();});
-  $('sticker-cancel').addEventListener('click',cancelPreview);
-  $('sticker-place').addEventListener('click',place);
+  $('sticker-cancel').addEventListener('click',cancelPreview);$('sticker-place').addEventListener('click',place);
   $('sticker-undo').addEventListener('click',()=>{system.undo();say('Last change undone.');refresh();});
   $('sticker-clear').addEventListener('click',()=>{system.reset();say('Box cleared. Undo brings the stickers back.');refresh();});
   $('sticker-size').addEventListener('input',e=>{options.size=Number(e.target.value);adjust();});
   $('sticker-angle').addEventListener('input',e=>{options.angle=Number(e.target.value);adjust();});
-  for(const finish of ['gloss','holo'])$(`sticker-${finish}`).addEventListener('click',()=>{
-    options.finish=finish;for(const value of ['gloss','holo'])$(`sticker-${value}`).setAttribute('aria-pressed',String(value===finish));adjust();
-  });
+  for(const finish of ['gloss','holo'])$(`sticker-${finish}`).addEventListener('click',()=>{options.finish=finish;adjust();});
   for(const face of ['front','right','back','left','lid'])$(`sticker-face-${face}`).addEventListener('click',()=>{
     box.decorationFace(face);
     const poses={front:{surface:'wall',u:0,v:1.1},right:{surface:'wall',u:3.22,v:1.1},back:{surface:'wall',u:6.45,v:1.1},left:{surface:'wall',u:9.67,v:1.1},lid:{surface:'lid',u:0,v:0}};
     lastPlacement=poses[face];if(system.draft())preview();
-    say(`${face==='lid'?'Lid':face+' side'} in view. Drag a sticker onto it, or tap to place the selected preview.`);
+    say(`${face==='lid'?'Lid':face+' side'} in view. ${system.draft()?'Adjust the preview, then Stick here.':'Pick a sticker to try here.'}`);
   });
-  // Capture only while the studio owns the stage, leaving all comic controls
-  // and click-away inspection behaviour untouched when it closes.
+  // A drag on the cutout moves the preview; a drag on bare box turns the box.
   stage.addEventListener('pointerdown',e=>{
     if(!active)return;e.stopImmediatePropagation();if(drag||gesture||e.button>0||!e.isPrimary||e.target.closest('button'))return;
-    stage.focus({preventScroll:true});box.hold(true);gesture={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};stage.setPointerCapture(e.pointerId);
+    stage.focus({preventScroll:true});
+    if(system.hitDraft(e.clientX,e.clientY)){beginDrag(e,stage,selected,'preview');return;}
+    box.hold(true);gesture={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};stage.setPointerCapture(e.pointerId);
   },true);
   stage.addEventListener('pointermove',e=>{
-    if(!active)return;e.stopImmediatePropagation();if(!gesture||gesture.id!==e.pointerId)return;
+    if(!active)return;e.stopImmediatePropagation();
+    if(drag?.owner===stage){moveDrag(e);return;}
+    if(!gesture){if(!drag&&e.pointerType==='mouse')stage.classList.toggle('can-move-sticker',system.hitDraft(e.clientX,e.clientY));return;}
+    if(gesture.id!==e.pointerId)return;
     if(!gesture.moved&&Math.hypot(e.clientX-gesture.startX,e.clientY-gesture.startY)<6)return;
-    gesture.moved=true;box.rotate((e.clientX-gesture.x)*.009,(e.clientY-gesture.y)*.006);
-    gesture.x=e.clientX;gesture.y=e.clientY;
+    gesture.moved=true;box.rotate((e.clientX-gesture.x)*.009,(e.clientY-gesture.y)*.006);gesture.x=e.clientX;gesture.y=e.clientY;
   },true);
   function releaseTurn(){const previous=gesture;gesture=null;box.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
   function end(e){
-    if(!active)return;e.stopImmediatePropagation();if(gesture?.id!==e.pointerId)return;
+    if(!active)return;e.stopImmediatePropagation();
+    if(drag?.owner===stage&&drag.id===e.pointerId){if(e.type==='pointerup')finishDrag(e);else cancelDrag();return;}
+    if(gesture?.id!==e.pointerId)return;
     const tap=!gesture.moved&&e.type==='pointerup';releaseTurn();
-    if(tap&&system.draft()){if(position(e.clientX,e.clientY))place();else say('Tap a surface of the box or lid to stick the preview.');}
+    if(tap&&system.draft()&&position(e.clientX,e.clientY))say('Preview moved. Adjust size and angle, then Stick here.');
   }
   stage.addEventListener('pointerup',end,true);stage.addEventListener('pointercancel',end,true);
-  stage.addEventListener('lostpointercapture',e=>{if(gesture?.id===e.pointerId)releaseTurn();},true);
+  stage.addEventListener('lostpointercapture',e=>{if(drag?.owner===stage&&drag.id===e.pointerId)cancelDrag();if(gesture?.id===e.pointerId)releaseTurn();},true);
   window.addEventListener('blur',()=>{if(active){cancelDrag();releaseTurn();}});
   stage.addEventListener('dblclick',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},true);
   stage.addEventListener('wheel',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
   stage.addEventListener('keydown',e=>{
     if(!active||e.target!==stage)return;e.stopImmediatePropagation();
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' ','Escape'].includes(e.key))e.preventDefault();
-    if(e.key==='Escape'){if(system.draft())cancelPreview();else close();return;}if(e.key==='Enter'||e.key===' '){place();return;}
+    if(e.key==='Escape'){if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();return;}if(e.key==='Enter'||e.key===' '){place();return;}
     const dx=e.key==='ArrowLeft'?-.08:e.key==='ArrowRight'?.08:0,dy=e.key==='ArrowUp'?.08:e.key==='ArrowDown'?-.08:0;
     if(!dx&&!dy)return;
     if(!system.draft())box.rotate(dx,-dy);else{lastPlacement.u+=dx;lastPlacement.v+=dy;preview();}
