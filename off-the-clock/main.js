@@ -1,5 +1,6 @@
 import {comics} from './comics.js?v=15.0';
-import {createBox} from './model.js?v=16.1';
+import {createBox} from './model.js?v=17.0';
+import {createStickerStudio} from './sticker-studio.js?v=17.0';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
@@ -147,5 +148,7 @@ stage.addEventListener('pointercancel',()=>{pointer=null;lastTap=null;box?.hold(
 stage.addEventListener('lostpointercapture',()=>{box?.hold(false);});
 try{
   box=await createBox(stage,comics);box.select(0);box.setOpen(false);updateMotion();render();seriesSelect.disabled=false;openButton.disabled=false;$('loading').hidden=true;
+  createStickerStudio({stage,box,beforeOpen:()=>{if(inspecting)leaveInspection();setOpen(false);},afterClose:()=>{stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag to turn. Escape closes.');render();}});
+  $('decorate-button').disabled=false;
 }catch(error){console.error('Unable to prepare the 3D collection',error);$('loading').hidden=true;$('unavailable').hidden=false;openButton.textContent='3D unavailable';}
 window.addEventListener('pagehide',event=>{if(!event.persisted)box?.dispose();});
