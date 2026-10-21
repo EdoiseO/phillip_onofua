@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./style.css?v=16.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=17.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=18.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -60,6 +61,11 @@
           <button class="arrow" id="next" aria-label="Next comic">→</button>
         </div>
         <p class="gesture-hint" id="gesture-hint"><span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn</p>
+        <div class="mobile-collection">
+          <label for="comic-ruler"><span id="comic-ruler-caption">BROWSE THE BOX</span><output id="comic-ruler-value" for="comic-ruler">01 / 24</output></label>
+          <input id="comic-ruler" type="range" min="0" max="23" step="1" value="0" aria-label="Browse comics" disabled>
+          <p id="comic-ruler-note">Slide to open the box and explore.</p>
+        </div>
       </section>
     </main>
     <footer class="footer"><span>THE SHORT BOX <span class="footer-number">/ 001</span></span><span class="footer-center"><i></i><span id="scene-status">WAITING TO BE OPENED</span></span><button class="motion-toggle" id="motion-toggle" aria-pressed="false">Motion on</button></footer>
@@ -102,9 +108,14 @@
         </div>
       </section>
       <section class="sticker-panel" aria-label="Sticker pack and placement controls">
+        <div class="sticker-panel-tabs" role="tablist" aria-label="Sticker tools"><button id="sticker-tab-pack" role="tab" aria-selected="true" aria-controls="sticker-pack-panel">Stickers</button><button id="sticker-tab-adjust" role="tab" aria-selected="false" aria-controls="sticker-adjust-panel" tabindex="-1">Adjust</button></div>
+        <div class="sticker-panel-scroll">
+        <div id="sticker-pack-panel" class="sticker-tool-panel" role="tabpanel" aria-labelledby="sticker-tab-pack">
         <div class="sticker-panel-heading"><p class="eyebrow">01 / PICK YOUR FAVOURITES</p><span id="sticker-count">00 / 24</span></div>
         <div class="sticker-pack" id="sticker-pack" role="group" aria-label="Choose a sticker"></div>
         <div class="sticker-selected"><h3 id="sticker-selected-name">Omnitrix</h3><p id="sticker-selected-note">Hero time.</p></div>
+        </div>
+        <div id="sticker-adjust-panel" class="sticker-tool-panel" role="tabpanel" aria-labelledby="sticker-tab-adjust">
         <div class="sticker-adjustments">
           <label for="sticker-size"><span>Size</span><output id="sticker-size-value" for="sticker-size">100%</output></label>
           <input id="sticker-size" type="range" min="0.45" max="1.65" step="0.05" value="1">
@@ -112,13 +123,17 @@
           <input id="sticker-angle" type="range" min="-180" max="180" step="1" value="-8">
         </div>
         <div class="sticker-finish" role="group" aria-label="Sticker finish"><span>Finish</span><button id="sticker-gloss" aria-pressed="true">Gloss</button><button id="sticker-holo" aria-pressed="false">✧ Holo</button></div>
+        </div>
+        </div>
+        <div class="sticker-panel-footer">
         <button class="primary sticker-place" id="sticker-place" disabled>Place sticker <span aria-hidden="true">↘</span></button>
         <div class="sticker-history"><button id="sticker-undo" disabled>↶ Undo</button><button id="sticker-clear" disabled>Clear box</button></div>
         <p class="sticker-feedback" id="sticker-feedback" aria-live="polite">Pick a sticker. Find its spot. Make it yours.</p>
         <p class="sticker-save-note" id="sticker-save-note">Saved on this device. Your box, your stickers.</p>
+        </div>
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=17.0"></script>
+  <script type="module" src="./main.js?v=18.0"></script>
 </body>
 </html>
