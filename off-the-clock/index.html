@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./style.css?v=22.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=23.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=24.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=25.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -60,11 +60,11 @@
           <button class="arrow" id="next" aria-label="Next comic">→</button>
         </div>
         <p class="gesture-hint" id="gesture-hint"><span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn</p>
-        <div class="mobile-collection">
+        <div class="mobile-collection" id="mobile-collection" hidden>
           <label for="comic-ruler"><span id="comic-ruler-caption">BROWSE</span><output id="comic-ruler-value" for="comic-ruler">01 / 24</output></label>
           <input id="comic-ruler" type="range" min="0" max="23" step="1" value="0" aria-label="Browse comics" disabled>
         </div>
-        <p class="mobile-collection-note" id="comic-ruler-note">Slide down to explore.</p>
+        <p class="mobile-collection-note" id="comic-ruler-note">Tap the box to open.</p>
       </section>
     </main>
     <footer class="footer"><span>THE SHORT BOX <span class="footer-number">/ 001</span></span><span class="footer-center"><i></i><span id="scene-status">WAITING TO BE OPENED</span></span><button class="motion-toggle" id="motion-toggle" aria-pressed="false">Motion on</button></footer>
@@ -141,6 +141,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=24.0"></script>
+  <script type="module" src="./main.js?v=25.0"></script>
 </body>
 </html>
