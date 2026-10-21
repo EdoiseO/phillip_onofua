@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./style.css?v=27.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=26.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=26.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=28.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -45,7 +45,7 @@
         </div>
         <div class="reading-progress" id="reading-progress" hidden><span id="issue-count">01 / 05</span><div class="progress-track"><div id="progress-fill"></div></div><span>THE COLLECTION</span></div>
       </section>
-      <section class="viewer" aria-label="Interactive 3D comic box">
+      <section class="viewer" data-open="false" aria-label="Interactive 3D comic box">
         <div class="stage" id="stage" tabindex="0" role="region" aria-label="Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.">
           <div class="stage-glow" aria-hidden="true"></div>
           <div class="loading" id="loading"><span></span><p>Unpacking a few worlds</p></div>
@@ -142,6 +142,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=26.0"></script>
+  <script type="module" src="./main.js?v=28.0"></script>
 </body>
 </html>

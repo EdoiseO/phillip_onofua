@@ -5,6 +5,7 @@ import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
+const collectionViewer=stage.closest('.viewer');
 const mobileCollection=matchMedia(mobileControlsQuery);
 const lidControls=$('lid-controls'),lidAnchor=document.createComment('Desktop lid controls');
 lidControls.before(lidAnchor);
@@ -45,6 +46,7 @@ function renderStageInstructions(){
 }
 function render(){
   const comic=comics[index];renderLid();renderStageInstructions();
+  collectionViewer.dataset.open=String(opened);
   $('mobile-collection').hidden=!opened;
   comicRuler.value=String(index);comicRuler.disabled=!box||!opened;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
@@ -98,7 +100,7 @@ function leaveInspection(){
   stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');render();$('inspect-button').focus({preventScroll:true});announce('Returned to the box.');
 }
 function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}box.unwrap(unwrapped);render();announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');}
-function updateMotion(){box?.reduce(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
+function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
 openButton.addEventListener('click',()=>setOpen(!opened));
 $('inspect-button').addEventListener('click',()=>enterInspection());$('return-button').addEventListener('click',leaveInspection);$('sleeve-button').addEventListener('click',toggleSleeve);
 for(const view of ['front','spine','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='spine'?'Spine and staple detail.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});

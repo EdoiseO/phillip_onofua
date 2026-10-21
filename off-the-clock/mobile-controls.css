@@ -86,13 +86,17 @@
   .story .inspect-button{font-size:10px;min-height:38px;gap:5px;white-space:nowrap}
   .story .decorate-button{font-size:10px;min-height:38px;gap:6px;flex-wrap:nowrap;white-space:nowrap}
   .story .sticker-button-note{display:none}
-  .viewer{--collection-height:clamp(440px,65svh,640px);height:var(--collection-height);min-height:0;width:100%;margin:0;align-self:stretch;display:grid;grid-template-columns:minmax(0,1fr) 56px;grid-template-rows:minmax(0,1fr) auto 40px 23px;column-gap:8px}
-  .viewer>.stage{touch-action:pan-y pinch-zoom;cursor:pointer;grid-column:1;grid-row:1;height:100%;min-height:0;margin:0;width:calc(100% + 12px);margin-left:-12px}
+  .viewer{--collection-height:clamp(440px,65svh,640px);--collection-rail:56px;--collection-gap:8px;--collection-bleed:12px;height:var(--collection-height);min-height:0;width:100%;margin:0;align-self:stretch;display:grid;grid-template-columns:minmax(0,1fr) var(--collection-rail);grid-template-rows:minmax(0,1fr) auto 40px 23px;column-gap:var(--collection-gap)}
+  .viewer>.stage{touch-action:pan-y pinch-zoom;cursor:pointer;grid-column:1;grid-row:1;height:100%;min-height:0;margin:0;width:calc(100% + var(--collection-bleed));margin-left:calc(-1 * var(--collection-bleed));transform:translateX(0);transition:transform 560ms cubic-bezier(.22,1,.36,1)}
+  /* Center the closed scene without resizing WebGL or changing the box's scale.
+     Opening restores its browsing position before the ruler fades in. */
+  .viewer[data-open=false]>.stage{transform:translateX(calc((var(--collection-rail) + var(--collection-gap) + var(--collection-bleed))/2))}
   .viewer .browse-controls,.viewer .gesture-hint{display:none!important}
   .viewer .series-jump{grid-column:1/-1;grid-row:3;margin:0;gap:8px;align-self:center}
   .series-jump>span{font-size:7px}
   .series-jump select{min-height:34px;max-width:230px;padding:7px 25px 7px 9px;font-size:10px}
   .mobile-collection{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;min-height:0;padding:16px 0 18px}
+  .mobile-collection:not([hidden]){animation:collection-ruler-enter 180ms ease-out 560ms both}
   .mobile-collection label{display:flex;flex-direction:column;align-items:center;gap:8px;margin:0 0 10px;color:#92a6bf;font:7px GeistMono,monospace;letter-spacing:.06em}
   .mobile-collection .ruler-control{height:auto;margin:0}
   .mobile-collection-note{display:block;grid-column:1/-1;grid-row:4;font-size:9px;line-height:15px;color:#97a7bb;margin:5px 0 0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -104,6 +108,11 @@
   .viewer>.lid-controls button[aria-pressed=true]{background:#e2eaf5;color:#142030;box-shadow:0 1px 4px #0003}
   .viewer>.lid-controls>span{font-size:8px;margin:0;padding:0 10px;color:#91a1b7}
 }
+
+@keyframes collection-ruler-enter{from{opacity:0;visibility:hidden;transform:translateX(6px)}to{opacity:1;visibility:visible;transform:translateX(0)}}
+body[data-reduced-motion=true] .viewer>.stage{transition:none}
+body[data-reduced-motion=true] .mobile-collection{animation:none}
+@media(prefers-reduced-motion:reduce){.viewer>.stage{transition:none}.mobile-collection{animation:none!important}}
 
 @media(max-width:700px) and (max-height:740px){
   .sticker-workspace{grid-template-rows:minmax(0,1fr) 332px}
