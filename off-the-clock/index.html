@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./style.css?v=16.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=17.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=18.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=19.0">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -62,10 +62,10 @@
         </div>
         <p class="gesture-hint" id="gesture-hint"><span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn</p>
         <div class="mobile-collection">
-          <label for="comic-ruler"><span id="comic-ruler-caption">BROWSE THE BOX</span><output id="comic-ruler-value" for="comic-ruler">01 / 24</output></label>
+          <label for="comic-ruler"><span id="comic-ruler-caption">BROWSE</span><output id="comic-ruler-value" for="comic-ruler">01 / 24</output></label>
           <input id="comic-ruler" type="range" min="0" max="23" step="1" value="0" aria-label="Browse comics" disabled>
-          <p id="comic-ruler-note">Slide to open the box and explore.</p>
         </div>
+        <p class="mobile-collection-note" id="comic-ruler-note">Slide down to explore.</p>
       </section>
     </main>
     <footer class="footer"><span>THE SHORT BOX <span class="footer-number">/ 001</span></span><span class="footer-center"><i></i><span id="scene-status">WAITING TO BE OPENED</span></span><button class="motion-toggle" id="motion-toggle" aria-pressed="false">Motion on</button></footer>
@@ -98,6 +98,9 @@
     <div class="sticker-workspace">
       <section class="sticker-canvas-area" aria-label="Decorate your comic box">
         <div class="sticker-stage" id="sticker-stage"></div>
+        <aside class="sticker-mobile-rail" id="sticker-mobile-rail" aria-label="Sticker adjustment ruler">
+          <div class="sticker-ruler-switch" role="group" aria-label="Ruler control"><button id="sticker-ruler-size" aria-pressed="true" aria-controls="sticker-size-field">Size</button><button id="sticker-ruler-angle" aria-pressed="false" aria-controls="sticker-angle-field">Angle</button></div>
+        </aside>
         <div class="sticker-canvas-controls">
           <p id="sticker-placement-note">Pick a sticker to begin</p>
           <div class="sticker-mode" role="group" aria-label="Sticker interaction">
@@ -117,11 +120,16 @@
         </div>
         <div id="sticker-adjust-panel" class="sticker-tool-panel" role="tabpanel" aria-labelledby="sticker-tab-adjust">
         <div class="sticker-adjustments">
+          <div class="sticker-ruler-field" id="sticker-size-field">
           <label for="sticker-size"><span>Size</span><output id="sticker-size-value" for="sticker-size">100%</output></label>
           <input id="sticker-size" type="range" min="0.45" max="1.65" step="0.05" value="1">
+          </div>
+          <div class="sticker-ruler-field" id="sticker-angle-field">
           <label for="sticker-angle"><span>Angle</span><output id="sticker-angle-value" for="sticker-angle">−8°</output></label>
           <input id="sticker-angle" type="range" min="-180" max="180" step="1" value="-8">
+          </div>
         </div>
+        <p class="sticker-rail-tip">Use the ruler on the right for size and angle. Drag the box to find its spot.</p>
         <div class="sticker-finish" role="group" aria-label="Sticker finish"><span>Finish</span><button id="sticker-gloss" aria-pressed="true">Gloss</button><button id="sticker-holo" aria-pressed="false">✧ Holo</button></div>
         </div>
         </div>
@@ -134,6 +142,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=18.0"></script>
+  <script type="module" src="./main.js?v=19.0"></script>
 </body>
 </html>
