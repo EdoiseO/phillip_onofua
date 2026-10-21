@@ -57,7 +57,7 @@ function render(){
     $('sleeve-button').innerHTML=unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
     $('sleeve-button').setAttribute('aria-pressed',String(unwrapped));
     $('sleeve-status').textContent=unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
-    $('inspection-instructions').textContent=unwrapped?'Drag to catch the shine. The board stays in the sleeve.':'Drag to turn. Click the comic to lift it off its backing board.';
+    $('inspection-instructions').textContent=unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
   }
 }
 function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=value;box.setOpen(value);render();announce(value?`Box opened. ${comics[index].title}, ${comics[index].variant}.`:'Box closed.');}
@@ -66,7 +66,7 @@ function step(direction){if(inspecting)return;if(!opened){setOpen(true);return;}
 function enterInspection(i=index){
   if(!box||inspecting)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
   $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
-  stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Escape returns to the box.');
+  stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
   box.focus(true);render();stage.focus({preventScroll:true});announce(`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
 }
 function leaveInspection(){
@@ -109,8 +109,9 @@ stage.addEventListener('keydown',e=>{
 });
 stage.addEventListener('pointerdown',e=>{
   if(e.target.closest('button')||e.button>0)return;
+  const hit=box?.hit(e.clientX,e.clientY);
   box?.hold(true);
-  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,moved:0,lid:opened&&!inspecting&&!!box?.hit(e.clientX,e.clientY)?.lid};stage.setPointerCapture(e.pointerId);
+  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
@@ -124,8 +125,16 @@ stage.addEventListener('pointerup',e=>{
   if(gesture.lid){lastTap=null;if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
   if(!inspecting&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
   if(gesture.moved>=7){lastTap=null;return;}
-  const hit=box?.hit(e.clientX,e.clientY);if(!hit)return;
-  if(inspecting){if(performance.now()-focusStarted>450&&hit.comic===index)clickTimer=setTimeout(toggleSleeve,220);return;}
+  const hit=box?.hit(e.clientX,e.clientY);
+  if(inspecting){
+    if(performance.now()-focusStarted<=450)return;
+    // Only a tap that starts and ends off the model dismisses the close-up.
+    // Rotation drags and taps on the comic, sleeve, or board stay in inspection.
+    if(!gesture.hit&&!hit)leaveInspection();
+    else if(hit?.comic===index)clickTimer=setTimeout(toggleSleeve,220);
+    return;
+  }
+  if(!hit)return;
   if(!opened){setOpen(true);return;}
   if(hit.comic!==undefined){
     const now=performance.now();
