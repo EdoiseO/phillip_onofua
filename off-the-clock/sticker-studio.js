@@ -1,4 +1,4 @@
-import {stickerPack} from './stickers.js?v=20.0';
+import {stickerPack} from './stickers.js?v=22.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 export function createStickerStudio({stage,box,beforeOpen,afterClose}){
