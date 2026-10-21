@@ -1,3 +1,5 @@
+import {installStickerFinish,setStickerFinish} from './sticker-finish.js?v=30.0';
+
 export const stickerPack = [
   {id:'omnitrix',name:'Omnitrix',note:'Hero time.',width:1.05},
   {id:'marvel',name:'Marvel Comics',note:'A whole universe.',width:1.18},
@@ -77,8 +79,7 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     const g=new THREE.PlaneGeometry(1,1,96,64);
     g.attributes.position.setUsage(THREE.DynamicDrawUsage);g.attributes.normal.setUsage(THREE.DynamicDrawUsage);
     const material=new THREE.MeshPhysicalMaterial({alphaTest:.35,alphaToCoverage:true,transparent:true,forceSinglePass:true,depthWrite:false,roughness:.27,clearcoat:1,clearcoatRoughness:.12,iridescenceIOR:1.35,iridescenceThicknessRange:[140,460],envMapIntensity:.85,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
-    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nif (!gl_FrontFacing) diffuseColor.rgb = vec3(0.96);');};
-    material.customProgramCacheKey=()=>'sticker-paper-reverse-v1';
+    installStickerFinish(material);
     const mesh=new THREE.Mesh(g,material);mesh.userData.sticker=true;mesh.receiveShadow=false;
     const item={data:null,mesh,base:new Float32Array(g.attributes.position.array.length),press:0,isDraft,layer};
     project(item,data);return item;
@@ -94,9 +95,8 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
       item.base.set(point.position,i*3);n.setXYZ(i,...point.normal);
     }
     n.needsUpdate=true;
-    const material=item.mesh.material,holo=data.finish==='holo';
-    if((material.iridescence>0)!==holo)material.needsUpdate=true;
-    material.map=tex.map;material.metalness=holo?.12:0;material.iridescence=holo?.85:0;
+    const material=item.mesh.material;
+    material.map=tex.map;setStickerFinish(material,data.finish);
     const parent=data.surface==='wall'?body:lid;if(item.mesh.parent!==parent)parent.add(item.mesh);
     // Box depth still occludes hidden faces. Among cutouts, explicit insertion
     // order wins at every viewing angle, even during overlapping peel motions.
