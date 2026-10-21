@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0e13">
+  <meta name="description" content="A little box of other worlds. An interactive 3D comic collection by Phillip Onofua.">
+  <title>Off the clock — Phillip Onofua</title>
+  <link rel="canonical" href="https://philliponofua.vercel.app/off-the-clock/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%230b0e13'/%3E%3Cpath d='M9 15h22v17H9zM7 10h26v7H7z' fill='%23eae4d5'/%3E%3Cpath d='M17 22h6' stroke='%230b0e13' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css?v=15.0">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
+</head>
+<body>
+  <a class="skip-link" href="#experience">Skip to the comic collection</a>
+  <div class="page">
+    <header class="header" data-node-id="5:149">
+      <a class="wordmark" href="/">PHILLIP ONOFUA<span class="wordmark-dot"></span></a>
+      <nav aria-label="Primary navigation"><a href="/index.html#projects">Work</a><a href="/index.html#about">About</a><span aria-current="page">Off the clock</span><a href="/index.html#contact">Contact ↗</a></nav>
+    </header>
+    <main class="experience" id="experience" tabindex="-1">
+      <section class="story" aria-labelledby="title">
+        <p class="eyebrow" id="eyebrow">04 / OFF THE CLOCK</p>
+        <h1 id="title">One more<br>issue<span class="period">.</span></h1>
+        <p class="edition-label" id="edition-label" hidden></p>
+        <p class="description" id="description">Some worlds are worth getting lost in. This little box holds a few of mine.</p>
+        <div class="issue-meta" id="issue-meta" hidden><span id="genre"></span><span id="issue-type"></span></div>
+        <div class="actions">
+          <button class="primary" id="open-button" disabled>Preparing the box… <span aria-hidden="true">↗</span></button>
+          <button class="inspect-button" id="inspect-button" hidden>Inspect this comic <span aria-hidden="true">⤢</span></button>
+          <p class="small-hint" id="left-hint">A SMALL COLLECTION. A FEW BIG ADVENTURES.</p>
+        </div>
+        <div class="reading-progress" id="reading-progress" hidden><span id="issue-count">01 / 05</span><div class="progress-track"><div id="progress-fill"></div></div><span>THE COLLECTION</span></div>
+      </section>
+      <section class="viewer" aria-label="Interactive 3D comic box">
+        <div class="stage" id="stage" tabindex="0" role="region" aria-label="Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.">
+          <div class="stage-glow" aria-hidden="true"></div>
+          <div class="loading" id="loading"><span></span><p>Unpacking a few worlds</p></div>
+          <div class="unavailable" id="unavailable" hidden><h2>A little more graphics power, please.</h2><p>This 3D experiment needs WebGL 2. Try another browser or enable hardware acceleration.</p></div>
+          <span class="stage-label" aria-hidden="true">EST. OFF THE CLOCK</span>
+          <div class="lid-controls" id="lid-controls" role="group" aria-label="Lid position" hidden><span>LID</span><button id="lid-left" aria-pressed="false" aria-label="Rest lid on the left">↖ Left</button><button id="lid-right" aria-pressed="true" aria-label="Rest lid on the right">Right ↗</button></div>
+          <button class="reset-view" id="reset-view" aria-label="Reset camera view" title="Reset view">↺</button>
+        </div>
+        <label class="series-jump" id="series-jump" hidden><span>JUMP TO SERIES</span><select id="series-select" disabled aria-label="Jump to series"></select></label>
+        <div class="browse-controls" id="browse-controls" hidden>
+          <button class="arrow" id="previous" aria-label="Previous comic">←</button>
+          <div class="comic-tabs" id="comic-tabs" role="group" aria-label="Select a comic"></div>
+          <button class="arrow" id="next" aria-label="Next comic">→</button>
+        </div>
+        <p class="gesture-hint" id="gesture-hint"><span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn</p>
+      </section>
+    </main>
+    <footer class="footer"><span>THE SHORT BOX <span class="footer-number">/ 001</span></span><span class="footer-center"><i></i><span id="scene-status">WAITING TO BE OPENED</span></span><button class="motion-toggle" id="motion-toggle" aria-pressed="false">Motion on</button></footer>
+    <p class="sr-only" aria-live="polite" id="announcement"></p>
+  </div>
+  <dialog class="inspection" id="inspection" aria-labelledby="inspection-title" aria-describedby="inspection-instructions">
+    <header class="inspection-header">
+      <button class="back-button" id="return-button">← <span>Back to the box</span></button>
+      <div><p class="eyebrow">A CLOSER LOOK</p><h2 id="inspection-title"></h2><p id="inspection-variant"></p></div>
+      <span class="inspection-number" id="inspection-number"></span>
+    </header>
+    <div class="comic-views" role="group" aria-label="Comic viewing angle">
+      <button id="view-front">Front</button><button id="view-spine">Spine &amp; staples</button><button id="view-back">Back</button>
+    </div>
+    <p class="back-image-note" id="back-image-note" hidden></p>
+    <div class="inspection-stage" id="inspection-stage"></div>
+    <p class="sr-only" aria-live="polite" id="inspection-announcement"></p>
+    <footer class="inspection-footer">
+      <p id="inspection-instructions">Drag to turn the comic. Click it to open the sleeve.</p>
+      <button class="primary sleeve-button" id="sleeve-button">Slide out of sleeve <span aria-hidden="true">↑</span></button>
+      <span class="sleeve-status" id="sleeve-status">BAGGED & BOARDED</span>
+    </footer>
+  </dialog>
+  <script type="module" src="./main.js?v=15.0"></script>
+</body>
+</html>
