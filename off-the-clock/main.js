@@ -37,11 +37,18 @@ const tabs=comics.map((comic,i)=>{
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
 function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
+function renderStageInstructions(){
+  if(inspecting||document.body.classList.contains('is-decorating'))return;
+  stage.setAttribute('aria-label',mobileCollection.matches
+    ?'Comic box. Tap to open; tap the lid to close. Use the ruler on the right to browse comics. Swipe over the box to scroll the page. Enter opens or closes; arrow keys browse; I inspects.'
+    :'Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');
+}
 function render(){
-  const comic=comics[index];renderLid();
-  comicRuler.value=String(index);comicRuler.disabled=!box;collectionRuler.update();
+  const comic=comics[index];renderLid();renderStageInstructions();
+  $('mobile-collection').hidden=!opened;
+  comicRuler.value=String(index);comicRuler.disabled=!box||!opened;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
-  $('comic-ruler-note').textContent=opened?comic.variant:'Slide down to explore.';
+  $('comic-ruler-note').textContent=opened?comic.variant:'Tap the box to open.';
   $('eyebrow').textContent=opened?'04 / FROM MY COLLECTION':'04 / OFF THE CLOCK';
   $('title').replaceChildren();
   $('title').classList.toggle('series-title',opened);
@@ -126,26 +133,29 @@ stage.addEventListener('keydown',e=>{
 stage.addEventListener('pointerdown',e=>{
   if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary)return;
   const hit=box?.hit(e.clientX,e.clientY);
-  box?.hold(true);
-  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,mobilePan:mobileCollection.matches&&!inspecting,axis:null,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};stage.setPointerCapture(e.pointerId);
+  const mobileScroll=mobileCollection.matches&&!inspecting;
+  // Collection swipes belong to the page on phones. Only track enough to
+  // distinguish a tap from a swipe; rotation remains available in close-ups.
+  if(!mobileScroll)box?.hold(true);
+  clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,mobileScroll,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};
+  if(!mobileScroll)stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
-  const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);
-  if(pointer.mobilePan){
-    const x=e.clientX-pointer.x,y=e.clientY-pointer.y;
-    if(!pointer.axis&&Math.hypot(x,y)>6)pointer.axis=Math.abs(y)>Math.abs(x)?'scroll':'turn';
-    if(pointer.axis!=='turn')return;
+  if(pointer.mobileScroll){
+    pointer.moved=Math.max(pointer.moved,Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y));
+    return;
   }
+  const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);
   if(pointer.moved>5){if(pointer.lid)positionLid(lidSide+dx*.009,lidTilt+dy*.003);else box?.rotate(dx*(inspecting ? .007 : .005),inspecting?dy*.006:pointer.type==='touch'?0:dy*.0008);}
   pointer.lastX=e.clientX;pointer.lastY=e.clientY;
 });
 stage.addEventListener('pointerup',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
   const gesture=pointer;pointer=null;box?.hold(false);if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
-  if(gesture.mobilePan&&gesture.axis==='scroll'){lastTap=null;return;}
+  if(gesture.mobileScroll&&Math.max(gesture.moved,Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y))>=7){lastTap=null;return;}
   if(gesture.lid){lastTap=null;if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
-  if(!inspecting&&!gesture.mobilePan&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
+  if(!inspecting&&!gesture.mobileScroll&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
   if(gesture.moved>=7){lastTap=null;return;}
   const hit=box?.hit(e.clientX,e.clientY);
   if(inspecting){
@@ -167,6 +177,8 @@ stage.addEventListener('pointerup',e=>{
 stage.addEventListener('dblclick',e=>{e.preventDefault();clearTimeout(clickTimer);if(inspecting)return;const hit=box?.hit(e.clientX,e.clientY);if(hit?.comic!==undefined)enterInspection(hit.comic);});
 function cancelPointer(){const previous=pointer;pointer=null;lastTap=null;clearTimeout(clickTimer);box?.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
 stage.addEventListener('pointercancel',cancelPointer);
+stage.addEventListener('pointerleave',()=>{if(pointer?.mobileScroll)cancelPointer();});
+mobileCollection.addEventListener('change',()=>{cancelPointer();renderStageInstructions();});
 stage.addEventListener('lostpointercapture',()=>{if(pointer)cancelPointer();});
 window.addEventListener('blur',cancelPointer);
 try{
