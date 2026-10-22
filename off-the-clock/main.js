@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=31.0';
-import {createBox} from './model.js?v=33.0';
+import {createBox} from './model.js?v=35.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -40,7 +40,8 @@ function announce(message){$(inspecting?'inspection-announcement':'announcement'
 function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
 function renderStageInstructions(){
   if(inspecting||document.body.classList.contains('is-decorating'))return;
-  $('open-cue-label').textContent=mobileCollection.matches?'Tap the box to explore':'Click the box to explore';
+  const gesture=mobileCollection.matches?'Tap':'Click';
+  $('open-cue-label').textContent=opened?`${gesture} the lid to close`:`${gesture} the box to explore`;
   stage.setAttribute('aria-label',mobileCollection.matches
     ?'Comic box. Tap to open; tap the lid to close. Use the ruler on the right to browse comics. Swipe over the box to scroll the page. Enter opens or closes; arrow keys browse; I inspects.'
     :'Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');
@@ -48,7 +49,7 @@ function renderStageInstructions(){
 function render(){
   const comic=comics[index];renderLid();renderStageInstructions();
   collectionViewer.dataset.open=String(opened);collectionViewer.dataset.ready=String(!!box);
-  $('open-cue').hidden=opened;$('gesture-hint').hidden=!opened;$('comic-ruler-note').hidden=!opened;
+  $('open-cue').hidden=false;$('gesture-hint').hidden=!opened;$('comic-ruler-note').hidden=!opened;
   $('mobile-collection').hidden=!opened;
   comicRuler.value=String(index);comicRuler.disabled=!box||!opened;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
@@ -81,7 +82,7 @@ function render(){
   $('previous').disabled=index===0;$('next').disabled=index===comics.length-1;
   tabs.forEach((t,i)=>t.setAttribute('aria-pressed',String(i===index)));
   $('scene-status').textContent=opened?`${String(index+1).padStart(2,'0')} / ${comics.length} — ${comic.series.toUpperCase()}`:'WAITING TO BE OPENED';
-  $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Drag box to turn <span class="hint-dot">·</span> Drag lid to move; click to close <span class="hint-dot">·</span> Double-click to inspect':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
+  $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Drag box to turn <span class="hint-dot">·</span> Drag lid to move <span class="hint-dot">·</span> Double-click to inspect':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
   stage.dataset.state=inspecting?'inspecting':opened?'open':'closed';stage.dataset.activeIndex=String(index);stage.dataset.sleeve=unwrapped?'removed':'on';
   if(inspecting){
     for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
