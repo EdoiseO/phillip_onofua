@@ -4,7 +4,7 @@ import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
-const stage=$('stage'),closeButton=$('close-button'),dialog=$('inspection');
+const stage=$('stage'),dialog=$('inspection');
 const collectionViewer=stage.closest('.viewer');
 const mobileCollection=matchMedia(mobileControlsQuery);
 const lidControls=$('lid-controls'),lidAnchor=document.createComment('Desktop lid controls');
@@ -65,7 +65,7 @@ function render(){
   $('edition-label').classList.toggle('incoming',comic.collectionStatus==='Incoming');
   $('series-jump').hidden=!opened;seriesSelect.value=comic.series;
   $('issue-type').textContent=opened?(comic.blindBag?'BLIND BAG':`${comic.publisher.toUpperCase()} · ${comic.year}`):'';
-  closeButton.hidden=!opened;$('inspect-button').hidden=!opened;
+  $('inspect-button').hidden=!opened;
   const nextStoryKey=opened?index:'closed';
   if(storyKey!==null&&storyKey!==nextStoryKey&&mobileCollection.matches&&!reduced){
     for(const id of ['eyebrow','title','description','edition-label']){
@@ -110,7 +110,6 @@ function leaveInspection(){
 }
 function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}box.unwrap(unwrapped);render();announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');}
 function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
-closeButton.addEventListener('click',()=>{setOpen(false);stage.focus({preventScroll:true});});
 $('inspect-button').addEventListener('click',()=>enterInspection());$('return-button').addEventListener('click',leaveInspection);$('sleeve-button').addEventListener('click',toggleSleeve);
 for(const view of ['front','comic','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
 dialog.addEventListener('cancel',e=>{e.preventDefault();leaveInspection();});
