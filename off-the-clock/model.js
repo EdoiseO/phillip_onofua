@@ -126,7 +126,8 @@ export async function createBox(stage,comics){
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
   let floatTime=0,floatStrength=0,held=false,wasSettled=false;
   const lerp=THREE.MathUtils.lerp;
-  const resize=()=>{const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w/h<.83?40:33;camera.updateProjectionMatrix();dirty=true;};
+  let viewportWidth=1,viewportHeight=1;
+  const resize=()=>{viewportWidth=Math.max(1,stage.clientWidth);viewportHeight=Math.max(1,stage.clientHeight);renderer.setSize(viewportWidth,viewportHeight,false);dirty=true;};
   const ro=new ResizeObserver(resize);ro.observe(stage);resize();
   const bookBounds=new THREE.Box3();
   const inspectionBounds=new THREE.Box3(),inspectionCenter=new THREE.Vector3(),inspectionCamera=new THREE.Vector3();
@@ -150,6 +151,11 @@ export async function createBox(stage,comics){
     inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
     const focus=smooth(0,1,focusProgress), extraction=smooth(0,1,unwrapProgress);
+    // Keep one mobile canvas and field of view throughout opening. Make room
+    // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
+    const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
+    camera.fov=mobileView.matches?40:viewportWidth/viewportHeight<.83?40:33;
+    camera.setViewOffset(Math.max(1,viewportWidth-rail),viewportHeight,0,0,viewportWidth,viewportHeight);
     const floatingWanted=inspecting&&!held&&!reduced?smooth(.82,1,focus)*(1-detailProgress)*(1-Math.sin(extraction*Math.PI)):0;
     floatStrength=reduced?0:damp(floatStrength,floatingWanted,dt,4);
     if(inspecting&&!reduced)floatTime+=dt;

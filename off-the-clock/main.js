@@ -1,10 +1,10 @@
 import {comics} from './comics.js?v=31.0';
-import {createBox} from './model.js?v=32.0';
+import {createBox} from './model.js?v=33.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
 const $=id=>document.getElementById(id);
-const stage=$('stage'),openButton=$('open-button'),dialog=$('inspection');
+const stage=$('stage'),closeButton=$('close-button'),dialog=$('inspection');
 const collectionViewer=stage.closest('.viewer');
 const mobileCollection=matchMedia(mobileControlsQuery);
 const lidControls=$('lid-controls'),lidAnchor=document.createComment('Desktop lid controls');
@@ -20,7 +20,7 @@ document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},tru
 document.addEventListener('keydown',e=>{if(!e.metaKey&&!e.ctrlKey&&!e.altKey)delete stage.dataset.pointerFocus;},true);
 const stageAnchor=document.createComment('3D scene home');stage.before(stageAnchor);
 let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,lastTap=null,clickTimer=0,focusStarted=0,inspectionView='front';
-let lidSide=1,lidTilt=0;
+let lidSide=1,lidTilt=0,storyKey=null;
 function renderLid(){ $('lid-controls').hidden=!opened||inspecting;for(const side of ['left','right'])$('lid-'+side).setAttribute('aria-pressed',String(side===(lidSide<0?'left':'right'))); }
 function positionLid(side,tilt=0){lidSide=Math.max(-1,Math.min(1,side));lidTilt=Math.max(-.16,Math.min(.24,tilt));box?.setLid(lidSide,lidTilt);renderLid();}
 for(const side of ['left','right'])$('lid-'+side).addEventListener('click',()=>{positionLid(side==='left'?-1:1);announce(`Lid resting to the ${side}.`);});
@@ -40,17 +40,19 @@ function announce(message){$(inspecting?'inspection-announcement':'announcement'
 function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
 function renderStageInstructions(){
   if(inspecting||document.body.classList.contains('is-decorating'))return;
+  $('open-cue-label').textContent=mobileCollection.matches?'Tap the box to explore':'Click the box to explore';
   stage.setAttribute('aria-label',mobileCollection.matches
     ?'Comic box. Tap to open; tap the lid to close. Use the ruler on the right to browse comics. Swipe over the box to scroll the page. Enter opens or closes; arrow keys browse; I inspects.'
     :'Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');
 }
 function render(){
   const comic=comics[index];renderLid();renderStageInstructions();
-  collectionViewer.dataset.open=String(opened);
+  collectionViewer.dataset.open=String(opened);collectionViewer.dataset.ready=String(!!box);
+  $('open-cue').hidden=opened;$('gesture-hint').hidden=!opened;$('comic-ruler-note').hidden=!opened;
   $('mobile-collection').hidden=!opened;
   comicRuler.value=String(index);comicRuler.disabled=!box||!opened;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
-  $('comic-ruler-note').textContent=opened?comic.variant:'Tap the box to open.';
+  $('comic-ruler-note').textContent=comic.variant;
   $('eyebrow').textContent=opened?'04 / FROM MY COLLECTION':'04 / OFF THE CLOCK';
   $('title').replaceChildren();
   $('title').classList.toggle('series-title',opened);
@@ -63,8 +65,15 @@ function render(){
   $('edition-label').classList.toggle('incoming',comic.collectionStatus==='Incoming');
   $('series-jump').hidden=!opened;seriesSelect.value=comic.series;
   $('issue-type').textContent=opened?(comic.blindBag?'BLIND BAG':`${comic.publisher.toUpperCase()} · ${comic.year}`):'';
-  openButton.classList.toggle('is-open',opened);openButton.innerHTML=opened?'Close the box <span aria-hidden="true">↙</span>':'Open the box <span aria-hidden="true">↗</span>';
-  openButton.setAttribute('aria-expanded',String(opened));$('inspect-button').hidden=!opened;
+  closeButton.hidden=!opened;$('inspect-button').hidden=!opened;
+  const nextStoryKey=opened?index:'closed';
+  if(storyKey!==null&&storyKey!==nextStoryKey&&mobileCollection.matches&&!reduced){
+    for(const id of ['eyebrow','title','description','edition-label']){
+      const element=$(id);element.getAnimations().forEach(animation=>animation.cancel());
+      element.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+    }
+  }
+  storyKey=nextStoryKey;
   $('left-hint').textContent=opened?'DOUBLE-CLICK A COVER FOR A CLOSER LOOK.':`${comics.length} EDITIONS. ONE LITTLE BOX.`;
   $('reading-progress').hidden=!opened;$('browse-controls').hidden=!opened;
   $('issue-count').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
@@ -101,7 +110,7 @@ function leaveInspection(){
 }
 function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}box.unwrap(unwrapped);render();announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');}
 function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
-openButton.addEventListener('click',()=>setOpen(!opened));
+closeButton.addEventListener('click',()=>{setOpen(false);stage.focus({preventScroll:true});});
 $('inspect-button').addEventListener('click',()=>enterInspection());$('return-button').addEventListener('click',leaveInspection);$('sleeve-button').addEventListener('click',toggleSleeve);
 for(const view of ['front','comic','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
 dialog.addEventListener('cancel',e=>{e.preventDefault();leaveInspection();});
@@ -184,8 +193,8 @@ mobileCollection.addEventListener('change',()=>{cancelPointer();renderStageInstr
 stage.addEventListener('lostpointercapture',()=>{if(pointer)cancelPointer();});
 window.addEventListener('blur',cancelPointer);
 try{
-  box=await createBox(stage,comics);box.select(0);box.setOpen(false);updateMotion();render();seriesSelect.disabled=false;openButton.disabled=false;$('loading').hidden=true;
+  box=await createBox(stage,comics);box.select(0);box.setOpen(false);updateMotion();render();seriesSelect.disabled=false;$('loading').hidden=true;
   createStickerStudio({stage,box,beforeOpen:()=>{if(inspecting)leaveInspection();setOpen(false);},afterClose:()=>{stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag to turn. Escape closes.');render();}});
   $('decorate-button').disabled=false;
-}catch(error){console.error('Unable to prepare the 3D collection',error);$('loading').hidden=true;$('unavailable').hidden=false;openButton.textContent='3D unavailable';}
+}catch(error){console.error('Unable to prepare the 3D collection',error);$('loading').hidden=true;$('unavailable').hidden=false;$('open-cue').hidden=true;}
 window.addEventListener('pagehide',event=>{if(!event.persisted)box?.dispose();});
