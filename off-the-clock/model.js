@@ -156,8 +156,11 @@ export async function createBox(stage,comics){
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
     camera.fov=mobileView.matches?40:viewportWidth/viewportHeight<.83?40:33;
     camera.setViewOffset(Math.max(1,viewportWidth-rail),viewportHeight,0,0,viewportWidth,viewportHeight);
-    const floatingWanted=inspecting&&!held&&!reduced?smooth(.82,1,focus)*(1-detailProgress)*(1-Math.sin(extraction*Math.PI)):0;
-    floatStrength=reduced?0:damp(floatStrength,floatingWanted,dt,4);
+    // Steady the book as soon as its dedicated close-up is requested, instead
+    // of carrying the Front/Back float through the whole extraction animation.
+    const floatingWanted=inspecting&&!held&&!reduced&&wantedDetail===0?smooth(.82,1,focus)*(1-detailProgress)*(1-Math.sin(extraction*Math.PI)):0;
+    floatStrength=reduced?0:damp(floatStrength,floatingWanted,dt,wantedDetail?12:4);
+    if(wantedDetail&&floatStrength<.001)floatStrength=0;
     if(inspecting&&!reduced)floatTime+=dt;
     // Keep the lid aside until every raised comic is back below the rim.
     const lidWanted=opened||cards.some(c=>c.y>1.52)?1:0;
