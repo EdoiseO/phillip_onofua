@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=31.0';
-import {createBox} from './model.js?v=30.0';
+import {createBox} from './model.js?v=32.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -55,9 +55,9 @@ function render(){
   $('title').replaceChildren();
   $('title').classList.toggle('series-title',opened);
   if(opened){const lines=comic.displayTitle??[comic.series,comic.issue==='Ashcan'?'Ashcan':`Issue ${comic.issue}`];$('title').append(lines[0],document.createElement('br'),lines[1]);}
-  else $('title').append('One more',document.createElement('br'),'issue');
+  else $('title').append('My comic',document.createElement('br'),'collection');
   const dot=document.createElement('span');dot.className='period';dot.textContent='.';$('title').append(dot);
-  $('description').textContent=opened?comic.description:'Some worlds are worth getting lost in. This little box holds a few of mine.';
+  $('description').textContent=opened?comic.description:'Away from coding, I collect comics. Take a look through my short box.';
   $('issue-meta').hidden=!opened;$('genre').textContent=opened?comic.variant:'';
   $('edition-label').hidden=!opened;$('edition-label').textContent=`${comic.issue==='Ashcan'?'Ashcan':`Issue ${comic.issue}`} · ${comic.collectionStatus==='Incoming'?'Incoming':comic.quantity>1?`${comic.quantity} copies`:'From my collection'}`;
   $('edition-label').classList.toggle('incoming',comic.collectionStatus==='Incoming');
