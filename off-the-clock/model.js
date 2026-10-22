@@ -6,6 +6,7 @@ import { createComicSleeve } from './comic-sleeve.js?v=15.0';
 import { createComicBook } from './comic-book.js?v=15.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
+import { mobileControlsQuery } from './ruler-control.js?v=19.0';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -39,6 +40,7 @@ export async function createBox(stage,comics){
   scene.environment=envTexture;scene.environmentIntensity=.6;pmrem.dispose();env.dispose();
   const camera=new THREE.PerspectiveCamera(33,1,.1,60);
   const homeCamera=new THREE.Vector3(6.1,5.6,10.5), homeTarget=new THREE.Vector3(0,2.65,0), cameraTarget=homeTarget.clone();
+  const mobileView=matchMedia(mobileControlsQuery),mobileAnchor=new THREE.Vector3();
   camera.position.copy(homeCamera);camera.lookAt(homeTarget);
   scene.add(new THREE.HemisphereLight(0xcbdfff,0x665d4b,.9));
   const key=new THREE.DirectionalLight(0xfff3df,2.7);key.position.set(-4,8,6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=8;key.shadow.camera.bottom=-5;key.shadow.normalBias=.035;key.shadow.bias=-.0001;scene.add(key);scene.add(key.target);
@@ -207,13 +209,17 @@ export async function createBox(stage,comics){
     if(focus<=.0001){
       // Fit the actual lid, box and raised comic, especially on narrow screens.
       overviewBounds[2].setFromObject(cards[selected].group);
-      const anchor=decorating?decorationTarget:homeTarget;
+      // The closed mobile box is the hero: aim at its centre and fit closely.
+      // Blend back to the raised-comic framing as the lid opens.
+      const mobileCollection=mobileView.matches&&!decorating;
+      mobileAnchor.set(0,1.45,0).lerp(homeTarget,smooth(0,1,Math.max(openProgress,lidProgress)));
+      const anchor=decorating?decorationTarget:mobileCollection?mobileAnchor:homeTarget;
       let n=0,minX=Infinity,maxX=-Infinity;
       for(const bounds of overviewBounds)for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
         const p=overviewCorners[n++].set(x,y,z);relative.copy(p).sub(anchor);const px=relative.dot(overviewRight);minX=Math.min(minX,px);maxX=Math.max(maxX,px);
       }
       overviewTarget.copy(anchor).addScaledVector(overviewRight,(minX+maxX)/2*smooth(0,1,Math.max(openProgress,lidProgress)));
-      let distance=decorating?7:homeCamera.distanceTo(homeTarget);const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
+      let distance=decorating||mobileCollection?7:homeCamera.distanceTo(homeTarget);const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
       for(const point of overviewCorners){relative.copy(point).sub(overviewTarget);const depth=relative.dot(overviewDirection);distance=Math.max(distance,depth+Math.abs(relative.dot(overviewRight))*1.1/tanH,depth+Math.abs(relative.dot(overviewUp))*1.08/tanV);}
       overviewCamera.copy(overviewTarget).addScaledVector(overviewDirection,distance);
     }
