@@ -21,7 +21,8 @@ An end-to-end student marketplace connecting catalogue discovery, listing manage
 The case study opens with the working interface, a summary of the problem and my contribution, and grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model. The engineering sections explain request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, and auditable report review. An expandable technical-notes section preserves the deeper implementation detail.
 
 - **Role:** Team lead and full-stack developer
-- **Stack:** Next.js, React, Supabase, PostgreSQL, Tailwind CSS, and Vercel
+- **Stack:** Next.js, React, Supabase, PostgreSQL, and Tailwind CSS
+- **Demo hosting:** Cloudflare Workers via vinext (migration preview)
 - [Open the live project](https://student-market-of-toronto.vercel.app)
 - [View the source code](https://github.com/EdoiseO/student-market-of-toronto)
 - [Read the engineering case study](https://philliponofua.vercel.app/student-market.html)
