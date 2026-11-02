@@ -8,7 +8,7 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 ## Overview
 
-This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline with real product previews, direct résumé access, and two featured projects. Each project links to a dedicated case study with implementation details, real interface captures, and clear status information; the Receipt Splitter concept appears separately as work in exploration.
+This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline with real product previews, direct résumé access, two detailed case studies, and a live interactive 3D collection.
 
 The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
@@ -20,12 +20,13 @@ An end-to-end student marketplace connecting catalogue discovery, listing manage
 
 The case study opens with the working interface, a summary of the problem and my contribution, and grouped galleries covering marketplace, messaging, profiles, administration, mobile interfaces, and the data model. The engineering sections explain request-scoped authentication, bounded server-rendered queries, recoverable listing writes, realtime communication, and auditable report review. An expandable technical-notes section preserves the deeper implementation detail.
 
-- **Role:** Team lead and full-stack developer
+- **Role:** Team lead of a five-person team and full-stack developer
 - **Stack:** Next.js, React, Supabase, PostgreSQL, and Tailwind CSS
-- **Demo hosting:** Cloudflare Workers via vinext (migration preview)
+- **Demo hosting:** Vercel
 - [Open the live project](https://student-market-of-toronto.vercel.app)
 - [View the source code](https://github.com/EdoiseO/student-market-of-toronto)
 - [Read the engineering case study](https://philliponofua.vercel.app/student-market.html)
+- [Read current deployment limitations](https://github.com/EdoiseO/student-market-of-toronto/blob/main/docs/deployment.md)
 
 ### Overlay Studio
 
@@ -35,17 +36,18 @@ The case study shows the instance library, live customizers, Windows media integ
 
 - **Role:** Product designer and developer
 - **Stack:** Python, JavaScript, aiohttp, WebSockets, WebView2, and OBS Studio
-- **Status:** Working production application in active development
+- **Status:** Working desktop application in active development
 - [Explore how Overlay Studio works](https://philliponofua.vercel.app/overlay-studio.html)
+- [Watch the demonstration](https://philliponofua.vercel.app/overlay-studio.html#overlay-demo)
 
-### Receipt Splitter
+### Off the clock
 
-A work-in-progress mobile product concept for assigning shared receipt items, tax, and tip and producing clear totals for each person.
+A live interactive 3D comic collection built with Three.js. Visitors can open the box, browse the collection, and inspect the covers up close.
 
-The project page separates the concept from finished work and documents the problem, proposed verification flow, open technical decisions, and next development milestones.
+- **Stack:** JavaScript and Three.js
+- [Explore the collection](https://philliponofua.vercel.app/off-the-clock/)
 
-- **Status:** Concept and workflow definition
-- [Review the Receipt Splitter plan](https://philliponofua.vercel.app/receipt-splitter.html)
+The [Receipt Splitter concept](https://philliponofua.vercel.app/receipt-splitter.html) remains available separately as work in exploration.
 
 ## Portfolio features
 
@@ -53,11 +55,11 @@ The project page separates the concept from finished work and documents the prob
 - **Off the clock:** an interactive 3D comic collection with a movable lid, glossy sleeves, separate backing boards, verified rear artwork, close-up rotation, and a gentle hover/glow
 - Original letter-by-letter hero animation, product previews, and prominent résumé access
 - Animation pause control, reduced-motion support, and a readable fallback without JavaScript
-- Two featured projects using real product captures, with concepts presented separately
+- Two detailed projects using real product captures, plus a live interactive 3D collection
 - Dedicated case-study pages with project-specific metadata and social previews
 - Product-first Student Market case study with expandable technical notes
 - Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
-- Overlay Studio screenshots and an embedded product demo
+- Overlay Studio screenshots and a recorded product demo near the top of its case study
 - Semantic HTML, skip links on the refreshed pages, visible keyboard focus, descriptive alternative text, and reduced-motion support
 - Downloadable résumé, direct contact links, privacy policy, and terms of use
 

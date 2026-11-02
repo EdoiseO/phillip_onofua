@@ -1605,6 +1605,14 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   margin-top: clamp(4rem, 9vw, 7rem);
 }
 
+.case-study-sections--demo-first {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.case-study-sections--demo-first > .case-study-row:first-child {
+  padding-top: 0;
+}
+
 .case-study-row {
   padding: clamp(3rem, 7vw, 5.5rem) 0;
   display: grid;

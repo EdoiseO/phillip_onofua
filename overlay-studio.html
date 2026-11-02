@@ -33,16 +33,36 @@
       <section class="case-study-hero" aria-labelledby="case-study-title">
         <p class="eyebrow">Inside the project · Windows desktop application</p>
         <h1 id="case-study-title">Overlay Studio</h1>
-        <p class="case-study-lead">A production application that gives streamers one place to manage overlay instances, customize their appearance, preview live data, and prepare browser-source URLs for OBS.</p>
+        <p class="case-study-lead">A Windows application that gives streamers one place to manage overlay instances, customize their appearance, preview live data, and prepare browser-source URLs for OBS.</p>
+
+        <div class="case-study-actions">
+          <a class="button button--primary" href="#overlay-demo">Watch the demo ↓</a>
+        </div>
 
         <dl class="case-study-meta">
           <div><dt>Role</dt><dd>Product designer and developer</dd></div>
           <div><dt>Core stack</dt><dd>Python, JavaScript, aiohttp, WebSockets, WebView2, OBS Studio</dd></div>
-          <div><dt>Status</dt><dd>Working production application in active development</dd></div>
+          <div><dt>Status</dt><dd>Working desktop application in active development</dd></div>
         </dl>
       </section>
 
-      <div class="case-study-sections">
+      <div class="case-study-sections case-study-sections--demo-first">
+        <section class="case-study-row" id="overlay-demo" aria-labelledby="overlay-demo-title">
+          <figure class="case-study-media">
+            <video controls muted playsinline preload="metadata" aria-label="Overlay Studio animated overlay demonstration">
+              <source src="assets/overlay-studio-demo.webm" type="video/webm" />
+              Your browser does not support this video. <a href="assets/overlay-studio-demo.webm">Download the demonstration.</a>
+            </video>
+            <figcaption>A recorded demonstration of the animated overlay running in context.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">Watch · Live output</p>
+            <h2 id="overlay-demo-title">Keep the preview and browser source in sync</h2>
+            <p>The desktop app, its preview, and OBS run in separate contexts. I connected them through a local Python server and WebSockets, so settings and Windows media updates appear in the browser source without rebuilding the OBS scene.</p>
+            <p>That connection brings native media data, saved settings, and live browser output together in one workflow.</p>
+          </div>
+        </section>
+
         <section class="case-study-row" aria-labelledby="overlay-customizer">
           <figure class="case-study-media">
             <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio Platform Badge customizer with a live draft preview and identity controls" width="1280" height="720" />
@@ -97,21 +117,6 @@
           </div>
         </section>
 
-        <section class="case-study-row" aria-labelledby="overlay-demo">
-          <figure class="case-study-media">
-            <video controls muted playsinline preload="metadata" aria-label="Overlay Studio animated overlay demonstration">
-              <source src="assets/overlay-studio-demo.webm" type="video/webm" />
-              Your browser does not support this video.
-            </video>
-            <figcaption>A recorded demonstration of the animated overlay running in context.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">05 · Live output</p>
-            <h2 id="overlay-demo">Keep the preview and browser source in sync</h2>
-            <p>WebSockets carry live state from the desktop application to the browser-source view. That keeps changes and external media updates visible without recreating the OBS scene.</p>
-            <p>The main technical challenge is coordinating desktop integrations, persistent settings, a local web server, and live browser output as one reliable experience.</p>
-          </div>
-        </section>
       </div>
 
       <section class="case-study-end" aria-label="Overlay Studio project conclusion">

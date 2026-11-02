@@ -85,8 +85,8 @@
           <h1 id="case-study-title">Student Market of Toronto</h1>
           <p class="case-study-lead">
             A place for Toronto students to buy and sell, message each other,
-            and manage their listings. I led the team and built the full-stack
-            workflows behind the exchange.
+            and manage their listings. I led a team of five and built the
+            full-stack workflows behind the exchange.
           </p>
 
           <p class="case-study-stack">
@@ -98,7 +98,7 @@
           <div class="case-study-actions">
             <a
               class="button button--primary button--small"
-              href="https://student-market-of-toronto.vercel.app"
+              href="https://student-market-of-toronto.vercel.app/"
               target="_blank"
               rel="noreferrer"
             >
@@ -136,6 +136,12 @@
               </svg>
             </a>
           </div>
+
+          <p class="case-study-demo-note">
+            The project’s deployment notes flag an unfinished private-message
+            media rollout and advise against account deletion until it is
+            complete. <a href="https://github.com/EdoiseO/student-market-of-toronto/blob/main/docs/deployment.md">Read the deployment notes</a>.
+          </p>
 
           <nav class="case-study-jump-nav" aria-label="On this page">
             <span>Explore the project</span>
@@ -190,20 +196,19 @@
           </article>
           <article>
             <p class="eyebrow">My contribution</p>
-            <h2>Team lead. Full-stack builder.</h2>
+            <h2>Five-person team. Full-stack work.</h2>
             <p>
-              I built the application across the interface, server routes, and
-              database, connecting the marketplace to messaging and moderation
-              workflows.
+              I led development and worked across the interface, server routes,
+              and database, connecting the marketplace to messaging and
+              moderation workflows.
             </p>
           </article>
           <article>
             <p class="eyebrow">Engineering focus</p>
             <h2>Make the important writes reliable.</h2>
             <p>
-              Recoverable listing operations, database-enforced permissions, and
-              bounded realtime messaging keep the system consistent when
-              requests fail.
+              Listings can recover from interrupted requests, permissions are
+              checked in the database, and messaging updates in real time.
             </p>
           </article>
         </section>
@@ -251,8 +256,8 @@
                   <span class="case-study-gallery-card-copy">
                     <strong>Marketplace and listings</strong>
                     <span
-                      >Bounded discovery, listing detail, seller context, and
-                      state-aware actions.</span
+                      >Browse listings, view seller details, and see available
+                      actions.</span
                     >
                   </span>
                 </button>
@@ -276,8 +281,8 @@
                   <span class="case-study-gallery-card-copy">
                     <strong>Messaging and media</strong>
                     <span
-                      >Listing-linked inboxes, bounded history, attachments,
-                      reactions, and closed-thread behavior.</span
+                      >Conversations tied to listings, with attachments,
+                      reactions, and preserved history.</span
                     >
                   </span>
                 </button>
@@ -424,7 +429,7 @@
             <dl class="case-study-meta">
               <div>
                 <dt>My role</dt>
-                <dd>Team lead and full-stack developer</dd>
+                <dd>Team lead of a five-person team and full-stack developer</dd>
               </div>
               <div>
                 <dt>Core stack</dt>
@@ -434,12 +439,12 @@
               </div>
               <div>
                 <dt>Demo hosting</dt>
-                <dd>Cloudflare Workers via vinext (migration preview)</dd>
+                <dd>Vercel</dd>
               </div>
               <div>
-                <dt>Repository surface</dt>
+                <dt>Repository snapshot</dt>
                 <dd>
-                  31 pages, 11 Route Handlers, 50 database migrations, and 57
+                  31 pages, 14 Route Handlers, 56 database migrations, and 75
                   test files
                 </dd>
               </div>
@@ -484,10 +489,14 @@
               <div>
                 <p class="eyebrow">01 · Catalogue and search</p>
                 <h2 id="market-discovery">
-                  Bound catalogue work before it reaches the browser.
+                  Help students find listings without loading everything.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  Students can browse and search active listings without the
+                  app loading the entire marketplace at once.
+                </p>
                 <p>
                   The catalogue is rendered on the server from active listings
                   only. The home route fetches a maximum of six records per
@@ -516,10 +525,14 @@
               <div>
                 <p class="eyebrow">02 · Listing write protocol</p>
                 <h2 id="listing-flow">
-                  Treat listing creation and editing as recoverable operations.
+                  Let a listing recover from an interrupted upload.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  If a connection drops during a listing update, a retry can
+                  resume the same operation instead of creating a duplicate.
+                </p>
                 <p>
                   Each create, edit, status change, or retirement begins with a
                   stable operation identifier and a canonical payload hash. A
@@ -546,10 +559,14 @@
               <div>
                 <p class="eyebrow">03 · Messaging and media</p>
                 <h2 id="market-messaging">
-                  Keep realtime fast without making it the source of truth.
+                  Keep conversations live and their history dependable.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  Buyers and sellers can chat in real time while the database
+                  keeps a record of each conversation.
+                </p>
                 <p>
                   A thread loads 40 messages at a time and retains a bounded
                   160-message client window. New inserts and reaction changes
@@ -577,10 +594,14 @@
               <div>
                 <p class="eyebrow">04 · Moderation architecture</p>
                 <h2 id="market-reporting">
-                  Make privileged actions narrow, reviewable, and auditable.
+                  Give moderators a clear record of their decisions.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  Moderators can review reports and record what they decided and
+                  why, while keeping internal notes private.
+                </p>
                 <p>
                   Administrative pages recheck the current Auth user, current
                   application standing, and a role-to-capability matrix before
@@ -617,10 +638,14 @@
               <div>
                 <p class="eyebrow">05 · Responsive application shell</p>
                 <h2 id="market-responsive">
-                  Change the composition without changing the domain rules.
+                  Make the same marketplace work on phones and computers.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  Navigation and layouts adapt to the screen while the same
+                  permissions and data rules apply on both devices.
+                </p>
                 <p>
                   The same server routes and database policies support both
                   desktop and mobile. Responsive shells change navigation, card
@@ -644,10 +669,15 @@
               <div>
                 <p class="eyebrow">06 · Security and reliability</p>
                 <h2 id="market-engineering">
-                  Design around trust boundaries and failure boundaries.
+                  Protect sensitive actions and test failure cases.
                 </h2>
               </div>
               <div class="case-study-feature-copy">
+                <p>
+                  Database checks protect sensitive actions even when someone
+                  bypasses the interface, and automated tests exercise those
+                  rules.
+                </p>
                 <p>
                   The repository separates public projections, participant data,
                   staff-only context, and service operations. The important

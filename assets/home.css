@@ -564,6 +564,12 @@ button:focus-visible {
 .exploration > a {
   flex-shrink: 0;
 }
+.finished-project {
+  border-style: solid;
+}
+.finished-project .eyebrow {
+  color: var(--accent);
+}
 .toolkit-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
