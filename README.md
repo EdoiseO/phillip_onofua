@@ -128,7 +128,7 @@ Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simp
 ## Contact
 
 - [GitHub](https://github.com/EdoiseO)
-- [Email](mailto:philliponofua@gmail.com)
+- [Email](mailto:phillip.onofua@gmail.com)
 
 ## Off the clock
 
