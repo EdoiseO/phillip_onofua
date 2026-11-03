@@ -128,8 +128,8 @@
             </div>
             <div class="hero-meta">
               <p class="availability">
-                <span class="status-dot" aria-hidden="true"></span> Open to
-                full-time software development roles
+                <span class="status-dot" aria-hidden="true"></span> Seeking a
+                co-op or internship · Summer 2027 · Toronto / Remote
               </p>
               <button
                 id="hero-motion-toggle"
@@ -186,6 +186,7 @@
           <nav class="work-strip" aria-label="Project types">
             <a href="#student-market">Web</a><span aria-hidden="true">/</span>
             <a href="#overlay-studio">Desktop</a><span aria-hidden="true">/</span>
+            <a href="#restaurant-guide">Mobile</a><span aria-hidden="true">/</span>
             <a href="#off-the-clock">3D</a>
           </nav>
           <a href="#projects"
@@ -201,8 +202,8 @@
             <p class="eyebrow">01 / Selected work</p>
             <h2 id="projects-title">From database to desktop.</h2>
             <p>
-              A full-stack marketplace, a Windows desktop app, and an
-              interactive 3D project.
+              A marketplace, a Windows desktop app, an Android prototype, and
+              an interactive 3D project.
             </p>
           </div>
           <article class="project project-market" id="student-market">
@@ -254,6 +255,8 @@
                 <li>Supabase</li>
                 <li>PostgreSQL</li>
                 <li>75 test files</li>
+                <li>56 migrations</li>
+                <li>14 route handlers</li>
               </ul>
               <div class="project-links">
                 <a class="text-link" href="student-market.html"
@@ -305,8 +308,8 @@
               </p>
               <h3>Overlay Studio</h3>
               <p>
-                A Windows desktop app that syncs native media data to live
-                browser output through a local Python server and WebSockets.
+                A Windows desktop app for building and running live OBS overlays:
+                12 overlays, audio-reactive animation, and live WebSocket sync.
               </p>
               <div class="contribution">
                 <span class="mono">MY ROLE / DESIGNER &amp; DEVELOPER</span>
@@ -319,16 +322,69 @@
               <ul class="stack" aria-label="Overlay Studio technologies">
                 <li>Python</li>
                 <li>aiohttp</li>
-                <li>JavaScript</li>
                 <li>WebSockets</li>
                 <li>WebView2</li>
+                <li>28 test files</li>
               </ul>
               <div class="project-links">
                 <a class="text-link" href="overlay-studio.html"
                   >Explore the project <span aria-hidden="true">↗</span></a
                 ><a class="quiet-link" href="overlay-studio.html#overlay-demo"
-                  >Source private · Watch demo <span aria-hidden="true">↗</span></a
+                  >Watch demo <span aria-hidden="true">↗</span></a
                 >
+                <!-- TODO: Add https://github.com/EdoiseO/overlay-studio after the owner confirms it is public. -->
+              </div>
+            </div>
+          </article>
+          <article class="project project-restaurant" id="restaurant-guide">
+            <div class="project-visual">
+              <div class="project-browser">
+                <div class="window-bar" aria-hidden="true">
+                  <span class="window-dots"><i></i><i></i><i></i></span>
+                  <span>Restaurant Guide · Figma screens</span><span>↗</span>
+                </div>
+                <div class="restaurant-gallery" aria-label="Restaurant Guide design gallery">
+                  <figure class="restaurant-gallery-home">
+                    <a href="assets/restaurant-guide/rg-home.png" target="_blank" rel="noreferrer" aria-label="Open the Restaurant Guide home screen design">
+                      <img src="assets/restaurant-guide/rg-home.png" alt="Restaurant Guide home design with search, filters, and a list of restaurants" width="412" height="940" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Home</figcaption>
+                  </figure>
+                  <figure>
+                    <a href="assets/restaurant-guide/rg-detail.png" target="_blank" rel="noreferrer" aria-label="Open the Restaurant Guide details screen design">
+                      <img src="assets/restaurant-guide/rg-detail.png" alt="Restaurant Guide details design with a rating, photos, address, and visit notes" width="824" height="2140" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Details</figcaption>
+                  </figure>
+                  <figure class="restaurant-gallery-map">
+                    <a href="assets/restaurant-guide/rg-map.png" target="_blank" rel="noreferrer" aria-label="Open the Restaurant Guide map preview design">
+                      <img src="assets/restaurant-guide/rg-map.png" alt="Static map preview in the Restaurant Guide details design" width="372" height="160" loading="lazy" decoding="async" />
+                    </a>
+                    <figcaption>Map preview</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+            <div class="project-copy">
+              <p class="project-status">
+                <span class="status-dot status-dot--blue" aria-hidden="true"></span>
+                Team project · Lead developer
+              </p>
+              <h3>Restaurant Guide</h3>
+              <p>
+                An Android app for discovering and saving restaurants, built with
+                Kotlin and Jetpack Compose. Search a list, view photos, and add
+                ratings or visit notes.
+              </p>
+              <div class="contribution">
+                <span class="mono">PROTOTYPE / ANDROID</span>
+                <p>Records currently use session and saved UI state; durable storage is planned.</p>
+              </div>
+              <ul class="stack" aria-label="Restaurant Guide technologies">
+                <li>Kotlin</li><li>Jetpack Compose</li><li>Android</li>
+              </ul>
+              <div class="project-links">
+                <a class="text-link" href="https://github.com/EdoiseO/COMP3074-RestaurantGuide" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
               </div>
             </div>
           </article>
@@ -345,6 +401,38 @@
               >Explore the collection <span aria-hidden="true">↗</span></a
             >
           </aside>
+          <section class="smaller-builds" aria-labelledby="smaller-builds-title">
+            <div class="smaller-builds-heading">
+              <p class="eyebrow">More work</p>
+              <h3 id="smaller-builds-title">Smaller builds</h3>
+            </div>
+            <div class="smaller-builds-grid">
+              <article class="small-build">
+                <h4>ChatGPT Read Aloud</h4>
+                <p>A local read-aloud add-on for Codex conversations in ChatGPT for Mac.</p>
+                <span class="mono">Python · Kokoro text-to-speech</span>
+                <a href="https://github.com/EdoiseO/chatgpt-read-aloud" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+              </article>
+              <article class="small-build">
+                <h4>Employee REST API</h4>
+                <p>User authentication and employee records with owner-scoped CRUD.</p>
+                <span class="mono">Express.js · MongoDB</span>
+                <a href="https://github.com/EdoiseO/101489064_COMP3123_Assignment1" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+              </article>
+              <article class="small-build">
+                <h4>NeetCode solutions</h4>
+                <p>Data structures and algorithms practice in Python.</p>
+                <span class="mono">Python</span>
+                <a href="https://github.com/EdoiseO/neetcode-submissions" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+              </article>
+              <article class="small-build">
+                <h4>TicTacToe</h4>
+                <p>A group-built Java game with a minimax opponent.</p>
+                <span class="mono">Java</span>
+                <a href="https://github.com/EdoiseO/COMP2080_Group_Project_2026_TIKTACTOE" target="_blank" rel="noreferrer">View source <span aria-hidden="true">↗</span></a>
+              </article>
+            </div>
+          </section>
         </section>
         <section
           id="skills"
@@ -367,6 +455,7 @@
                 <li>JavaScript &amp; TypeScript</li>
                 <li>React &amp; Next.js</li>
                 <li>Tailwind CSS &amp; shadcn/ui</li>
+                <li>Kotlin &amp; Jetpack Compose</li>
               </ul>
               <a href="student-market.html#market-responsive"
                 >In Student Market <span aria-hidden="true">↗</span></a
@@ -382,6 +471,7 @@
               <ul>
                 <li>SQL databases &amp; REST APIs</li>
                 <li>Supabase (PostgreSQL, Auth, Storage)</li>
+                <li>Express.js &amp; MongoDB</li>
                 <li>Python &amp; WebSockets</li>
               </ul>
               <a href="student-market.html#market-system-flow"
@@ -433,7 +523,7 @@
               </div>
             </div>
             <section class="languages" aria-labelledby="languages-title">
-              <h3 id="languages-title" class="mono">Languages &amp; web</h3>
+              <h3 id="languages-title" class="mono">Languages</h3>
               <div class="language-group">
                 <p class="language-label">Core stack</p>
                 <ul class="language-list">
@@ -446,13 +536,13 @@
                     <img src="assets/tech-logos/typescript.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>TypeScript</span>
                   </li>
                   <li>
-                    <a href="https://github.com/EdoiseO/student-market-of-toronto/tree/main/supabase/migrations" target="_blank" rel="noreferrer" aria-label="SQL: view Student Market database migrations">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="3" /><path d="M5 5.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /><path d="M5 11.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></svg><span>SQL</span>
+                    <a href="https://github.com/EdoiseO/COMP2152_Assignment-1" target="_blank" rel="noreferrer" aria-label="Python: view a course project">
+                      <img src="assets/tech-logos/python.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>Python</span>
                     </a>
                   </li>
                   <li>
-                    <a href="https://github.com/EdoiseO/COMP2152_Assignment-1" target="_blank" rel="noreferrer" aria-label="Python: view a course project">
-                      <img src="assets/tech-logos/python.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>Python</span>
+                    <a href="https://github.com/EdoiseO/student-market-of-toronto/tree/main/supabase/migrations" target="_blank" rel="noreferrer" aria-label="SQL: view Student Market database migrations">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="3" /><path d="M5 5.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /><path d="M5 11.5v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></svg><span>SQL</span>
                     </a>
                   </li>
                   <li>
@@ -471,12 +561,17 @@
                 <p class="language-label">Additional languages</p>
                 <ul class="language-list language-list--secondary">
                   <li>
-                    <img src="assets/tech-logos/csharp.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>C#</span>
+                    <a href="https://github.com/EdoiseO/COMP3074-RestaurantGuide" target="_blank" rel="noreferrer" aria-label="Kotlin: view the Restaurant Guide project">
+                      <img src="assets/tech-logos/kotlin.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>Kotlin</span>
+                    </a>
                   </li>
                   <li>
                     <a href="https://github.com/EdoiseO/COMP2080_Group_Project_2026_TIKTACTOE/blob/master/MinimaxAI.java" target="_blank" rel="noreferrer" aria-label="Java: view the group Tic-Tac-Toe minimax code">
                       <img src="assets/tech-logos/java.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>Java</span>
                     </a>
+                  </li>
+                  <li>
+                    <img src="assets/tech-logos/csharp.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>C#</span>
                   </li>
                   <li>
                     <img src="assets/tech-logos/cplusplus.svg" width="20" height="20" alt="" loading="lazy" decoding="async" /><span>C++</span>
@@ -509,6 +604,7 @@
                 Software quality assurance</span
               >
             </div>
+            <p class="ai-disclosure">I use AI coding assistants like ChatGPT and Claude to move faster, and I own the design and every line I ship. I’m happy to walk through any of it.</p>
           </div>
         </section>
         <section id="contact" class="contact" aria-labelledby="contact-title">
@@ -520,8 +616,7 @@
               Looking for a developer?<br />Let’s talk<span>.</span>
             </h2>
             <p>
-              I’m open to full-time software development roles. Have an
-              opportunity in mind? I’d like to hear about it.
+              Seeking a co-op or internship · Summer 2027 · Toronto / Remote
             </p>
             <a class="email-link" href="mailto:phillip.onofua@gmail.com"
               ><svg
