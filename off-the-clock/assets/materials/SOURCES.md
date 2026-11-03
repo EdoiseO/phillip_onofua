@@ -8,4 +8,4 @@ Created using **Cardboard 002** by ambientCG (Lennart Demes), licensed under Cre
 - Included original maps: Color, NormalGL, Roughness, each 1024 × 1024 pixels.
 - Filenames shortened for the application; pixels are unchanged. The material applies a warm, less saturated tint and modest normal strength at render time.
 
-The user-supplied cardboard image was used as a visual reference, not embedded in the application.
+A cardboard reference image informed the visual treatment; it is not embedded in the application.
