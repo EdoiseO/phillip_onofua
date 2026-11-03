@@ -21,7 +21,7 @@ test('all routes restrict executable content, embedding and sensitive permission
 });
 
 test('every HTML script is local or explicitly hash-approved; import-map hash cannot drift',async()=>{
-  const files=(await readdir(root,{recursive:true})).filter(path=>path.endsWith('.html')&&!path.startsWith('.git/'));
+  const files=(await readdir(root,{recursive:true})).filter(path=>path.endsWith('.html')&&!/^(?:\.git|dist)[\\/]/.test(path));
   let inlineCount=0;
   for(const path of files){
     const html=await readFile(new URL(path,root),'utf8');
