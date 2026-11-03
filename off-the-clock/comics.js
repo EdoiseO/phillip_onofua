@@ -302,7 +302,7 @@ export const comics = [
         "variant": "Cover ZE - Blue Blank Authentix",
         "artist": null,
         "cover": "./assets/covers/pulls/ben10-2-cover-ze.jpg",
-        "back": "./assets/backs/pulls/ben10-3-cover-zm-back.jpg",
+        "back": "./assets/backs/pulls/ben10-3-cover-zm-back-blue.jpg",
         "backFrom": "Ben 10 #3 Cover ZM",
         "finish": "gloss"
       }
@@ -430,7 +430,7 @@ export const comics = [
         "variant": "Cover ZM - Blue Blank Authentix",
         "artist": null,
         "cover": "./assets/covers/pulls/ben10-3-cover-zm.jpg",
-        "back": "./assets/backs/pulls/ben10-3-cover-zm-back.jpg",
+        "back": "./assets/backs/pulls/ben10-3-cover-zm-back-blue.jpg",
         "finish": "gloss"
       }
     ],
