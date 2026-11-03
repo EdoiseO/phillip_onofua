@@ -1,5 +1,5 @@
-import {comics} from './comics.js?v=31.0';
-import {createBox} from './model.js?v=36.1';
+import {comics} from './comics.js?v=32.0';
+import {createBox} from './model.js?v=37.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -13,7 +13,7 @@ document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},tru
 document.addEventListener('keydown',e=>{if(!e.metaKey&&!e.ctrlKey&&!e.altKey)delete stage.dataset.pointerFocus;},true);
 const stageAnchor=document.createComment('3D scene home');stage.before(stageAnchor);
 let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,clickTimer=0,focusStarted=0,inspectionView='front';
-let lidSide=1,lidTilt=0;
+let lidSide=1,lidTilt=0,pullsShown=false,pullTimer=0,bagTorn=false;
 function positionLid(side,tilt=0){lidSide=Math.max(-1,Math.min(1,side));lidTilt=Math.max(-.16,Math.min(.24,tilt));box?.setLid(lidSide,lidTilt);}
 const media=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=media.matches;
@@ -28,6 +28,7 @@ const tabs=comics.map((comic,i)=>{
   const img=document.createElement('img');img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
+function pullLabel(pull){return `${pull.variant.replace(' - ',' · ')}${pull.artist?' — '+pull.artist:''}`;}
 function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
 function renderStageInstructions(){
   if(inspecting||document.body.classList.contains('is-decorating'))return;
@@ -59,13 +60,16 @@ function render(){
   stage.dataset.state=inspecting?'inspecting':opened?'open':'closed';stage.dataset.activeIndex=String(index);stage.dataset.sleeve=unwrapped?'removed':'on';
   if(inspecting){
     for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
-    $('back-image-note').hidden=inspectionView!=='back'&&!!comic.backCover;$('back-image-note').textContent=inspectionView==='back'&&!unwrapped?'The backing board is inside the sleeve. Slide out the comic to view its back.':comic.backCover?`${backImageLabel(comic)}${comic.backQualityNote?' · '+comic.backQualityNote:''}`:comic.blindBag?'Packaging rear not found; enclosed comic variants are unknown.':comic.collectionStatus==='Incoming'?'Exact back image not yet available for this incoming issue.':'Exact back image not found for this edition.';
+    const bag=!!comic.blindBag;$('view-comic').hidden=bag;
+    $('pull-list').hidden=!bag||!unwrapped||!pullsShown;
+    if(bag)$('pull-list').replaceChildren(...comic.pulls.map(pull=>{const li=document.createElement('li');li.textContent=pullLabel(pull);if(pull.finish==='foil')li.dataset.finish='foil';return li;}));
+    $('back-image-note').hidden=inspectionView!=='back'&&!!comic.backCover;$('back-image-note').textContent=inspectionView==='back'&&!unwrapped&&!bag?'The backing board is inside the sleeve. Slide out the comic to view its back.':comic.backCover?`${backImageLabel(comic)}${comic.backQualityNote?' · '+comic.backQualityNote:''}`:comic.blindBag?'Packaging rear not found for this bag.':comic.collectionStatus==='Incoming'?'Exact back image not yet available for this incoming issue.':'Exact back image not found for this edition.';
     $('inspection-title').textContent=comic.title;$('inspection-variant').textContent=comic.variant+(comic.issue==='Ashcan'?' · smaller format':'')+(comic.collectionStatus==='Incoming'?' · Incoming':comic.quantity>1?` · ${comic.quantity} copies`:'');
     $('inspection-number').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
-    $('sleeve-button').innerHTML=unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
+    $('sleeve-button').innerHTML=bag?(unwrapped?'Put them back <span aria-hidden="true">↓</span>':bagTorn?'Take them out <span aria-hidden="true">↑</span>':'Tear it open <span aria-hidden="true">↯</span>'):unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
     $('sleeve-button').setAttribute('aria-pressed',String(unwrapped));
-    $('sleeve-status').textContent=unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
-    $('inspection-instructions').textContent=unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
+    $('sleeve-status').textContent=bag?(unwrapped?`OPENED · ${comic.pulls.length} PULLS`:bagTorn?'OPENED':'SEALED'):unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
+    $('inspection-instructions').textContent=bag?(unwrapped?'Drag to turn. Click the comics to put them back, or empty space to return to the box.':bagTorn?'Drag to turn. Click the bag to take the comics out again, or empty space to return to the box.':'Drag to turn. Click the bag to tear it open, or empty space to return to the box.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
   }
 }
 function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=value;box.setOpen(value);render();announce(value?`Box opened. ${comics[index].title}, ${comics[index].variant}.`:'Box closed.');}
@@ -74,18 +78,28 @@ function step(direction){if(inspecting)return;if(!opened){setOpen(true);return;}
 function enterInspection(i=index){
   if(!box||inspecting)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
   $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
-  stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
-  box.focus(true);render();stage.focus({preventScroll:true});announce(`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
+  const bag=!!comics[index].blindBag;
+  stage.setAttribute('aria-label',bag?'Blind bag close-up. Drag or use arrow keys to rotate. Enter or Space tears the bag open and shows the three comics inside. R resets the view. Click empty space or press Escape to return to the box.':'Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
+  box.focus(true);render();stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
 }
 function leaveInspection(){
-  if(!inspecting)return;clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;
+  if(!inspecting)return;clearTimeout(clickTimer);clearTimeout(pullTimer);pullsShown=false;bagTorn=false;inspecting=false;unwrapped=false;pointer=null;
   box.focus(false);dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
   stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});announce('Returned to the box.');
 }
-function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}box.unwrap(unwrapped);render();announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');}
+function toggleSleeve(){
+  if(!inspecting)return;const comic=comics[index];unwrapped=!unwrapped;
+  if(!unwrapped&&inspectionView!=='front'&&!comic.blindBag){inspectionView='front';box.inspectView('front');}
+  if(comic.blindBag&&unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}
+  // Name the pulls once they are out of the bag, not while it is still tearing.
+  clearTimeout(pullTimer);pullsShown=false;const firstTear=comic.blindBag&&unwrapped&&!bagTorn;if(comic.blindBag&&unwrapped)bagTorn=true;
+  if(comic.blindBag&&unwrapped)pullTimer=setTimeout(()=>{pullsShown=true;render();announce(`Inside: ${comic.pulls.map(pullLabel).join('; ')}.`);},reduced?0:firstTear?2600:1300);
+  box.unwrap(unwrapped);render();
+  announce(comic.blindBag?(unwrapped?(firstTear?'Tearing the bag open.':'Taking the comics out.'):'Comics slid back into the bag.'):unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');
+}
 function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
 $('inspect-button').addEventListener('click',()=>enterInspection());$('return-button').addEventListener('click',leaveInspection);$('sleeve-button').addEventListener('click',toggleSleeve);
-for(const view of ['front','comic','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
+for(const view of ['front','comic','back'])$('view-'+view).addEventListener('click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?(comics[index].backCover?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
 dialog.addEventListener('cancel',e=>{e.preventDefault();leaveInspection();});
 $('previous').addEventListener('click',()=>step(-1));$('next').addEventListener('click',()=>step(1));
 $('motion-toggle').addEventListener('click',()=>{reduced=!reduced;updateMotion();});

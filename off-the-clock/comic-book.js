@@ -2,15 +2,15 @@
 // sheets, and two wire staples passing through the spine. No solid block.
 export const COMIC_SPINE_X=-.8885;
 export const COMIC_COVER_RADIUS=.0115;
-export function createComicBook(THREE,{frontTexture,frontQuad=null,backTexture=null,backQuad=null,paperSheets=8}){
+export function createComicBook(THREE,{frontTexture,frontQuad=null,backTexture=null,backQuad=null,paperSheets=8,foil=false}){
   const group=new THREE.Group();group.name='saddle-stitched-comic';
   const spine=COMIC_SPINE_X, radius=COMIC_COVER_RADIUS, H=2.7;
   const surfaces=[],edgeRecords=[],normalJoins=[];
-  const coverMaterial=map=>new THREE.ShaderMaterial({
-    uniforms:{art:{value:map}},side:THREE.DoubleSide,
+  const coverMaterial=(map,foilAmount=0)=>new THREE.ShaderMaterial({
+    uniforms:{art:{value:map},foil:{value:foilAmount}},side:THREE.DoubleSide,
     vertexShader:`varying vec2 vArtUv; varying vec3 vWorld; varying vec3 vN;
       void main(){vArtUv=uv;vec4 p=modelMatrix*vec4(position,1.0);vWorld=p.xyz;vec3 viewNormal=normalMatrix*normal;vN=normalize(vec3(dot(viewMatrix[0].xyz,viewNormal),dot(viewMatrix[1].xyz,viewNormal),dot(viewMatrix[2].xyz,viewNormal)));gl_Position=projectionMatrix*viewMatrix*p;}`,
-    fragmentShader:`uniform sampler2D art; varying vec2 vArtUv; varying vec3 vWorld; varying vec3 vN;
+    fragmentShader:`uniform sampler2D art; uniform float foil; varying vec2 vArtUv; varying vec3 vWorld; varying vec3 vN;
       void main(){
         vec3 n=normalize(vN);if(!gl_FrontFacing)n=-n;
         vec3 v=normalize(cameraPosition-vWorld),r=reflect(-v,n);
@@ -27,11 +27,20 @@ export function createComicBook(THREE,{frontTexture,frontQuad=null,backTexture=n
         float rim=.035*pow(1.0-facing,3.0);
         float light=.91+.09*max(dot(n,normalize(vec3(-.35,.7,1.0))),0.0);
         vec3 ink=texture2D(art,vArtUv).rgb;
+        // Foil covers reflect a rainbow band that travels with the view, over
+        // the print rather than replacing it. Light ink shows the most foil.
+        if(foil>0.0){
+          vec3 spectrum=.5+.5*cos(6.2831853*(p.x*.45+p.y*.3+vArtUv.x*.8+vArtUv.y*.55+vec3(0.0,.3333333,.6666667)));
+          float band=pow(.5+.5*cos(6.2831853*(diagonal*.85+vArtUv.y*.7)),3.0);
+          float lightness=dot(ink,vec3(.2126,.7152,.0722));
+          float strength=foil*(.2+.55*smoothstep(.06,.8,lightness))*(.3+.7*band);
+          ink=ink*(1.0-strength*(1.0-spectrum))+spectrum*strength*.28;
+        }
         gl_FragColor=vec4(ink*light+vec3(.9,.96,1.0)*(sheen+rim),1.0);
         #include <colorspace_fragment>
       }`
   });
-  const frontMaterial=coverMaterial(frontTexture);
+  const frontMaterial=coverMaterial(frontTexture,foil?1:0);
   const rearMaterial=backTexture?coverMaterial(backTexture):new THREE.MeshStandardMaterial({color:0x33343a,roughness:.55});
   function imageUv(u,v,quad){
     if(!quad)return [u,v];
