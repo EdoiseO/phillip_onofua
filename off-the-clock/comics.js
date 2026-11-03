@@ -264,8 +264,28 @@ export const comics = [
     "issue": "2",
     "variant": "Cover F - Premium Mystery Blind Bag",
     "cover": "./assets/covers/ben10-6.jpg",
-    "description": "A little mystery in the collection. This is the original blind-bag packaging; the enclosed variant is still a surprise.",
+    "description": "A premium mystery blind bag that held three Dynamite variants. Tear it open to see the three I pulled.",
     "blindBag": true,
+    "pulls": [
+      {
+        "variant": "Cover X - Foil Virgin",
+        "artist": "Duncan Rouleau",
+        "cover": "./assets/covers/pulls/ben10-2-cover-x.jpg",
+        "finish": "foil"
+      },
+      {
+        "variant": "Cover W - Virgin B&W Sketch",
+        "artist": "Robert Hack",
+        "cover": "./assets/covers/pulls/ben10-2-cover-w.jpg",
+        "finish": "gloss"
+      },
+      {
+        "variant": "Cover ZE - Blue Blank Authentix",
+        "artist": null,
+        "cover": "./assets/covers/pulls/ben10-2-cover-ze.jpg",
+        "finish": "gloss"
+      }
+    ],
     "source": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/51414.zoom.jpg?t=1791842927",
     "sourcePage": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/51414.zoom.jpg?t=1791842927",
     "coverWidth": 600,
@@ -273,7 +293,7 @@ export const comics = [
     "series": "Ben 10",
     "publisher": "Dynamite",
     "year": 2026,
-    "backStatus": "unknown-enclosed-variant",
+    "backStatus": "packaging-rear-not-found",
     "backVerified": false
   },
   {
@@ -366,8 +386,29 @@ export const comics = [
     "issue": "3",
     "variant": "Cover H - Premium Mystery Blind Bag",
     "cover": "./assets/covers/ben10-9.jpg",
-    "description": "A little mystery in the collection. This is the original blind-bag packaging; the enclosed variant is still a surprise.",
+    "description": "A premium mystery blind bag that held three Dynamite variants. Tear it open to see the three I pulled.",
     "blindBag": true,
+    "pulls": [
+      {
+        "variant": "Cover ZB - Akira Poster Homage Virgin",
+        "artist": "Cormac Hughes",
+        "cover": "./assets/covers/pulls/ben10-3-cover-zb.jpg",
+        "finish": "gloss"
+      },
+      {
+        "variant": "Cover ZH - Foil Virgin",
+        "artist": "Sebastian Piriz",
+        "cover": "./assets/covers/pulls/ben10-3-cover-zh.jpg",
+        "finish": "foil"
+      },
+      {
+        "variant": "Cover ZM - Blue Blank Authentix",
+        "artist": null,
+        "cover": "./assets/covers/pulls/ben10-3-cover-zm.jpg",
+        "finish": "gloss"
+      }
+    ],
+    "bagBack": "./assets/backs/ben10-9-bag.webp",
     "source": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/52070.zoom.jpg?t=1791843089",
     "sourcePage": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/52070.zoom.jpg?t=1791843089",
     "coverWidth": 600,
@@ -400,8 +441,7 @@ export const comics = [
     "backSourcePage": "https://www.ebay.com/itm/227452716955",
     "backAssetType": "outer-blind-bag-packaging-back",
     "backImageWidth": 985,
-    "backImageHeight": 1600,
-    "backQualityNote": "Enclosed comic variants remain unidentified."
+    "backImageHeight": 1600
   },
   {
     "id": "ben10-10",

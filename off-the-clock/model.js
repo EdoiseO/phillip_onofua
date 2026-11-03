@@ -3,7 +3,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
 import { createComicSleeve } from './comic-sleeve.js?v=15.0';
-import { createComicBook } from './comic-book.js?v=15.0';
+import { createComicBook } from './comic-book.js?v=37.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=37.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
@@ -90,9 +91,21 @@ export async function createBox(stage,comics){
   lid.position.y=lidClosedY;
   const textureLoader=new THREE.TextureLoader();
   const textures=await Promise.all(comics.map(c=>textureLoader.loadAsync(c.cover).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;})));
-  const backTextures=await Promise.all(comics.map(c=>c.backCover?textureLoader.loadAsync(c.backCover).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}):null));
+  const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;});
+  const backTextures=await Promise.all(comics.map(c=>c.backCover&&!c.blindBag?loadColor(c.backCover):null));
+  // Blind bags are sealed packs, not sleeved comics. Their pulls load with them.
+  const bagModel=comics.some(c=>c.blindBag)?await loadBlindBag():null;
+  const bagTextures=await Promise.all(comics.map(c=>c.blindBag?Promise.all([c.bagBack?loadColor(c.bagBack):null,Promise.all(c.pulls.map(pull=>loadColor(pull.cover)))]):null));
   const cards=textures.map((tex,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
+    if(comics[i].blindBag){
+      const [backTexture,pullTextures]=bagTextures[i];
+      const blind=createBlindBag(THREE,bagModel,{frontTexture:tex,backTexture,pullTextures,pulls:comics[i].pulls});
+      g.add(blind.group);
+      g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
+      g.rotation.set(-.025,0,(i%3-1)*.009);
+      return {group:g,blind,pullTextures:[...pullTextures,backTexture].filter(Boolean),baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
+    }
     const booklet=createComicBook(THREE,{frontTexture:tex,frontQuad:comics[i].frontQuad,backTexture:backTextures[i],backQuad:comics[i].backQuad,paperSheets:comics[i].paperSheets??8});
     const book=booklet.group,bag=createComicSleeve(THREE),sleeve=bag.group;
     const [widthIn,heightIn]=comics[i].physicalSizeInches??[6.625,10.25];
@@ -150,7 +163,7 @@ export async function createBox(stage,comics){
     inspectYaw=reduced?wantedInspectYaw:damp(inspectYaw,wantedInspectYaw,dt,8);
     inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
-    const focus=smooth(0,1,focusProgress), extraction=smooth(0,1,unwrapProgress);
+    const focus=smooth(0,1,focusProgress), extraction=cards[selected].blind?0:smooth(0,1,unwrapProgress);
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
@@ -171,6 +184,7 @@ export async function createBox(stage,comics){
     const pose=lidPose(THREE,lidT,lidSide,lidTilt);
     lid.position.set(...pose.position);lid.position.y-=7*focus;lid.rotation.copy(pose.rotation);
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
+    let bagsMoving=false;
     cards.forEach((card,i)=>{
       const active=i===selected, lift=active?reveal:0;
       const target=1.42+lift*3.13;
@@ -184,6 +198,8 @@ export async function createBox(stage,comics){
       card.group.rotation.x=-.025*(1-amount)+amount*.025;
       card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
+      if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(dt,reduced)||bagsMoving;}
+      else{
       const out=active?extraction:0,pull=smooth(.12,.68,out),settle=smooth(.68,1,out);
       card.book.position.set(.75*settle,3.05*pull-2.57*settle,.36*settle);
       card.book.rotation.z=-.025*settle;
@@ -191,6 +207,7 @@ export async function createBox(stage,comics){
       card.sleeve.position.set(-1.12*settle,-.26*settle,-.36*settle);
       card.sleeve.rotation.set(0,-.28*settle,.1*settle);
       card.bag.update(smooth(0,.2,out),smooth(.65,1,out));
+      }
       if(active){
         card.group.position.x=lerp(card.group.position.x,0,focus);
         card.group.position.z=lerp(card.group.position.z,1.2,focus);
@@ -238,9 +255,9 @@ export async function createBox(stage,comics){
     if(focus>.0001){
       // Frame the actual animated bounds, including the comic at the top of its pull.
       cards[selected].group.updateWorldMatrix(true,true);
-      inspectionBounds.setFromObject(cards[selected].group);
+      if(cards[selected].blind)cards[selected].blind.bounds(inspectionBounds);else inspectionBounds.setFromObject(cards[selected].group);
       inspectionBounds.getCenter(inspectionCenter);
-      const bookFocus=smooth(.9,1,extraction)*detailProgress;
+      const bookFocus=cards[selected].blind?0:smooth(.9,1,extraction)*detailProgress;
       if(bookFocus>0){
         bookBounds.setFromObject(cards[selected].book);
         inspectionBounds.min.lerp(bookBounds.min,bookFocus);inspectionBounds.max.lerp(bookBounds.max,bookFocus);
@@ -272,19 +289,18 @@ export async function createBox(stage,comics){
     const activeCard=cards[selected],freeFloat=smooth(.85,1,extraction);
     activeCard.group.position.y+=floatY*(1-freeFloat);
     activeCard.group.rotation.z+=floatRoll*(1-freeFloat);
-    activeCard.book.position.y+=floatY*freeFloat/activeCard.group.scale.y;
-    activeCard.book.rotation.z+=floatRoll*freeFloat;
+    if(activeCard.book){activeCard.book.position.y+=floatY*freeFloat/activeCard.group.scale.y;activeCard.book.rotation.z+=floatRoll*freeFloat;}
     halo.visible=focus>.001;
     if(halo.visible){
       activeCard.group.updateWorldMatrix(true,true);
-      bookBounds.setFromObject(activeCard.book);bookBounds.getCenter(halo.position);
+      if(activeCard.blind){activeCard.blind.bounds(bookBounds);bookBounds.getCenter(halo.position);const size=bookBounds.getSize(relative);halo.scale.set(size.x*2.25,size.y*1.8,1);}
+      else{bookBounds.setFromObject(activeCard.book);bookBounds.getCenter(halo.position);halo.scale.set(activeCard.book.scale.x*1.8*activeCard.group.scale.x*2.25,activeCard.book.scale.y*2.7*activeCard.group.scale.y*1.8,1);}
       halo.position.z=inspectionBounds.min.z-.65;
-      halo.scale.set(activeCard.book.scale.x*1.8*activeCard.group.scale.x*2.25,activeCard.book.scale.y*2.7*activeCard.group.scale.y*1.8,1);
       halo.material.opacity=.19*focus*(1-detailProgress*.55);
     }
     stage.dataset.idleMotion=inspecting&&!reduced&&floatStrength>.001?'floating':'still';
     stage.dataset.halo=halo.visible?'on':'off';
-    const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001;
+    const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving;
     stage.dataset.motionSettled=String(settled);
     wasSettled=settled;
     if(dirty||!settled||floatStrength>.0001||stickersMoving){renderer.render(scene,camera);dirty=false;}
@@ -294,18 +310,18 @@ export async function createBox(stage,comics){
   return {
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
-    select(index){selected=index;dirty=true;stage.dataset.activeIndex=String(index);},
+    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;dirty=true;stage.dataset.activeIndex=String(index);},
     rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
     stickers:stickerSystem,
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
     decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
-    focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{focusProgress=0;unwrapProgress=0;}dirty=true;},
+    focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;cards[selected].blind?.crinkle();}else{focusProgress=0;unwrapProgress=0;cards.forEach(c=>c.blind?.reset());}dirty=true;},
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());}
+    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.pullTextures?.forEach(t=>t.dispose());});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());}
   };
 }
