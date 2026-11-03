@@ -22,6 +22,18 @@ test('every blind bag lists its three pulls with local covers', () => {
   }
 });
 
+test('verified packaging backs have local artwork and source information', () => {
+  for (const id of ['ben10-6', 'ben10-9']) {
+    const bag = comics.find(comic => comic.id === id);
+    assert.ok(bag?.bagBack, id);
+    assert.ok(existsSync(here(bag.bagBack)), bag.bagBack);
+    assert.equal(bag.backVerified, true, id);
+    assert.equal(bag.backStatus, 'verified-outer-packaging', id);
+    assert.match(bag.backSource, /^https:\/\//, id);
+    assert.match(bag.backSourcePage, /^https:\/\//, id);
+  }
+});
+
 test('the bag model keeps the nodes and clips the page drives', () => {
   const glb = readFileSync(here('./assets/models/blind-bag.glb'));
   assert.equal(glb.toString('ascii', 0, 4), 'glTF');

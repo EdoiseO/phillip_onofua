@@ -314,8 +314,14 @@ export const comics = [
     "series": "Ben 10",
     "publisher": "Dynamite",
     "year": 2026,
-    "backStatus": "packaging-rear-not-found",
-    "backVerified": false
+    "backStatus": "verified-outer-packaging",
+    "backVerified": true,
+    "bagBack": "./assets/backs/ben10-6-bag.webp",
+    "backSource": "https://i.ebayimg.com/images/g/NUEAAeSwMiBqTTS1/s-l1600.webp",
+    "backSourcePage": "https://www.ebay.ie/itm/227421230829",
+    "backAssetType": "outer-blind-bag-packaging-back",
+    "backImageWidth": 1030,
+    "backImageHeight": 1600
   },
   {
     "id": "ben10-7",
