@@ -1,24 +1,14 @@
 // A sealed premium mystery bag. The pouch, its tear and the falling strip
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
-import { TextureLoader } from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { createComicBook } from './comic-book.js?v=37.0';
+import { loadModel } from './models.js?v=38.0';
+import { createComicBook } from './comic-book.js?v=38.0';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
 const BAG_SCALE=.9;
-const COMIC_WIDTH_SCALE=6.625*(2.7/10.25)/1.8;
-let template=null;
+export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
-export function loadBlindBag(){
-  // The page's policy keeps connect-src to 'self', which blocks fetch() of the
-  // blob URLs the loader makes for embedded images. Decode them as <img>
-  // elements instead; img-src already allows blob:.
-  template??=new GLTFLoader().register(parser=>{parser.textureLoader=new TextureLoader(parser.options.manager);return {name:'image-element-textures'};}).loadAsync('./assets/models/blind-bag.glb');
-  return template;
-}
-
-export function createBlindBag(THREE,gltf,{frontTexture,backTexture=null,pullTextures,pulls}){
+export function createBlindBag(THREE,gltf,{comicModel,frontTexture,backTexture=null,pullTextures,pulls}){
   const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
   const group=new THREE.Group();group.name='blind-bag';
   const bag=gltf.scene.clone(true);bag.scale.setScalar(BAG_SCALE);group.add(bag);
@@ -47,8 +37,8 @@ export function createBlindBag(THREE,gltf,{frontTexture,backTexture=null,pullTex
   // The pulls wait inside, stacked front to back, until the mouth is open.
   const pullGroup=new THREE.Group();pullGroup.scale.setScalar(BAG_SCALE);pullGroup.visible=false;group.add(pullGroup);
   const books=pulls.map((pull,k)=>{
-    const booklet=createComicBook(THREE,{frontTexture:pullTextures[k],paperSheets:8,foil:pull.finish==='foil'});
-    booklet.group.scale.set(COMIC_WIDTH_SCALE,1,1);pullGroup.add(booklet.group);return booklet.group;
+    const booklet=createComicBook(THREE,{template:comicModel,frontTexture:pullTextures[k],foil:pull.finish==='foil'});
+    pullGroup.add(booklet.group);return booklet.group;
   });
 
   let open=false,tearTime=0,reveal=0,crinkleTime=-1,moving=false;

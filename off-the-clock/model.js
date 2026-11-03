@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
-import { createComicSleeve } from './comic-sleeve.js?v=15.0';
-import { createComicBook } from './comic-book.js?v=37.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=37.1';
+import { createComicSleeve } from './comic-sleeve.js?v=38.0';
+import { createComicBook } from './comic-book.js?v=38.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=38.0';
+import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
@@ -94,23 +95,24 @@ export async function createBox(stage,comics){
   const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;});
   const backTextures=await Promise.all(comics.map(c=>c.backCover&&!c.blindBag?loadColor(c.backCover):null));
   // Blind bags are sealed packs, not sleeved comics. Their pulls load with them.
+  const comicModel=await loadModel('./assets/models/comic-set.glb');
   const bagModel=comics.some(c=>c.blindBag)?await loadBlindBag():null;
   const bagTextures=await Promise.all(comics.map(c=>c.blindBag?Promise.all([c.bagBack?loadColor(c.bagBack):null,Promise.all(c.pulls.map(pull=>loadColor(pull.cover)))]):null));
   const cards=textures.map((tex,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     if(comics[i].blindBag){
       const [backTexture,pullTextures]=bagTextures[i];
-      const blind=createBlindBag(THREE,bagModel,{frontTexture:tex,backTexture,pullTextures,pulls:comics[i].pulls});
+      const blind=createBlindBag(THREE,bagModel,{comicModel,frontTexture:tex,backTexture,pullTextures,pulls:comics[i].pulls});
       g.add(blind.group);
       g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
       g.rotation.set(-.025,0,(i%3-1)*.009);
       return {group:g,blind,pullTextures:[...pullTextures,backTexture].filter(Boolean),baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
     }
-    const booklet=createComicBook(THREE,{frontTexture:tex,frontQuad:comics[i].frontQuad,backTexture:backTextures[i],backQuad:comics[i].backQuad,paperSheets:comics[i].paperSheets??8});
-    const book=booklet.group,bag=createComicSleeve(THREE),sleeve=bag.group;
+    const booklet=createComicBook(THREE,{template:comicModel,frontTexture:tex,frontQuad:comics[i].frontQuad,backTexture:backTextures[i],backQuad:comics[i].backQuad});
+    const book=booklet.group,bag=createComicSleeve(THREE,comicModel),sleeve=bag.group;
     const [widthIn,heightIn]=comics[i].physicalSizeInches??[6.625,10.25];
-    // One physical scale: standard comic height 10.25 inches = 2.7 units.
-    book.scale.set(widthIn*(2.7/10.25)/1.8,heightIn/10.25,comics[i].thicknessScale??1);
+    // The model is a standard 6⅝ × 10¼ in comic; smaller formats scale from it.
+    book.scale.set(widthIn/6.625,heightIn/10.25,comics[i].thicknessScale??1);
     g.add(book,sleeve);
     g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
     g.rotation.set(-.025,0,(i%3-1)*.009);
