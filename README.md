@@ -8,7 +8,7 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 ## Overview
 
-This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline and skills-focused introduction with real product previews, direct résumé access, two detailed case studies, and a live interactive 3D collection.
+This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline and skills-focused introduction with product previews, direct résumé access, two detailed case studies, an Android prototype, and a live interactive 3D collection.
 
 The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
@@ -32,13 +32,21 @@ The case study opens with the working interface, a summary of the problem and my
 
 A Windows desktop application for managing reusable overlay instances, customizing their appearance, previewing live data, and preparing browser-source URLs for OBS.
 
-The case study shows the instance library, live customizers, Windows media integration, grouped social overlays, persistent settings, a recorded demonstration, and code highlights explaining how draft previews and saved output stay separate.
+The case study covers the twelve-overlay library, audio-reactive animation, request pacing, local-server security, privacy, packaging, a recorded demonstration, and code highlights explaining how draft previews and saved output stay separate. Its hardest-problem section is a marked placeholder for a future personal account.
 
 - **Role:** Product designer and developer
 - **Stack:** Python, JavaScript, aiohttp, WebSockets, WebView2, and OBS Studio
 - **Status:** Working desktop application in active development
 - [Explore how Overlay Studio works](https://philliponofua.vercel.app/overlay-studio.html)
 - [Watch the demonstration](https://philliponofua.vercel.app/overlay-studio.html#overlay-demo)
+
+### Restaurant Guide
+
+An Android team prototype built with Kotlin and Jetpack Compose for browsing restaurant details, photos, ratings, and visit notes. Its records currently use session and saved UI state; durable storage is planned.
+
+- **Role:** Lead developer
+- **Stack:** Kotlin, Jetpack Compose, and Android
+- [View the source](https://github.com/EdoiseO/COMP3074-RestaurantGuide)
 
 ### Off the clock
 
@@ -54,9 +62,10 @@ The [Receipt Splitter concept](https://philliponofua.vercel.app/receipt-splitter
 - Dark-only, responsive editorial layout with clear navigation
 - **Off the clock:** an interactive 3D comic collection with a movable lid, glossy sleeves, separate backing boards, verified rear artwork, close-up rotation, and a gentle hover/glow
 - Letter-by-letter headline animation, product previews, and prominent résumé access
-- Quick links to web, desktop, and 3D projects, plus grouped language skills
+- Quick links to web, desktop, mobile, and 3D projects, plus grouped language skills
 - Animation pause control, reduced-motion support, and a readable fallback without JavaScript
 - Two detailed projects using real product captures, plus a live interactive 3D collection
+- Restaurant Guide design gallery and a compact row of smaller builds
 - Dedicated case-study pages with project-specific metadata and social previews
 - Product-first Student Market case study with expandable technical notes
 - Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
@@ -106,6 +115,7 @@ Open [http://localhost:8000](http://localhost:8000).
 │   ├── student-market-*.{png,jpg}     # Desktop, mobile, admin, and data-model captures
 │   ├── overlay-studio-*.png           # Overlay Studio interface captures
 │   ├── overlay-studio-demo.webm       # Recorded Overlay Studio demonstration
+│   ├── restaurant-guide/              # Replaceable Restaurant Guide design screenshots
 │   ├── tech-logos/                    # Self-hosted technology brand marks
 │   ├── portfolio-preview.jpg          # README and social preview image
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
