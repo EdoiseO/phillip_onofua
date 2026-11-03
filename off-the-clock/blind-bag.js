@@ -1,5 +1,6 @@
 // A sealed premium mystery bag. The pouch, its tear and the falling strip
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
+import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createComicBook } from './comic-book.js?v=37.0';
 
@@ -10,7 +11,10 @@ const COMIC_WIDTH_SCALE=6.625*(2.7/10.25)/1.8;
 let template=null;
 
 export function loadBlindBag(){
-  template??=new GLTFLoader().loadAsync('./assets/models/blind-bag.glb');
+  // The page's policy keeps connect-src to 'self', which blocks fetch() of the
+  // blob URLs the loader makes for embedded images. Decode them as <img>
+  // elements instead; img-src already allows blob:.
+  template??=new GLTFLoader().register(parser=>{parser.textureLoader=new TextureLoader(parser.options.manager);return {name:'image-element-textures'};}).loadAsync('./assets/models/blind-bag.glb');
   return template;
 }
 
