@@ -412,7 +412,7 @@ export const comics = [
     "title": "Ben 10 #3",
     "issue": "3",
     "variant": "Cover H - Premium Mystery Blind Bag",
-    "cover": "./assets/covers/ben10-9.jpg",
+    "cover": "./assets/covers/ben10-9-bag-front.jpg",
     "description": "A premium mystery blind bag that held three Dynamite variants. Tear it open to see the three I pulled.",
     "blindBag": true,
     "pulls": [
@@ -441,10 +441,10 @@ export const comics = [
       }
     ],
     "bagBack": "./assets/backs/ben10-9-bag.webp",
-    "source": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/52070.zoom.jpg?t=1791843089",
-    "sourcePage": "https://cdn11.bigcommerce.com/s-fle6qzf7oq/images/stencil/original/attribute_value_images/52070.zoom.jpg?t=1791843089",
-    "coverWidth": 600,
-    "coverHeight": 900,
+    "source": "https://i.ebayimg.com/images/g/1pAAAeSwqlBqhxw8/s-l1600.webp",
+    "sourcePage": "https://www.ebay.pl/itm/336752810904",
+    "coverWidth": 1050,
+    "coverHeight": 1560,
     "series": "Ben 10",
     "publisher": "Dynamite",
     "year": 2026,
