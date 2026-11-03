@@ -1,4 +1,4 @@
-import {comics} from './comics.js?v=36.0';
+import {comics} from './comics.js?v=37.0';
 import {createBox} from './model.js?v=39.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
@@ -29,7 +29,7 @@ const tabs=comics.map((comic,i)=>{
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
 function pullLabel(pull){return `${pull.variant.replace(' - ',' · ')}${pull.artist?' — '+pull.artist:''}`;}
-function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
+function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':comic.backAssetType==='shared-dynamite-back'?`Standard Dynamite back · photographed from my ${comic.backFrom}`:'Verified back-cover photograph';}
 function renderStageInstructions(){
   if(inspecting||document.body.classList.contains('is-decorating'))return;
   const gesture=mobileCollection.matches?'Tap':'Click';
