@@ -27,6 +27,9 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 110px;
 }
+[id] {
+  scroll-margin-top: 96px;
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -399,7 +402,6 @@ button:focus-visible {
 }
 .section {
   padding: 84px 0 0;
-  scroll-margin-top: 30px;
 }
 .section-title {
   margin-bottom: 38px;
@@ -432,10 +434,6 @@ button:focus-visible {
   padding: 32px 0 52px;
   border-bottom: 1px solid var(--border);
 }
-.project[id],
-.finished-project[id] {
-  scroll-margin-top: 96px;
-}
 .project + .project {
   padding-top: 52px;
 }
@@ -463,6 +461,52 @@ button:focus-visible {
   aspect-ratio: 1.6;
   object-fit: cover;
   object-position: center;
+}
+.restaurant-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px;
+  aspect-ratio: 1.6;
+  background: #111720;
+}
+.restaurant-gallery figure {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+.restaurant-gallery-home {
+  grid-row: span 2;
+}
+.restaurant-gallery figure a {
+  display: block;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #1b222d;
+}
+.restaurant-gallery figure img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+  object-position: top;
+}
+.restaurant-gallery .restaurant-gallery-map img {
+  object-fit: contain;
+  object-position: center;
+}
+.restaurant-gallery figcaption {
+  color: var(--muted);
+  font-family: GeistMono, monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .project-status {
   color: var(--muted);
@@ -580,6 +624,61 @@ button:focus-visible {
   border-style: solid;
 }
 .finished-project .eyebrow {
+  color: var(--accent);
+}
+.smaller-builds {
+  margin-top: 56px;
+}
+.smaller-builds-heading h3 {
+  margin-top: 8px;
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.7px;
+}
+.smaller-builds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+.small-build {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: #0f141c;
+}
+.small-build h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+}
+.small-build p {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.small-build > span {
+  margin-top: auto;
+  color: var(--accent);
+  font-size: 9px;
+  line-height: 1.6;
+}
+.small-build a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--soft);
+  font-size: 11px;
+}
+.small-build a:hover {
   color: var(--accent);
 }
 .toolkit-grid {
@@ -736,6 +835,7 @@ button:focus-visible {
 }
 .language-list--secondary li {
   color: var(--muted);
+  opacity: 0.8;
 }
 .language-list img,
 .language-list svg {
@@ -760,7 +860,9 @@ button:focus-visible {
   margin-top: 28px;
   padding-top: 23px;
   border-top: 1px solid var(--border);
-  scroll-margin-top: 30px;
+}
+.about-copy > .ai-disclosure {
+  margin-top: 24px;
 }
 .education > .mono {
   font-size: 9px;
@@ -790,7 +892,6 @@ button:focus-visible {
   align-items: end;
   border-block: 1px solid var(--border);
   padding: 57px 0 56px;
-  scroll-margin-top: 25px;
 }
 .contact h2 {
   font-size: clamp(36px, 4.2vw, 56px);
@@ -1054,6 +1155,9 @@ button:focus-visible {
     flex-direction: column;
     gap: 8px;
     padding: 22px;
+  }
+  .smaller-builds-grid {
+    grid-template-columns: 1fr;
   }
   .toolkit-grid {
     grid-template-columns: 1fr;
