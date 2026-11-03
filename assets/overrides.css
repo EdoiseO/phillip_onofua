@@ -1505,6 +1505,10 @@ html[data-theme="dark"] .skill-logo--monochrome img {
   padding: clamp(3.5rem, 8vw, 6.5rem) 0 1rem;
 }
 
+.case-study-page [id] {
+  scroll-margin-top: 96px;
+}
+
 .case-study-hero {
   max-width: 900px;
 }
@@ -1729,6 +1733,43 @@ html[data-theme="dark"] .skill-logo--monochrome img {
 
 .case-study-challenge > .case-study-copy {
   max-width: 820px;
+}
+
+.overlay-library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  background: var(--border);
+}
+
+.overlay-library-grid li {
+  min-width: 0;
+  padding: 1.2rem;
+  background: var(--surface);
+}
+
+.overlay-library-grid h3 {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.overlay-library-grid p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.overlay-hardest-placeholder {
+  border-bottom: 0;
 }
 
 .case-study-code-grid {
@@ -2429,6 +2470,10 @@ body.case-study-gallery-open {
 }
 
 @media (max-width: 760px) {
+  .overlay-library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .case-study-code-grid {
     grid-template-columns: 1fr;
   }

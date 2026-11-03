@@ -33,7 +33,7 @@
       <section class="case-study-hero" aria-labelledby="case-study-title">
         <p class="eyebrow">Inside the project · Windows desktop application</p>
         <h1 id="case-study-title">Overlay Studio</h1>
-        <p class="case-study-lead">A Windows application that gives streamers one place to manage overlay instances, customize their appearance, preview live data, and prepare browser-source URLs for OBS.</p>
+        <p class="case-study-lead">A Windows desktop app for building and running live OBS overlays. It brings a library of 12 overlay types, live previews, audio-reactive animation, and saved settings into one place.</p>
 
         <div class="case-study-actions">
           <a class="button button--primary" href="#overlay-demo">Watch the demo ↓</a>
@@ -41,7 +41,7 @@
 
         <dl class="case-study-meta">
           <div><dt>Role</dt><dd>Product designer and developer</dd></div>
-          <div><dt>Core stack</dt><dd>Python, JavaScript, aiohttp, WebSockets, WebView2, OBS Studio</dd></div>
+          <div><dt>Core stack</dt><dd>Python, aiohttp, WebSockets, WebView2, OBS Studio</dd></div>
           <div><dt>Status</dt><dd>Working desktop application in active development</dd></div>
         </dl>
       </section>
@@ -63,9 +63,88 @@
           </div>
         </section>
 
+        <section class="case-study-row case-study-row--reverse" aria-labelledby="overlay-library">
+          <figure class="case-study-media">
+            <img src="assets/overlay-studio-library.png" alt="Overlay Studio library with installed social, goal, and now-playing overlay instances" width="1280" height="720" loading="lazy" />
+            <figcaption>Installed overlays have their own settings, previews, and OBS URLs.</figcaption>
+          </figure>
+          <div class="case-study-copy">
+            <p class="eyebrow">01 · Overlay library</p>
+            <h2 id="overlay-library">Twelve overlays, one library</h2>
+            <p>Choose an overlay, customize it, and copy its browser-source URL into OBS. Multiple instances of the same type can keep separate settings.</p>
+            <p>The catalog is assembled from local overlay manifests, and each instance has its own saved configuration.</p>
+          </div>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-types-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">The collection</p>
+            <h2 id="overlay-types-title">Built for different parts of a stream</h2>
+          </div>
+          <ul class="overlay-library-grid">
+            <li><h3>Dancing GIF</h3><p>Switches between resting and audio-reactive dancing media.</p></li>
+            <li><h3>Spotify</h3><p>Shows track details and artwork from Spotify desktop.</p></li>
+            <li><h3>Now Playing Flow</h3><p>Shows artwork from the active Windows media session.</p></li>
+            <li><h3>Match Record</h3><p>Displays an editable wins-and-losses banner.</p></li>
+            <li><h3>Goal Widget</h3><p>Tracks a goal with a circular progress ring.</p></li>
+            <li><h3>Goal Bar</h3><p>Shows goal progress in a configurable bar.</p></li>
+            <li><h3>Goal Pill</h3><p>Presents a compact goal with an icon and progress fill.</p></li>
+            <li><h3>Rivals Rank Tracker</h3><p>Shows a player's rank and session record.</p></li>
+            <li><h3>Social Bar</h3><p>Displays selected social accounts in a row.</p></li>
+            <li><h3>Social Rotator</h3><p>Cycles through selected social handles.</p></li>
+            <li><h3>Social Grouped</h3><p>Combines platform icons with shared handles.</p></li>
+            <li><h3>Platform Badge</h3><p>Pairs one platform icon with a compact handle.</p></li>
+          </ul>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-audio-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">02 · Audio-reactive animation</p>
+            <h2 id="overlay-audio-title">Make the dance follow the sound</h2>
+            <p>The Dancing GIF overlay reacts to the audio playing on the computer, so a beat can bring the animation to life.</p>
+            <p>A local Windows audio loopback worker analyzes the sound spectrum and bass levels, then sends beat and level updates to the overlay. It listens to the whole output device, including game and voice audio.</p>
+          </div>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-api-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">03 · Being a good API citizen</p>
+            <h2 id="overlay-api-title">Share requests and slow down when needed</h2>
+            <p>Several overlays can follow the same Rivals player without each making its own requests. When the service has trouble, the last successful state stays visible.</p>
+            <p>The worker shares fetches per player, enforces an app-wide budget of 120 requests per hour, backs off after errors and rate limits, and adds startup delays and jitter to avoid bursts.</p>
+          </div>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-security-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">04 · Local server security</p>
+            <h2 id="overlay-security-title">Keep outside websites from changing settings</h2>
+            <p>A random website should not be able to change an active overlay in the background.</p>
+            <p>Mutating API requests require JSON. Browser requests with an Origin or Referer must also match the local server's origin; local tools without those browser headers remain supported. Tests cover allowed and rejected requests.</p>
+          </div>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-privacy-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">05 · Privacy</p>
+            <h2 id="overlay-privacy-title">Keep the linked player ID private</h2>
+            <p>The overlay can show a player's rank and session record without exposing the linked player ID to its browser clients.</p>
+            <p>The ID is kept in server-side bookkeeping and used for requests to Rivals Data. It is excluded from the app's API responses and WebSocket messages.</p>
+          </div>
+        </section>
+
+        <section class="case-study-challenge" aria-labelledby="overlay-shipping-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">06 · Shipping the app</p>
+            <h2 id="overlay-shipping-title">Make the library practical to use</h2>
+            <p>A PyInstaller one-file Windows executable gives the desktop app a packaged entry point. The library supports custom media and drag-to-reorder, with saved order between launches.</p>
+            <p>Supported social overlays can also export the current draft as a transparent PNG for video editors, end cards, and lower thirds.</p>
+          </div>
+        </section>
+
         <section class="case-study-challenge" aria-labelledby="overlay-challenge-title">
           <div class="case-study-copy">
-            <p class="eyebrow">Engineering challenge</p>
+            <p class="eyebrow">Under the hood · Live preview</p>
             <h2 id="overlay-challenge-title">Preview changes without interrupting the stream</h2>
             <p>Editing an overlay should show a live preview without sending unfinished settings to an active OBS scene. The customizer keeps an unsaved draft in its preview while the browser source continues using the saved settings.</p>
             <p>When the user saves, the local server stores the settings for that overlay instance and broadcasts its updated configuration to connected browser sources.</p>
@@ -98,60 +177,18 @@
           </div>
         </section>
 
-        <section class="case-study-row" aria-labelledby="overlay-customizer">
-          <figure class="case-study-media">
-            <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio Platform Badge customizer with a live draft preview and identity controls" width="1280" height="720" />
-            <figcaption>Appearance and content controls update a live draft before the overlay is opened in OBS.</figcaption>
-          </figure>
+        <section class="case-study-challenge overlay-hardest-placeholder" aria-labelledby="overlay-hardest-title">
           <div class="case-study-copy">
-            <p class="eyebrow">01 · Customization</p>
-            <h2 id="overlay-customizer">See changes before they reach the stream</h2>
-            <p>Each overlay type has a focused customizer with a live draft. Streamers can adjust content, colors, sizing, and behavior without repeatedly switching between the application and OBS.</p>
-            <p>Saved settings belong to an overlay instance, allowing several versions of the same overlay type to coexist with different identities or visual treatments.</p>
+            <p class="eyebrow">07 · Hardest problem · Notes to add</p>
+            <h2 id="overlay-hardest-title">The hardest problem</h2>
+            <p>This section is a placeholder for my own account of the problem.</p>
+            <ul>
+              <li>What broke or proved difficult?</li>
+              <li>What did I try?</li>
+              <li>What finally worked, and why?</li>
+            </ul>
           </div>
         </section>
-
-        <section class="case-study-row case-study-row--reverse" aria-labelledby="overlay-library">
-          <figure class="case-study-media">
-            <img src="assets/overlay-studio-library.png" alt="Overlay Studio library with installed social, goal, and now-playing overlay instances" width="1280" height="720" loading="lazy" />
-            <figcaption>The library shows installed instances, status, intended canvas size, and the next useful action.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">02 · Library</p>
-            <h2 id="overlay-library">Manage overlays as reusable instances</h2>
-            <p>The library turns a collection of separate browser sources into a manageable desktop product. A user can create an instance, return to its settings, preview it, and copy the correct URL for OBS.</p>
-            <p>This model also provides a consistent foundation for adding new overlay categories without rebuilding the surrounding workflow.</p>
-          </div>
-        </section>
-
-        <section class="case-study-row" aria-labelledby="overlay-media">
-          <figure class="case-study-media case-study-media--pair case-study-media--equal">
-            <img src="assets/overlay-studio-spotify-customizer.png" alt="Overlay Studio Spotify customizer with current media data and color settings" width="1280" height="720" loading="lazy" />
-            <img src="assets/overlay-studio-spotify-preview.png" alt="Overlay Studio now-playing browser-source preview" width="1280" height="720" loading="lazy" />
-            <figcaption>The application translates the current Windows media session into a configurable now-playing overlay.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">03 · Windows media</p>
-            <h2 id="overlay-media">Turn live media data into an OBS overlay</h2>
-            <p>The now-playing experience reads current Windows media information, presents it inside the customizer, and publishes it to a browser source.</p>
-            <p>Artwork-derived colors and fallback controls keep the overlay useful when source data changes or is incomplete.</p>
-          </div>
-        </section>
-
-        <section class="case-study-row case-study-row--reverse" aria-labelledby="overlay-social">
-          <figure class="case-study-media case-study-media--pair case-study-media--equal">
-            <img src="assets/overlay-studio-social-grouped-customizer.png" alt="Overlay Studio Social Grouped customizer with platforms, handles, and live draft" width="1280" height="720" loading="lazy" />
-            <img src="assets/overlay-studio-social-grouped-preview.png" alt="Overlay Studio grouped social identity browser-source preview" width="1280" height="720" loading="lazy" />
-            <figcaption>Multiple platform identities become one reusable, compact browser source.</figcaption>
-          </figure>
-          <div class="case-study-copy">
-            <p class="eyebrow">04 · Social identity</p>
-            <h2 id="overlay-social">Group related accounts without editing a scene</h2>
-            <p>The grouped social overlay lets a streamer assemble several platform identities, share handles where appropriate, and control how they appear as one unit.</p>
-            <p>The same draft-to-preview workflow keeps this more complex content model consistent with simpler overlay types.</p>
-          </div>
-        </section>
-
       </div>
 
       <section class="case-study-end" aria-label="Overlay Studio project conclusion">
