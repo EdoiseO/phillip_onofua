@@ -7,10 +7,10 @@
   <title>Off the clock — Phillip Onofua</title>
   <link rel="canonical" href="https://philliponofua.vercel.app/off-the-clock/">
   <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="./style.css?v=35.0">
+  <link rel="stylesheet" href="./style.css?v=36.1">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=26.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=35.0">
+  <link rel="stylesheet" href="./mobile-controls.css?v=36.1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -34,23 +34,20 @@
       <section class="story" aria-labelledby="title">
         <p class="eyebrow" id="eyebrow">04 / OFF THE CLOCK</p>
         <h1 id="title">My comic<br>collection<span class="period">.</span></h1>
-        <p class="edition-label" id="edition-label" hidden></p>
         <p class="description" id="description">Away from coding, I collect comics. Take a look through my short box.</p>
-        <div class="issue-meta" id="issue-meta" hidden><span id="genre"></span><span id="issue-type"></span></div>
         <div class="actions">
-          <button class="inspect-button" id="inspect-button" hidden>Inspect this comic <span aria-hidden="true">⤢</span></button>
+          <button class="inspect-button" id="inspect-button" hidden>Take a closer look <span aria-hidden="true">⤢</span></button>
           <button class="decorate-button" id="decorate-button" disabled><span class="sticker-icon" aria-hidden="true">✦</span> Make it yours <span class="sticker-button-note">STICKER PACK / 01</span></button>
           <p class="small-hint" id="left-hint">A SMALL COLLECTION. A FEW BIG ADVENTURES.</p>
         </div>
         <div class="reading-progress" id="reading-progress" hidden><span id="issue-count">01 / 05</span><div class="progress-track"><div id="progress-fill"></div></div><span>THE COLLECTION</span></div>
       </section>
       <section class="viewer" data-open="false" data-ready="false" aria-label="Interactive 3D comic box">
-        <div class="stage" id="stage" tabindex="0" role="region" aria-label="Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.">
+        <div class="stage" id="stage" tabindex="0" role="region" aria-label="Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.">
           <div class="stage-glow" aria-hidden="true"></div>
           <div class="loading" id="loading"><span></span><p>Unpacking a few worlds</p></div>
           <div class="unavailable" id="unavailable" hidden><h2>A little more graphics power, please.</h2><p>This 3D experiment needs WebGL 2. Try another browser or enable hardware acceleration.</p></div>
           <span class="stage-label" aria-hidden="true">EST. OFF THE CLOCK</span>
-          <div class="lid-controls" id="lid-controls" role="group" aria-label="Lid position" hidden><span>LID</span><button id="lid-left" aria-pressed="false" aria-label="Rest lid on the left">↖ Left</button><button id="lid-right" aria-pressed="true" aria-label="Rest lid on the right">Right ↗</button></div>
         </div>
         <label class="series-jump" id="series-jump" hidden><select id="series-select" disabled aria-label="Jump to series"></select></label>
         <div class="browse-controls" id="browse-controls" hidden>
@@ -142,6 +139,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=35.0"></script>
+  <script type="module" src="./main.js?v=36.1"></script>
 </body>
 </html>
