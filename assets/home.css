@@ -377,12 +377,20 @@ button:focus-visible {
   font-size: 10px;
   color: var(--muted);
 }
-.hero-bottom p {
+.hero-bottom .work-strip {
   display: flex;
   gap: 17px;
+  align-items: center;
 }
-.hero-bottom p span {
+.hero-bottom .work-strip span {
   color: #485469;
+}
+.hero-bottom .work-strip a {
+  align-items: center;
+  min-height: 44px;
+}
+.hero-bottom .work-strip a:hover {
+  color: var(--accent);
 }
 .hero-bottom a {
   color: var(--soft);
@@ -423,6 +431,10 @@ button:focus-visible {
   align-items: center;
   padding: 32px 0 52px;
   border-bottom: 1px solid var(--border);
+}
+.project[id],
+.finished-project[id] {
+  scroll-margin-top: 96px;
 }
 .project + .project {
   padding-top: 52px;
@@ -678,6 +690,17 @@ button:focus-visible {
   color: var(--accent);
   margin-bottom: 14px;
 }
+.language-group + .language-group {
+  margin-top: 1.25rem;
+}
+.language-label {
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-family: GeistMono, monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 .language-list {
   display: flex;
   flex-wrap: wrap;
@@ -699,6 +722,20 @@ button:focus-visible {
   font-size: 11px;
   line-height: 1.5;
   white-space: nowrap;
+}
+.language-list li > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+.language-list li > a:hover span {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.language-list--secondary li {
+  color: var(--muted);
 }
 .language-list img,
 .language-list svg {
@@ -957,7 +994,7 @@ button:focus-visible {
   .hero-bottom {
     font-size: 9px;
   }
-  .hero-bottom p {
+  .hero-bottom .work-strip {
     gap: 10px;
   }
   .hero-bottom > a {
@@ -1146,7 +1183,7 @@ button:focus-visible {
   .preview-label {
     font-size: 8px;
   }
-  .hero-bottom p {
+  .hero-bottom .work-strip {
     font-size: 8px;
     gap: 9px;
   }

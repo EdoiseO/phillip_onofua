@@ -63,6 +63,41 @@
           </div>
         </section>
 
+        <section class="case-study-challenge" aria-labelledby="overlay-challenge-title">
+          <div class="case-study-copy">
+            <p class="eyebrow">Engineering challenge</p>
+            <h2 id="overlay-challenge-title">Preview changes without interrupting the stream</h2>
+            <p>Editing an overlay should show a live preview without sending unfinished settings to an active OBS scene. The customizer keeps an unsaved draft in its preview while the browser source continues using the saved settings.</p>
+            <p>When the user saves, the local server stores the settings for that overlay instance and broadcasts its updated configuration to connected browser sources.</p>
+          </div>
+          <div class="case-study-code-grid" aria-label="Selected code highlights">
+            <article class="case-study-code-card">
+              <p class="eyebrow">01 · Live draft</p>
+              <h3>Keep the preview responsive</h3>
+              <p>Debouncing groups rapid edits before sending the latest draft to the preview.</p>
+              <pre><code>function scheduleCustomizerDraft(delay = 70) {
+  if (byId("customizerPreviewDock").hidden) return;
+  clearTimeout(app.customizerPreviewTimer);
+  app.customizerPreviewTimer = setTimeout(postCustomizerDraft, delay);
+}</code></pre>
+              <small>From studio/app.js<span class="case-study-code-hint"> · Swipe to view full code →</span></small>
+            </article>
+            <article class="case-study-code-card">
+              <p class="eyebrow">02 · Saved output</p>
+              <h3>Update the right instance</h3>
+              <p>The server broadcasts the saved configuration with its instance ID, so clients can identify which overlay changed.</p>
+              <pre><code>await hub.broadcast(
+    {
+        "type": "config",
+        "instanceId": instance_id,
+        "config": instance_config,
+    }
+)</code></pre>
+              <small>From larpdog-server/main.py<span class="case-study-code-hint"> · Swipe to view full code →</span></small>
+            </article>
+          </div>
+        </section>
+
         <section class="case-study-row" aria-labelledby="overlay-customizer">
           <figure class="case-study-media">
             <img src="assets/overlay-studio-customizer.png" alt="Overlay Studio Platform Badge customizer with a live draft preview and identity controls" width="1280" height="720" />
