@@ -230,7 +230,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "ben10-5",
@@ -316,7 +321,7 @@ export const comics = [
     "year": 2026,
     "backStatus": "verified-outer-packaging",
     "backVerified": true,
-    "bagBack": "./assets/backs/ben10-6-bag.webp",
+    "bagBack": "./assets/backs/ben10-6-bag-clean.jpg",
     "backSource": "https://i.ebayimg.com/images/g/NUEAAeSwMiBqTTS1/s-l1600.webp",
     "backSourcePage": "https://www.ebay.ie/itm/227421230829",
     "backAssetType": "outer-blind-bag-packaging-back",
@@ -440,7 +445,7 @@ export const comics = [
         "finish": "gloss"
       }
     ],
-    "bagBack": "./assets/backs/ben10-9-bag.webp",
+    "bagBack": "./assets/backs/ben10-9-bag-clean.jpg",
     "source": "https://i.ebayimg.com/images/g/1pAAAeSwqlBqhxw8/s-l1600.webp",
     "sourcePage": "https://www.ebay.pl/itm/336752810904",
     "coverWidth": 1050,
@@ -572,7 +577,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "ben10-12",
@@ -630,7 +640,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "ben10-16",
@@ -646,7 +661,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "ben10-17",
@@ -662,7 +682,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "ben10-22",
@@ -678,7 +703,12 @@ export const comics = [
     "coverHeight": 2048,
     "series": "Ben 10: Creator Files",
     "publisher": "Dynamite",
-    "year": 2026
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false
   },
   {
     "id": "absolute-green-arrow-1-cover-a",
