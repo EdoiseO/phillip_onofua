@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=32.0';
-import {createBox} from './model.js?v=37.0';
+import {createBox} from './model.js?v=37.1';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
