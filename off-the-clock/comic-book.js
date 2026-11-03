@@ -75,7 +75,7 @@ export function createComicBook(THREE,{template,frontTexture,frontQuad=null,back
     const uv=o.geometry.attributes.uv,quad=front?frontQuad:backQuad;
     for(let i=0;i<uv.count;i++)uv.setXY(i,...imageUv(uv.getX(i),1-uv.getY(i),quad));
     uv.needsUpdate=true;
-    o.material=coverMaterial(map,front&&foil?1:0);ownMaterials.push(o.material);
+    o.material=coverMaterial(map,foil?1:0);ownMaterials.push(o.material);
   });
   let previous=-1;
   // 0 is flat inside the sleeve; 1 is the relaxed bow once it is out.

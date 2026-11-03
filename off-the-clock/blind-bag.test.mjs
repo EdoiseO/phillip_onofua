@@ -14,6 +14,9 @@ test('every blind bag lists its three pulls with local covers', () => {
       assert.match(pull.cover, /^\.\/assets\/covers\/pulls\//, `${bag.id} ${pull.variant}`);
       assert.ok(existsSync(here(pull.cover)), pull.cover);
       assert.ok(['foil', 'gloss'].includes(pull.finish), pull.variant);
+      // Backs are photos of my own copies; a reused back names the copy it came from.
+      assert.match(pull.back, /^\.\/assets\/backs\/pulls\//, `${bag.id} ${pull.variant}`);
+      assert.ok(existsSync(here(pull.back)), pull.back);
     }
     if (bag.bagBack) assert.ok(existsSync(here(bag.bagBack)), bag.bagBack);
   }

@@ -271,18 +271,23 @@ export const comics = [
         "variant": "Cover X - Foil Virgin",
         "artist": "Duncan Rouleau",
         "cover": "./assets/covers/pulls/ben10-2-cover-x.jpg",
+        "back": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
         "finish": "foil"
       },
       {
         "variant": "Cover W - Virgin B&W Sketch",
         "artist": "Robert Hack",
         "cover": "./assets/covers/pulls/ben10-2-cover-w.jpg",
+        "back": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+        "backFrom": "Ben 10 #2 Cover X",
         "finish": "gloss"
       },
       {
         "variant": "Cover ZE - Blue Blank Authentix",
         "artist": null,
         "cover": "./assets/covers/pulls/ben10-2-cover-ze.jpg",
+        "back": "./assets/backs/pulls/ben10-3-cover-zm-back.jpg",
+        "backFrom": "Ben 10 #3 Cover ZM",
         "finish": "gloss"
       }
     ],
@@ -393,18 +398,23 @@ export const comics = [
         "variant": "Cover ZB - Akira Poster Homage Virgin",
         "artist": "Cormac Hughes",
         "cover": "./assets/covers/pulls/ben10-3-cover-zb.jpg",
+        "back": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+        "backFrom": "Ben 10 #2 Cover X",
         "finish": "gloss"
       },
       {
         "variant": "Cover ZH - Foil Virgin",
         "artist": "Sebastian Piriz",
         "cover": "./assets/covers/pulls/ben10-3-cover-zh.jpg",
+        "back": "./assets/backs/pulls/ben10-2-cover-x-back.jpg",
+        "backFrom": "Ben 10 #2 Cover X",
         "finish": "foil"
       },
       {
         "variant": "Cover ZM - Blue Blank Authentix",
         "artist": null,
         "cover": "./assets/covers/pulls/ben10-3-cover-zm.jpg",
+        "back": "./assets/backs/pulls/ben10-3-cover-zm-back.jpg",
         "finish": "gloss"
       }
     ],
