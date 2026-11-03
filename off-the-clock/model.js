@@ -221,6 +221,9 @@ export async function createBox(stage,comics){
       // The closed mobile box is the hero: aim at its centre and fit closely.
       // Blend back to the raised-comic framing as the lid opens.
       const mobileCollection=mobileView.matches&&!decorating;
+      // The resting lid may run partly off-frame so opening keeps the box and
+      // raised comic close instead of pulling the camera back.
+      if(!decorating){const crop=(mobileCollection?.7:.55)*smooth(.5,1,lidProgress);overviewBounds[1].min.lerp(overviewBounds[0].min,crop);overviewBounds[1].max.lerp(overviewBounds[0].max,crop);}
       mobileAnchor.set(0,1.45,0).lerp(homeTarget,smooth(0,1,Math.max(openProgress,lidProgress)));
       const anchor=decorating?decorationTarget:mobileCollection?mobileAnchor:homeTarget;
       let n=0,minX=Infinity,maxX=-Infinity;

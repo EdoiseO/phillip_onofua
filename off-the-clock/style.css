@@ -30,14 +30,9 @@ body.is-inspecting{overflow:hidden}.inspection{position:fixed;inset:0;margin:0;m
 .series-jump select{max-width:260px;min-width:180px;background:#121923;border:1px solid #344152;color:var(--text);border-radius:5px;padding:9px 30px 9px 12px;font:12px Geist,Arial,sans-serif;cursor:pointer}
 .series-jump select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .story h1.series-title{font-size:clamp(36px,3.9vw,60px);overflow-wrap:normal;margin-bottom:18px}
-.edition-label{font:11px GeistMono,monospace;line-height:1.7;color:var(--accent);margin:0 0 18px}
-.edition-label.incoming{color:#e3bf88}
-@media(max-width:650px){.story h1.series-title{font-size:39px;grid-column:1/-1;margin-bottom:10px}.story:has(.series-title) .actions{grid-row:4;grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;margin-top:4px}.edition-label{grid-column:1/-1;grid-row:3;font-size:10px;margin-bottom:12px}.series-jump{gap:8px;font-size:8px;margin-bottom:14px}.series-jump select{min-width:0;max-width:230px;font-size:11px}.footer-center{max-width:47%;text-align:center;line-height:1.5}.inspection-header h2{font-size:19px;max-width:230px}}
+@media(max-width:650px){.story h1.series-title{font-size:39px;grid-column:1/-1;margin-bottom:10px}.story:has(.series-title) .actions{grid-row:4;grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;margin-top:4px}.series-jump{gap:8px;font-size:8px;margin-bottom:14px}.series-jump select{min-width:0;max-width:230px;font-size:11px}.footer-center{max-width:47%;text-align:center;line-height:1.5}.inspection-header h2{font-size:19px;max-width:230px}}
 
-.lid-controls{position:absolute;left:16px;bottom:12px;z-index:4;display:flex;gap:5px;align-items:center;font:9px GeistMono,monospace;color:var(--muted)}
-.lid-controls>span{margin-right:5px;letter-spacing:.1em}.lid-controls button{padding:7px 10px;border:1px solid #344152;background:#0b0e13d9;border-radius:16px;font:10px Geist,Arial,sans-serif;color:var(--muted)}
-.lid-controls button[aria-pressed=true]{color:var(--accent);border-color:#6082b5;background:#142034ed}.lid-controls button:hover{color:var(--text);border-color:var(--accent)}
-@media(max-width:650px){.lid-controls{left:12px;bottom:14px}.lid-controls button{padding:9px 10px}.gesture-hint{max-width:340px;margin-left:auto;margin-right:auto;line-height:1.7}}
+@media(max-width:650px){.gesture-hint{max-width:340px;margin-left:auto;margin-right:auto;line-height:1.7}}
 
 /* The collection sits below the shared portfolio header. */
 .off-clock-page{display:flex;flex-direction:column;min-height:100svh}

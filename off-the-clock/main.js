@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=31.0';
-import {createBox} from './model.js?v=35.0';
+import {createBox} from './model.js?v=36.1';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -7,23 +7,14 @@ const $=id=>document.getElementById(id);
 const stage=$('stage'),dialog=$('inspection');
 const collectionViewer=stage.closest('.viewer');
 const mobileCollection=matchMedia(mobileControlsQuery);
-const lidControls=$('lid-controls'),lidAnchor=document.createComment('Desktop lid controls');
-lidControls.before(lidAnchor);
-function moveLidControls(){
-  if(mobileCollection.matches)$('series-jump').before(lidControls);
-  else lidAnchor.after(lidControls);
-}
-mobileCollection.addEventListener('change',moveLidControls);moveLidControls();
 // Pointer focus keeps keyboard controls active without framing the 3D scene.
 // Switch back immediately when the user resumes keyboard navigation.
 document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},true);
 document.addEventListener('keydown',e=>{if(!e.metaKey&&!e.ctrlKey&&!e.altKey)delete stage.dataset.pointerFocus;},true);
 const stageAnchor=document.createComment('3D scene home');stage.before(stageAnchor);
-let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,lastTap=null,clickTimer=0,focusStarted=0,inspectionView='front';
-let lidSide=1,lidTilt=0,storyKey=null;
-function renderLid(){ $('lid-controls').hidden=!opened||inspecting;for(const side of ['left','right'])$('lid-'+side).setAttribute('aria-pressed',String(side===(lidSide<0?'left':'right'))); }
-function positionLid(side,tilt=0){lidSide=Math.max(-1,Math.min(1,side));lidTilt=Math.max(-.16,Math.min(.24,tilt));box?.setLid(lidSide,lidTilt);renderLid();}
-for(const side of ['left','right'])$('lid-'+side).addEventListener('click',()=>{positionLid(side==='left'?-1:1);announce(`Lid resting to the ${side}.`);});
+let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,clickTimer=0,focusStarted=0,inspectionView='front';
+let lidSide=1,lidTilt=0;
+function positionLid(side,tilt=0){lidSide=Math.max(-1,Math.min(1,side));lidTilt=Math.max(-.16,Math.min(.24,tilt));box?.setLid(lidSide,lidTilt);}
 const media=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=media.matches;
 const seriesSelect=$('series-select');
@@ -34,7 +25,7 @@ for(const series of new Set(comics.map(c=>c.series))){const option=document.crea
 seriesSelect.addEventListener('change',()=>select(comics.findIndex(c=>c.series===seriesSelect.value)));
 const tabs=comics.map((comic,i)=>{
   const b=document.createElement('button');b.className='comic-tab';b.setAttribute('aria-label',`${comic.title}, ${comic.variant}`);b.setAttribute('aria-pressed','false');b.title=`${comic.title} · ${comic.variant}${comic.collectionStatus==='Incoming'?' · Incoming':''}`;b.dataset.series=comic.series;
-  const img=document.createElement('img');img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>select(i));$('comic-tabs').append(b);return b;
+  const img=document.createElement('img');img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
 function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':'Verified back-cover photograph';}
@@ -43,46 +34,28 @@ function renderStageInstructions(){
   const gesture=mobileCollection.matches?'Tap':'Click';
   $('open-cue-label').textContent=opened?`${gesture} the lid to close`:`${gesture} the box to explore`;
   stage.setAttribute('aria-label',mobileCollection.matches
-    ?'Comic box. Tap to open; tap the lid to close. Use the ruler on the right to browse comics. Swipe over the box to scroll the page. Enter opens or closes; arrow keys browse; I inspects.'
-    :'Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');
+    ?'Comic box. Tap to open; tap the lid to close. Use the ruler on the right to browse comics and tap the raised cover for a closer look. Swipe over the box to scroll the page. Enter opens or closes; arrow keys browse; I inspects.'
+    :'Comic box. Enter opens or closes. Arrow keys browse; I inspects. Click the raised cover for a closer look. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Escape closes.');
 }
 function render(){
-  const comic=comics[index];renderLid();renderStageInstructions();
+  const comic=comics[index];renderStageInstructions();
   collectionViewer.dataset.open=String(opened);collectionViewer.dataset.ready=String(!!box);
   $('open-cue').hidden=false;$('gesture-hint').hidden=!opened;$('comic-ruler-note').hidden=!opened;
   $('mobile-collection').hidden=!opened;
   comicRuler.value=String(index);comicRuler.disabled=!box||!opened;collectionRuler.update();
   $('comic-ruler-value').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
   $('comic-ruler-note').textContent=comic.variant;
-  $('eyebrow').textContent=opened?'04 / FROM MY COLLECTION':'04 / OFF THE CLOCK';
-  $('title').replaceChildren();
-  $('title').classList.toggle('series-title',opened);
-  if(opened){const lines=comic.displayTitle??[comic.series,comic.issue==='Ashcan'?'Ashcan':`Issue ${comic.issue}`];$('title').append(lines[0],document.createElement('br'),lines[1]);}
-  else $('title').append('My comic',document.createElement('br'),'collection');
-  const dot=document.createElement('span');dot.className='period';dot.textContent='.';$('title').append(dot);
-  $('description').textContent=opened?comic.description:'Away from coding, I collect comics. Take a look through my short box.';
-  $('issue-meta').hidden=!opened;$('genre').textContent=opened?comic.variant:'';
-  $('edition-label').hidden=!opened;$('edition-label').textContent=`${comic.issue==='Ashcan'?'Ashcan':`Issue ${comic.issue}`} · ${comic.collectionStatus==='Incoming'?'Incoming':comic.quantity>1?`${comic.quantity} copies`:'From my collection'}`;
-  $('edition-label').classList.toggle('incoming',comic.collectionStatus==='Incoming');
-  $('series-jump').hidden=!opened;seriesSelect.value=comic.series;
-  $('issue-type').textContent=opened?(comic.blindBag?'BLIND BAG':`${comic.publisher.toUpperCase()} · ${comic.year}`):'';
+  // The covers identify each comic; titles and details live in the close-up.
+  $('series-jump').hidden=!opened||!mobileCollection.matches;seriesSelect.value=comic.series;
   $('inspect-button').hidden=!opened;
-  const nextStoryKey=opened?index:'closed';
-  if(storyKey!==null&&storyKey!==nextStoryKey&&mobileCollection.matches&&!reduced){
-    for(const id of ['eyebrow','title','description','edition-label']){
-      const element=$(id);element.getAnimations().forEach(animation=>animation.cancel());
-      element.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
-    }
-  }
-  storyKey=nextStoryKey;
-  $('left-hint').textContent=opened?'DOUBLE-CLICK A COVER FOR A CLOSER LOOK.':`${comics.length} EDITIONS. ONE LITTLE BOX.`;
+  $('left-hint').textContent=opened?`${mobileCollection.matches?'TAP':'CLICK'} THE RAISED COVER FOR A CLOSER LOOK.`:`${comics.length} EDITIONS. ONE LITTLE BOX.`;
   $('reading-progress').hidden=!opened;$('browse-controls').hidden=!opened;
   $('issue-count').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
   $('progress-fill').style.width=`${(index+1)/comics.length*100}%`;
   $('previous').disabled=index===0;$('next').disabled=index===comics.length-1;
   tabs.forEach((t,i)=>t.setAttribute('aria-pressed',String(i===index)));
   $('scene-status').textContent=opened?`${String(index+1).padStart(2,'0')} / ${comics.length} — ${comic.series.toUpperCase()}`:'WAITING TO BE OPENED';
-  $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Drag box to turn <span class="hint-dot">·</span> Drag lid to move <span class="hint-dot">·</span> Double-click to inspect':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
+  $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Click the raised cover to look closer':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
   stage.dataset.state=inspecting?'inspecting':opened?'open':'closed';stage.dataset.activeIndex=String(index);stage.dataset.sleeve=unwrapped?'removed':'on';
   if(inspecting){
     for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
@@ -105,9 +78,9 @@ function enterInspection(i=index){
   box.focus(true);render();stage.focus({preventScroll:true});announce(`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
 }
 function leaveInspection(){
-  if(!inspecting)return;clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;lastTap=null;
+  if(!inspecting)return;clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;
   box.focus(false);dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
-  stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the lid to close. Lid position buttons are also available. Escape closes.');render();$('inspect-button').focus({preventScroll:true});announce('Returned to the box.');
+  stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});announce('Returned to the box.');
 }
 function toggleSleeve(){if(!inspecting)return;unwrapped=!unwrapped;if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}box.unwrap(unwrapped);render();announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');}
 function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
@@ -164,10 +137,10 @@ stage.addEventListener('pointermove',e=>{
 stage.addEventListener('pointerup',e=>{
   if(!pointer||pointer.id!==e.pointerId)return;
   const gesture=pointer;pointer=null;box?.hold(false);if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
-  if(gesture.mobileScroll&&Math.max(gesture.moved,Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y))>=7){lastTap=null;return;}
-  if(gesture.lid){lastTap=null;if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
-  if(!inspecting&&!gesture.mobileScroll&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);lastTap=null;return;}
-  if(gesture.moved>=7){lastTap=null;return;}
+  if(gesture.mobileScroll&&Math.max(gesture.moved,Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y))>=7)return;
+  if(gesture.lid){if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
+  if(!inspecting&&!gesture.mobileScroll&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);return;}
+  if(gesture.moved>=7)return;
   const hit=box?.hit(e.clientX,e.clientY);
   if(inspecting){
     if(performance.now()-focusStarted<=450)return;
@@ -179,17 +152,14 @@ stage.addEventListener('pointerup',e=>{
   }
   if(!hit)return;
   if(!opened){setOpen(true);return;}
-  if(hit.comic!==undefined){
-    const now=performance.now();
-    if(gesture.type==='touch'&&lastTap&&now-lastTap.time<350&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){enterInspection(hit.comic);lastTap=null;return;}
-    select(hit.comic);lastTap={time:now,x:e.clientX,y:e.clientY};
-  }
+  // One click raises a comic; clicking the raised cover opens its close-up.
+  if(hit.comic!==undefined){if(hit.comic===index)enterInspection(hit.comic);else select(hit.comic);}
 });
-stage.addEventListener('dblclick',e=>{e.preventDefault();clearTimeout(clickTimer);if(inspecting)return;const hit=box?.hit(e.clientX,e.clientY);if(hit?.comic!==undefined)enterInspection(hit.comic);});
-function cancelPointer(){const previous=pointer;pointer=null;lastTap=null;clearTimeout(clickTimer);box?.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
+stage.addEventListener('dblclick',e=>e.preventDefault());
+function cancelPointer(){const previous=pointer;pointer=null;clearTimeout(clickTimer);box?.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
 stage.addEventListener('pointercancel',cancelPointer);
 stage.addEventListener('pointerleave',()=>{if(pointer?.mobileScroll)cancelPointer();});
-mobileCollection.addEventListener('change',()=>{cancelPointer();renderStageInstructions();});
+mobileCollection.addEventListener('change',()=>{cancelPointer();render();});
 stage.addEventListener('lostpointercapture',()=>{if(pointer)cancelPointer();});
 window.addEventListener('blur',cancelPointer);
 try{
