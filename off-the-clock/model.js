@@ -3,8 +3,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
 import { createComicSleeve } from './comic-sleeve.js?v=38.0';
-import { createComicBook } from './comic-book.js?v=38.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=38.0';
+import { createComicBook } from './comic-book.js?v=39.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=39.0';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
@@ -97,12 +97,14 @@ export async function createBox(stage,comics){
   // Blind bags are sealed packs, not sleeved comics. Their pulls load with them.
   const comicModel=await loadModel('./assets/models/comic-set.glb');
   const bagModel=comics.some(c=>c.blindBag)?await loadBlindBag():null;
-  const bagTextures=await Promise.all(comics.map(c=>c.blindBag?Promise.all([c.bagBack?loadColor(c.bagBack):null,Promise.all(c.pulls.map(pull=>loadColor(pull.cover)))]):null));
+  // Pulls that share a printed back share its texture.
+  const pullBackCache=new Map(),loadPullBack=url=>{if(!pullBackCache.has(url))pullBackCache.set(url,loadColor(url));return pullBackCache.get(url);};
+  const bagTextures=await Promise.all(comics.map(c=>c.blindBag?Promise.all([c.bagBack?loadColor(c.bagBack):null,Promise.all(c.pulls.map(pull=>loadColor(pull.cover))),Promise.all(c.pulls.map(pull=>pull.back?loadPullBack(pull.back):null))]):null));
   const cards=textures.map((tex,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     if(comics[i].blindBag){
-      const [backTexture,pullTextures]=bagTextures[i];
-      const blind=createBlindBag(THREE,bagModel,{comicModel,frontTexture:tex,backTexture,pullTextures,pulls:comics[i].pulls});
+      const [backTexture,pullTextures,pullBacks]=bagTextures[i];
+      const blind=createBlindBag(THREE,bagModel,{comicModel,frontTexture:tex,backTexture,pullTextures,pullBacks,pulls:comics[i].pulls});
       g.add(blind.group);
       g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
       g.rotation.set(-.025,0,(i%3-1)*.009);
@@ -324,6 +326,6 @@ export async function createBox(stage,comics){
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.pullTextures?.forEach(t=>t.dispose());});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());}
+    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.pullTextures?.forEach(t=>t.dispose());});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());pullBackCache.forEach(p=>p.then(t=>t.dispose()));}
   };
 }
