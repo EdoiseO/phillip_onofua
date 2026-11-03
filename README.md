@@ -8,7 +8,7 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 ## Overview
 
-This repository contains the source for my personal portfolio. The homepage pairs a skills-focused introduction and animated specialties with real product previews, direct résumé access, two detailed case studies, and a live interactive 3D collection.
+This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline and skills-focused introduction with real product previews, direct résumé access, two detailed case studies, and a live interactive 3D collection.
 
 The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
 
@@ -53,7 +53,7 @@ The [Receipt Splitter concept](https://philliponofua.vercel.app/receipt-splitter
 
 - Dark-only, responsive editorial layout with clear navigation
 - **Off the clock:** an interactive 3D comic collection with a movable lid, glossy sleeves, separate backing boards, verified rear artwork, close-up rotation, and a gentle hover/glow
-- Letter-by-letter specialties animation, product previews, and prominent résumé access
+- Letter-by-letter headline animation, product previews, and prominent résumé access
 - Animation pause control, reduced-motion support, and a readable fallback without JavaScript
 - Two detailed projects using real product captures, plus a live interactive 3D collection
 - Dedicated case-study pages with project-specific metadata and social previews
