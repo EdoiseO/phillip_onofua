@@ -1,4 +1,4 @@
-import {comics} from './comics.js?v=35.0';
+import {comics} from './comics.js?v=36.0';
 import {createBox} from './model.js?v=39.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
