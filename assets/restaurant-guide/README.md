@@ -1,12 +1,11 @@
 # Restaurant Guide gallery
 
-The portfolio uses these local PNGs:
+The portfolio uses these local JPEGs, captured from the Android app (API 30 emulator, 824 px wide):
 
-- `rg-home.png` — the home/list screen
-- `rg-detail.png` — the restaurant details screen
-- `rg-map.png` — the static map preview
+- `rg-home.jpg` — the home/list screen
+- `rg-detail.jpg` — the restaurant details screen
+- `rg-rating.jpg` — the half-star rating dialog, cropped from the edit screen
 
-The current images are Figma design exports. To replace one, put the new PNG in
-this folder with the same filename, then commit and deploy it with the portfolio.
-Update the corresponding `alt` text in `index.html` if the replacement shows a
-different screen. Keep map attribution visible in any map image.
+To replace one, put the new image in this folder with the same filename, then
+commit and deploy it with the portfolio. Update the corresponding `alt` text in
+`index.html` if the replacement shows a different screen.
