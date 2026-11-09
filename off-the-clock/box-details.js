@@ -100,6 +100,22 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
   const paperMaterial = map => keepMaterial(new THREE.MeshStandardMaterial({ map, roughness: .96, color: 0xffffff, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   const decalMaterial = map => keepMaterial(new THREE.MeshStandardMaterial({ map, transparent: true, roughness: .94, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
 
+  // A soft contact shadow begins at the closed skirt's lower edge and fades
+  // down the walls. Its material is shared so lifting the lid removes all sides.
+  const lidShadowTexture = keepTexture(texture(THREE, 8, 128, (ctx, w, h) => {
+    const fade = ctx.createLinearGradient(0, 0, 0, h);
+    fade.addColorStop(0, 'rgba(43,38,31,.34)');
+    fade.addColorStop(.3, 'rgba(43,38,31,.18)');
+    fade.addColorStop(1, 'rgba(43,38,31,0)');
+    ctx.fillStyle = fade; ctx.fillRect(0, 0, w, h);
+  }));
+  const lidShadowMaterial = keepMaterial(new THREE.MeshBasicMaterial({ map: lidShadowTexture, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  const shadowY = H - .23 - .08;
+  for (const side of [-1, 1]) {
+    plane(body, W, .16, lidShadowMaterial, [0, shadowY, side * (D / 2 + T / 2 + .007)], [0, side < 0 ? Math.PI : 0, 0]);
+    plane(body, D, .16, lidShadowMaterial, [side * (W / 2 + T / 2 + .016), shadowY, 0], [0, side * Math.PI / 2, 0]);
+  }
+
   // The label is intentionally big enough to be legible at the ordinary shelf view.
   const labelTexture = keepTexture(texture(THREE, 1024, 640, (ctx, w, h) => {
     ctx.fillStyle = '#e8e0c9'; ctx.fillRect(0, 0, w, h);
@@ -163,13 +179,16 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
   }
 
   const sideStamp = keepTexture(texture(THREE, 1024, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#626c6888'; ctx.font = '600 66px monospace'; ctx.fillText('OTHER WORLDS', 52, 110);
+    ctx.fillStyle = '#4f5955a0'; ctx.font = '600 66px monospace'; ctx.fillText('OTHER WORLDS', 52, 110);
     ctx.font = '35px monospace'; ctx.fillText('HANDLE WITH CURIOSITY.', 55, 176);
     ctx.strokeStyle = '#626c6860'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(55, 220); ctx.lineTo(w - 55, 220); ctx.stroke();
     ctx.font = '30px monospace'; ctx.fillText('ARCHIVE / 001', 55, 276);
     ctx.font = '25px monospace'; ctx.fillText('BAGGED. BOARDED. KEPT.', 55, 331);
   }));
-  plane(body, 1.35, .675, decalMaterial(sideStamp), [W / 2 + T / 2 + .006, .83, -.25], [0, Math.PI / 2, 0]);
+  const sideStampMaterial = decalMaterial(sideStamp);
+  for (const side of [-1, 1]) {
+    plane(body, 2.3, 1.15, sideStampMaterial, [side * (W / 2 + T / 2 + .019), .83, -.25], [0, side * Math.PI / 2, 0]);
+  }
 
   const tapeTexture = keepTexture(texture(THREE, 256, 512, (ctx, w, h) => {
     const random = randomSource(842);
@@ -183,12 +202,12 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
   plane(body, .27, .49, tapeMaterial, [-.97, .31, D / 2 + T / 2 + .011], [0, 0, -.09]);
 
   const lidStamp = keepTexture(texture(THREE, 1024, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#64736b'; ctx.font = '600 58px monospace'; ctx.fillText('THE SHORT BOX', 60, 124);
-    ctx.font = '32px monospace'; ctx.fillStyle = '#7b8177'; ctx.fillText('A FEW BIG ADVENTURES.', 63, 198);
+    ctx.fillStyle = '#414d47'; ctx.font = '700 72px monospace'; ctx.fillText('THE SHORT BOX', 60, 124);
+    ctx.font = '32px monospace'; ctx.fillStyle = '#626b62'; ctx.fillText('A FEW BIG ADVENTURES.', 63, 198);
     ctx.strokeStyle = '#7c887970'; ctx.lineWidth = 2; ctx.strokeRect(35, 49, 945, 204);
     ctx.font = '28px monospace'; ctx.fillText('001 / PERSONAL ARCHIVE', 62, 312);
   }));
-  plane(lid, 1.48, .74, decalMaterial(lidStamp), [-.08, .132, .36], [-Math.PI / 2, 0, -.025]);
+  plane(lid, 1.8, .9, decalMaterial(lidStamp), [-.08, .132, .36], [-Math.PI / 2, 0, -.025]);
   // Tiny thickness cues along the lid's folded skirt, strongest at the end seams.
   const creaseMaterial = keepMaterial(new THREE.MeshStandardMaterial({ color: 0xb7b3a6, roughness: 1 }));
   for (const x of [-1, 1]) {
@@ -198,6 +217,7 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
   }
   return {
     meshes,
+    setLidShadow(amount) { lidShadowMaterial.opacity = Math.max(0, Math.min(1, amount)); },
     dispose() { meshes.forEach(m => { m.removeFromParent(); m.geometry.dispose(); }); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); }
   };
 }

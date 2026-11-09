@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
+import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
 import { createComicSleeve } from './comic-sleeve.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
 import { loadBlindBag, createBlindBag } from './blind-bag.js?v=40.0';
@@ -27,6 +27,38 @@ function addMesh(group,geometry,material,pos,rotation){
 }
 function block(g,w,h,d,mat,pos){return addMesh(g,new RoundedBoxGeometry(w,h,d,2,.018),mat,pos);}
 
+// Subdivide the rounded wall faces before bending them. RoundedBoxGeometry's
+// broad middle faces otherwise have no vertices with which to form a bow.
+function bowedWallGeometry(width,height,depth,side){
+  const source=new RoundedBoxGeometry(width,height,depth,2,.018);
+  const attributes=['position','normal','uv'], arrays=Object.fromEntries(attributes.map(key=>[key,[]]));
+  const groups=[];
+  const read=(i)=>Object.fromEntries(attributes.map(key=>[key,Array.from({length:source.attributes[key].itemSize},(_,j)=>source.attributes[key].array[i*source.attributes[key].itemSize+j])]));
+  const midpoint=(a,b)=>Object.fromEntries(attributes.map(key=>[key,a[key].map((v,i)=>(v+b[key][i])/2)]));
+  const add=v=>{for(const key of attributes)arrays[key].push(...v[key]);};
+  const split=(a,b,c,depthLeft)=>{
+    if(!depthLeft){add(a);add(b);add(c);return;}
+    const ab=midpoint(a,b),bc=midpoint(b,c),ca=midpoint(c,a);
+    split(a,ab,ca,depthLeft-1);split(ab,b,bc,depthLeft-1);split(ca,bc,c,depthLeft-1);split(ab,bc,ca,depthLeft-1);
+  };
+  for(const group of source.groups){
+    const start=arrays.position.length/3;
+    for(let i=group.start;i<group.start+group.count;i+=3)split(read(i),read(i+1),read(i+2),2);
+    groups.push({start,count:arrays.position.length/3-start,materialIndex:group.materialIndex});
+  }
+  const geometry=new THREE.BufferGeometry();
+  for(const key of attributes)geometry.setAttribute(key,new THREE.Float32BufferAttribute(arrays[key],source.attributes[key].itemSize));
+  groups.forEach(group=>geometry.addGroup(group.start,group.count,group.materialIndex));
+  const p=geometry.attributes.position,n=geometry.attributes.normal,bulge=.012;
+  for(let i=0;i<p.count;i++){
+    const y=p.getY(i),z=p.getZ(i),ay=Math.PI*(y/height+.5),az=Math.PI*(z/depth+.5);
+    p.setX(i,p.getX(i)+side*bulge*Math.sin(ay)*Math.sin(az));
+    const nx=n.getX(i),ny=n.getY(i)-nx*side*bulge*Math.PI/height*Math.cos(ay)*Math.sin(az),nz=n.getZ(i)-nx*side*bulge*Math.PI/depth*Math.sin(ay)*Math.cos(az);
+    const length=Math.hypot(nx,ny,nz)||1;n.setXYZ(i,nx/length,ny/length,nz/length);
+  }
+  source.dispose();geometry.computeBoundingSphere();return geometry;
+}
+
 export async function createBox(stage,comics){
   // The models download alongside the cardboard maps below.
   const modelsReady=Promise.all([
@@ -51,7 +83,7 @@ export async function createBox(stage,comics){
   camera.position.copy(homeCamera);camera.lookAt(homeTarget);
   scene.add(new THREE.HemisphereLight(0xcbdfff,0x665d4b,.9));
   const key=new THREE.DirectionalLight(0xfff3df,2.7);key.position.set(-4,8,6);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=8;key.shadow.camera.bottom=-5;key.shadow.normalBias=.035;key.shadow.bias=-.0001;scene.add(key);scene.add(key.target);
-  const rim=new THREE.DirectionalLight(0xb6d3ff,1.5);rim.position.set(4,5,-4);scene.add(rim);
+  const rim=new THREE.DirectionalLight(0xb6d3ff,1.05);rim.position.set(4,5,-4);scene.add(rim);
   const world=new THREE.Group();scene.add(world);
   const board=new THREE.MeshStandardMaterial(createCardboardTextures(THREE));
   const cardboardLoader=new THREE.TextureLoader();
@@ -65,7 +97,7 @@ export async function createBox(stage,comics){
   const W=2.16,H=2.9,D=4.15,T=.068;
   const lidClosedY=H-.02;
   block(body,W,T,D,innerFace(2),[0,T/2,0]);
-  block(body,T,H,D,innerFace(0),[-W/2,H/2,0]);block(body,T,H,D,innerFace(1),[W/2,H/2,0]);
+  for(const side of [-1,1])addMesh(body,bowedWallGeometry(T,H,D,side),innerFace(side<0?0:1),[side*W/2,H/2,0]);
   for(const z of [-D/2,D/2]){
     const shape=new THREE.Shape();roundedPath(shape,-W/2,0,W,H,.035);
     const hole=new THREE.Path();roundedPath(hole,-.38,2.25,.76,.23,.09);shape.holes.push(hole);
@@ -91,7 +123,7 @@ export async function createBox(stage,comics){
   addMesh(lid,new THREE.PlaneGeometry(W+.075,D+.045),inside,[0,.033,0],[Math.PI/2,0,0]);
   for(const x of [-1,1])block(lid,.065,.29,D+.21,board,[x*(W+.18)/2,-.065,0]);
   for(const z of [-1,1])block(lid,W+.24,.29,.065,board,[0,-.065,z*(D+.15)/2]);
-  addBoxDetails({THREE,body,lid,W,H,D,T});
+  const boxDetails=addBoxDetails({THREE,body,lid,W,H,D,T});
   // Cardboard, not animated sticker curls, determines camera framing and the floor.
   const bodyLocalBounds=new THREE.Box3().setFromObject(body),lidLocalBounds=new THREE.Box3().setFromObject(lid);
   lid.position.y=lidClosedY;
@@ -181,11 +213,14 @@ export async function createBox(stage,comics){
     // Keep the lid aside until every raised comic is back below the rim.
     const lidWanted=opened||cards.some(c=>c.y>1.52)?1:0;
     advanceLidMotion(lidMotion,reduced?Number(opened):lidWanted,dt,reduced);lidProgress=lidMotion.progress;
+    boxDetails.setLidShadow(1-smooth(0,.12,lidProgress));
     const lidT=lidProgress,reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
     body.position.y=-7*focus;body.visible=focus<.995;
     lid.visible=focus<.995;
     const pose=lidPose(THREE,lidT,lidSide,lidTilt);
     lid.position.set(...pose.position);lid.position.y-=7*focus;lid.rotation.copy(pose.rotation);
+    // A small closed-pose offset reads as a loose lid and blends away as it lifts.
+    const loose=1-smooth(0,.25,lidProgress);lid.position.x+=.012*loose;lid.position.z-=.008*loose;
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
     let bagsMoving=false;
     cards.forEach((card,i)=>{
