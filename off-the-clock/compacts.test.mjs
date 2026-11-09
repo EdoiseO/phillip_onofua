@@ -42,19 +42,25 @@ test('paperback photo mapping keeps a continuous grid and survives replacement',
 });
 
 
-test('paperback has a connected cover and a recessed, three-edged page block',async()=>{
+test('paperback has a thin connected cover and flush textured page edges',async()=>{
   const THREE=await import('./vendor/three.module.js');
   const {createPaperback}=await import('./paperback.js');
   const previous=globalThis.document;
   globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
   try{
-    const book=createPaperback(THREE,compacts[0]);
+    for(const data of compacts){
+    const book=createPaperback(THREE,data);
     const wrap=book.group.getObjectByName('paperback-cover-wrap'),pages=book.group.getObjectByName('paperback-pages');
     assert.ok(wrap&&pages,'cover shell and page block exist');
     wrap.geometry.computeBoundingBox();pages.geometry.computeBoundingBox();
     const cover=wrap.geometry.boundingBox,block=pages.geometry.boundingBox;
-    assert.ok(cover.max.x>block.max.x&&cover.max.y>block.max.y&&cover.min.y<block.min.y,'cover overhangs pages');
+    const near=(a,b)=>Math.abs(a-b)<1e-6;
+    assert.ok(near(cover.max.x,block.max.x)&&near(cover.max.y,block.max.y)&&near(cover.min.y,block.min.y),'three exposed edges are flush');
     assert.ok(cover.max.z>block.max.z&&cover.min.z<block.min.z,'cover has front and back thickness');
+    assert.ok(near(cover.max.z-block.max.z,.01*2.7/10.25),'cover is 0.01 inches thick');
+    assert.equal(wrap.geometry.parameters.options.bevelEnabled,false);
+    assert.equal(pages.geometry.parameters.options.bevelEnabled,false);
+    assert.equal(wrap.material.color.getHex(),0xe9e5dc,'cover cut edge is off-white');
     assert.equal(book.group.getObjectByName('paperback-page-lines'),undefined,'page lines come from the photo');
     const edgeTexture=new THREE.Texture();book.setPageEdge(edgeTexture);
     assert.equal(pages.material[1].map,edgeTexture);
@@ -70,5 +76,6 @@ test('paperback has a connected cover and a recessed, three-edged page block',as
     }
     assert.deepEqual(seen,new Set(['fore','top','bottom']),'all exposed edges use the same photo material');
     book.dispose();
+    }
   }finally{globalThis.document=previous;}
 });

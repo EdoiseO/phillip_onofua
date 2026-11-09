@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.2';
-import {createPaperback} from './paperback.js?v=2.1';
+import {createPaperback} from './paperback.js?v=2.2';
 
 // These display studies are created only on request, after the short box paints.
 export function openCompactDisplays({box,inline=false}){

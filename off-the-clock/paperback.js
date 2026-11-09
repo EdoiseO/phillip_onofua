@@ -89,35 +89,26 @@ export function createPaperback(THREE, data) {
   const width = widthInches * UNITS_PER_INCH;
   const height = heightInches * UNITS_PER_INCH;
   const depth = (data.thicknessInches || .35) * UNITS_PER_INCH;
-  const coverThickness = Math.min(.012 * UNITS_PER_INCH, depth / 12);
+  const coverThickness = Math.min(.01 * UNITS_PER_INCH, depth / 12);
   const pageDepth = depth - coverThickness * 2;
   const group = new THREE.Group(); group.name = `paperback-${data.id || 'book'}`;
   const geometries = [], materials = [], placeholders = [], faces = {};
   const add = mesh => { mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); return mesh; };
-  // The page block is square at the glued spine and gently rounded at the fore edge.
-  const radius = Math.min(.024, width / 20), pageInset = (1 / 16) * UNITS_PER_INCH;
-  // The block is attached to the spine and recessed at its three exposed edges.
+  // The book is trimmed after binding, so the cover and page block are flush
+  // at the fore-edge, top and bottom. Keep the glued edge inside the spine.
+  const pageInset = 0;
   const left = -width/2 + coverThickness, right = width/2 - pageInset;
   const bottom = -height/2 + pageInset, top = height/2 - pageInset;
   const shape = new THREE.Shape();
-  shape.moveTo(left, bottom); shape.lineTo(right-radius, bottom);
-  shape.quadraticCurveTo(right, bottom, right, bottom+radius);
-  shape.lineTo(right, top-radius); shape.quadraticCurveTo(right, top, right-radius, top);
-  shape.lineTo(left, top); shape.closePath();
-  const pagesGeometry = new THREE.ExtrudeGeometry(shape, {depth:pageDepth, steps:4, bevelEnabled:false, curveSegments:4});
+  shape.moveTo(left, bottom); shape.lineTo(right, bottom);
+  shape.lineTo(right, top); shape.lineTo(left, top); shape.closePath();
+  const pagesGeometry = new THREE.ExtrudeGeometry(shape, {depth:pageDepth, steps:1, bevelEnabled:false});
   pagesGeometry.translate(0, 0, -pageDepth/2);
   const pagePositions = pagesGeometry.attributes.position;
-  const foreRound = z => .003 * Math.max(0, 1 - (2*z/pageDepth)**2);
-  for (let i=0; i<pagePositions.count; i++) {
-    if (pagePositions.getX(i) > right - radius) {
-      const influence = Math.max(0, Math.min(1, (pagePositions.getX(i) - (right-radius)) / radius));
-      pagePositions.setX(i, pagePositions.getX(i) + foreRound(pagePositions.getZ(i)) * influence);
-    }
-  }
-  pagePositions.needsUpdate = true; pagesGeometry.computeVertexNormals(); geometries.push(pagesGeometry);
+  geometries.push(pagesGeometry);
   // ExtrudeGeometry's side-wall UVs are in object units. Remap each triangle
   // to run the photograph along the edge and across the page-block depth. The
-  // rounded fore-edge corners remain part of this same textured side wall.
+  // three exposed trimmed edges use the same textured side wall.
   const uv=pagesGeometry.attributes.uv, sideGroup=pagesGeometry.groups.find(part=>part.materialIndex===1);
   const stripAspect=1700/150;
   for(let i=sideGroup.start;i<sideGroup.start+sideGroup.count;i+=3){
@@ -134,42 +125,31 @@ export function createPaperback(THREE, data) {
   materials.push(pagesMaterial,edgeMaterial);
   const pages=add(new THREE.Mesh(pagesGeometry, [pagesMaterial,edgeMaterial]));pages.name='paperback-pages';
   // One continuous C-shaped cover shell connects back, bound spine and front.
-  // The 0.012-inch board is thin but physically present rather than three planes.
+  // The 0.01-inch card is thin but physically present rather than three planes.
   const wrap = new THREE.Shape();
   wrap.moveTo(-width/2,-depth/2); wrap.lineTo(width/2,-depth/2);
   wrap.lineTo(width/2,-depth/2+coverThickness); wrap.lineTo(-width/2+coverThickness,-depth/2+coverThickness);
   wrap.lineTo(-width/2+coverThickness,depth/2-coverThickness); wrap.lineTo(width/2,depth/2-coverThickness);
   wrap.lineTo(width/2,depth/2); wrap.lineTo(-width/2,depth/2); wrap.closePath();
-  const wrapGeometry=new THREE.ExtrudeGeometry(wrap,{depth:height,steps:1,bevelEnabled:true,bevelThickness:.0015,bevelSize:.0015,bevelSegments:2});
+  const wrapGeometry=new THREE.ExtrudeGeometry(wrap,{depth:height,steps:1,bevelEnabled:false});
   // Profile y is book z and extrusion is book height.
   wrapGeometry.rotateX(Math.PI/2);wrapGeometry.translate(0,height/2,0);geometries.push(wrapGeometry);
-  const wrapMaterial=new THREE.MeshStandardMaterial({color:0x262828,roughness:.7});materials.push(wrapMaterial);
+  const wrapMaterial=new THREE.MeshStandardMaterial({color:0xe9e5dc,roughness:.7});materials.push(wrapMaterial);
   const coverShell=add(new THREE.Mesh(wrapGeometry,wrapMaterial));coverShell.name='paperback-cover-wrap';
   // Lightly embossed binding creases sit 0.3 inches from the spine.
   const creaseX=-width/2+.3*UNITS_PER_INCH, creasePositions=[];
-  for(const z of [-depth/2-.0022,depth/2+.0022]) creasePositions.push(creaseX,-height/2+.012,z,creaseX,height/2-.012,z);
+  for(const z of [-depth/2-.0002,depth/2+.0002]) creasePositions.push(creaseX,-height/2+.012,z,creaseX,height/2-.012,z);
   const creaseGeometry=new THREE.BufferGeometry();creaseGeometry.setAttribute('position',new THREE.Float32BufferAttribute(creasePositions,3));geometries.push(creaseGeometry);
-  const creaseMaterial=new THREE.LineBasicMaterial({color:0x111111,transparent:true,opacity:.3,depthWrite:false});materials.push(creaseMaterial);
+  const creaseMaterial=new THREE.LineBasicMaterial({color:0x111111,transparent:true,opacity:.16,depthWrite:false});materials.push(creaseMaterial);
   const creases=new THREE.LineSegments(creaseGeometry,creaseMaterial);creases.renderOrder=2;group.add(creases);
   for (const side of ['front','back','spine']) {
     const geometry = new THREE.PlaneGeometry(side === 'spine' ? depth : width, height, 16, 32); geometries.push(geometry);
-    // Slightly round the printed face at the exposed outer corners while keeping the UV grid.
-    if(side!=='spine'){
-      const position=geometry.attributes.position, corner=.012;
-      for(let i=0;i<position.count;i++){
-        const x=position.getX(i),y=position.getY(i);
-        if(Math.abs(x)>width/2-corner&&Math.abs(y)>height/2-corner){
-          position.setXY(i,Math.sign(x)*(width/2-corner*.293),Math.sign(y)*(height/2-corner*.293));
-        }
-      }
-      position.needsUpdate=true;geometry.computeVertexNormals();
-    }
     const initial = placeholder(THREE, data.title || 'Compact comic', side); placeholders.push(initial);
     const material = coverMaterial(THREE, initial); materials.push(material);
     const mesh = add(new THREE.Mesh(geometry, material)); mesh.name = `paperback-${side}`;
-    if (side === 'front') mesh.position.z = depth/2 + .002;
-    else if (side === 'back') { mesh.position.z = -depth/2 - .002; mesh.rotation.y = Math.PI; }
-    else { mesh.position.x = -width/2 - .002; mesh.rotation.y = -Math.PI/2; }
+    if (side === 'front') mesh.position.z = depth/2 + .0001;
+    else if (side === 'back') { mesh.position.z = -depth/2 - .0001; mesh.rotation.y = Math.PI; }
+    else { mesh.position.x = -width/2 - .0001; mesh.rotation.y = -Math.PI/2; }
     faces[side] = {mesh, geometry, material, originalUV: geometry.attributes.uv.array.slice(), quad:data[`${side}Quad`] || null};
   }
   function setCover(side, map) {
