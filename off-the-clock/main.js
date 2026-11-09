@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=38.0';
-import {createBox} from './model.js?v=39.0';
+import {createBox} from './model.js?v=40.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -25,7 +25,7 @@ for(const series of new Set(comics.map(c=>c.series))){const option=document.crea
 seriesSelect.addEventListener('change',()=>select(comics.findIndex(c=>c.series===seriesSelect.value)));
 const tabs=comics.map((comic,i)=>{
   const b=document.createElement('button');b.className='comic-tab';b.setAttribute('aria-label',`${comic.title}, ${comic.variant}`);b.setAttribute('aria-pressed','false');b.title=`${comic.title} · ${comic.variant}${comic.collectionStatus==='Incoming'?' · Incoming':''}`;b.dataset.series=comic.series;
-  const img=document.createElement('img');img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
+  const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
 function pullLabel(pull){return `${pull.variant.replace(' - ',' · ')}${pull.artist?' — '+pull.artist:''}`;}

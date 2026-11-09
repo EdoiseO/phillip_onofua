@@ -61,22 +61,43 @@ export function createComicBook(THREE,{template,frontTexture,frontQuad=null,back
     return [(bl[0]*(1-u)+br[0]*u)*(1-v)+(tl[0]*(1-u)+tr[0]*u)*v,
       1-((bl[1]*(1-u)+br[1]*u)*(1-v)+(tl[1]*(1-u)+tr[1]*u)*v)];
   }
-  const relaxing=[],ownMaterials=[];
+  const relaxing=[],ownMaterials=[],coverMeshes={front:[],back:[]},art={front:null,back:null};
+  // A cover without art yet shows plain card stock; its photograph can arrive later.
+  function applyCover(o,front){
+    const map=art[front?'front':'back'];
+    const previousMaterial=o.material;
+    if(o.userData.baseGeometry&&o.geometry!==o.userData.baseGeometry)o.geometry.dispose();
+    if(!map){o.geometry=o.userData.baseGeometry;o.material=new THREE.MeshStandardMaterial({color:0x33343a,roughness:.55});}
+    else{
+      // glTF UVs run from the top of the image; the site's covers load the usual
+      // way up. Each comic gets its own UVs for its photograph's quad.
+      o.geometry=o.userData.baseGeometry.clone();
+      const uv=o.geometry.attributes.uv,quad=front?frontQuad:backQuad;
+      for(let i=0;i<uv.count;i++)uv.setXY(i,...imageUv(uv.getX(i),1-uv.getY(i),quad));
+      uv.needsUpdate=true;
+      o.material=coverMaterial(map,foil?1:0);
+    }
+    const index=ownMaterials.indexOf(previousMaterial);
+    if(index>=0){previousMaterial.dispose();ownMaterials.splice(index,1);}
+    ownMaterials.push(o.material);
+  }
+  art.front=frontTexture;art.back=backTexture;
   comic.traverse(o=>{
     if(!o.isMesh)return;
     if(o.morphTargetDictionary?.free_bow!==undefined)relaxing.push(o);
     const name=o.material.name,front=name==='cover_front';
     if(!front&&name!=='cover_back')return;
-    const map=front?frontTexture:backTexture;
-    if(!map){o.material=new THREE.MeshStandardMaterial({color:0x33343a,roughness:.55});ownMaterials.push(o.material);return;}
-    // glTF UVs run from the top of the image; the site's covers load the usual
-    // way up. Each comic gets its own UVs for its photograph's quad.
-    o.geometry=o.geometry.clone();
-    const uv=o.geometry.attributes.uv,quad=front?frontQuad:backQuad;
-    for(let i=0;i<uv.count;i++)uv.setXY(i,...imageUv(uv.getX(i),1-uv.getY(i),quad));
-    uv.needsUpdate=true;
-    o.material=coverMaterial(map,foil?1:0);ownMaterials.push(o.material);
+    o.userData.baseGeometry=o.geometry;
+    coverMeshes[front?'front':'back'].push(o);
+    applyCover(o,front);
   });
+  /** Swaps a cover's photograph in, for art that finishes loading after the box is shown. */
+  function setCover(front,map){
+    const side=front?'front':'back';
+    if(art[side]===map)return;
+    art[side]=map;
+    coverMeshes[side].forEach(o=>applyCover(o,front));
+  }
   let previous=-1;
   // 0 is flat inside the sleeve; 1 is the relaxed bow once it is out.
   function setFree(value){
@@ -84,5 +105,5 @@ export function createComicBook(THREE,{template,frontTexture,frontQuad=null,back
     for(const mesh of relaxing)mesh.morphTargetInfluences[mesh.morphTargetDictionary.free_bow]=value;
   }
   setFree(0);
-  return {group,setFree,dispose(){ownMaterials.forEach(m=>m.dispose());}};
+  return {group,setFree,setCover,dispose(){ownMaterials.forEach(m=>m.dispose());coverMeshes.front.concat(coverMeshes.back).forEach(o=>{if(o.geometry!==o.userData.baseGeometry)o.geometry.dispose();});}};
 }
