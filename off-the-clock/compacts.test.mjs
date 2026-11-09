@@ -7,10 +7,11 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
   assert.equal(compacts.length,2);
   for(const book of compacts){
     assert.equal(book.format,'compact-paperback');
-    for(const key of ['id','title','series','publisher','year','pageCount','thicknessInches','thicknessBasis','source'])assert.ok(book[key],`${book.id}: ${key}`);
+    for(const key of ['id','title','series','publisher','year','pageCount','thicknessInches','thicknessBasis','source','pageEdge','pageEdgeNote'])assert.ok(book[key],`${book.id}: ${key}`);
     assert.deepEqual(book.physicalSizeInches,[5.5,8.5]);
     assert.match(book.thicknessBasis,/approximate/i);
     assert.equal(book.backImageNote,'Photographed from my copy');
+    assert.ok(existsSync(new URL(book.pageEdge,import.meta.url)),book.pageEdge);
     for(const side of ['front','back','spine']){
       assert.ok(existsSync(new URL(book[side],import.meta.url)),book[side]);
       assert.equal(book[`${side}Quad`].length,4);
@@ -18,6 +19,7 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
     }
     assert.ok(!comics.some(comic=>comic.id===book.id),'paperbacks must stay out of the short box');
   }
+  assert.match(compacts.find(book=>book.id==='green-arrow-year-one').pageEdgeNote,/estimated/i);
 });
 
 test('paperback photo mapping keeps a continuous grid and survives replacement',async()=>{
@@ -53,9 +55,20 @@ test('paperback has a connected cover and a recessed, three-edged page block',as
     const cover=wrap.geometry.boundingBox,block=pages.geometry.boundingBox;
     assert.ok(cover.max.x>block.max.x&&cover.max.y>block.max.y&&cover.min.y<block.min.y,'cover overhangs pages');
     assert.ok(cover.max.z>block.max.z&&cover.min.z<block.min.z,'cover has front and back thickness');
-    const lines=book.group.getObjectByName('paperback-page-lines').geometry.attributes.position;
-    const normals=new Set();for(let i=0;i<lines.count;i+=2){const a=[lines.getX(i),lines.getY(i),lines.getZ(i)],b=[lines.getX(i+1),lines.getY(i+1),lines.getZ(i+1)];normals.add(Math.abs(a[1]-b[1])>0?'fore':Math.sign(a[1]));}
-    assert.deepEqual(normals,new Set(['fore',1,-1]),'page lines run on fore, top and bottom edges');
+    assert.equal(book.group.getObjectByName('paperback-page-lines'),undefined,'page lines come from the photo');
+    const edgeTexture=new THREE.Texture();book.setPageEdge(edgeTexture);
+    assert.equal(pages.material[1].map,edgeTexture);
+    assert.equal(edgeTexture.wrapS,THREE.RepeatWrapping);
+    const positions=pages.geometry.attributes.position,uv=pages.geometry.attributes.uv,side=pages.geometry.groups.find(g=>g.materialIndex===1);
+    const seen=new Set();
+    for(let i=side.start;i<side.start+side.count;i+=3){
+      const xs=[0,1,2].map(j=>positions.getX(i+j)),ys=[0,1,2].map(j=>positions.getY(i+j));
+      if(Math.min(...xs)>block.max.x-.01)seen.add('fore');
+      if(Math.min(...ys)>block.max.y-.001)seen.add('top');
+      if(Math.max(...ys)<block.min.y+.001)seen.add('bottom');
+      for(let j=0;j<3;j++)assert.ok(uv.getY(i+j)>=-.0001&&uv.getY(i+j)<=1.0001,'depth maps to the photograph height');
+    }
+    assert.deepEqual(seen,new Set(['fore','top','bottom']),'all exposed edges use the same photo material');
     book.dispose();
   }finally{globalThis.document=previous;}
 });

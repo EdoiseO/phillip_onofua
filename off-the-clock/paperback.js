@@ -115,21 +115,24 @@ export function createPaperback(THREE, data) {
     }
   }
   pagePositions.needsUpdate = true; pagesGeometry.computeVertexNormals(); geometries.push(pagesGeometry);
-  const pagesMaterial = new THREE.MeshStandardMaterial({color:0xe9e3d4, roughness:.95}); materials.push(pagesMaterial);
-  const pages=add(new THREE.Mesh(pagesGeometry, pagesMaterial));pages.name='paperback-pages';
-  // Fine page edges: cap the geometry, while deriving the count from the book.
-  const lineCount = Math.max(8, Math.min(64, Math.round((data.pageCount || 152) / 4)));
-  const positions = [];
-  for (let i=1; i<lineCount; i++) {
-    const z = -pageDepth/2 + pageDepth*i/lineCount;
-    positions.push(right+foreRound(z)+.0004,bottom+radius,z, right+foreRound(z)+.0004,top-radius,z);
-    positions.push(left,top+.0004,z, right-radius,top+.0004,z);
-    positions.push(left,bottom-.0004,z, right-radius,bottom-.0004,z);
+  // ExtrudeGeometry's side-wall UVs are in object units. Remap each triangle
+  // to run the photograph along the edge and across the page-block depth. The
+  // rounded fore-edge corners remain part of this same textured side wall.
+  const uv=pagesGeometry.attributes.uv, sideGroup=pagesGeometry.groups.find(part=>part.materialIndex===1);
+  const stripAspect=1700/150;
+  for(let i=sideGroup.start;i<sideGroup.start+sideGroup.count;i+=3){
+    const xs=[0,1,2].map(j=>pagePositions.getX(i+j)), ys=[0,1,2].map(j=>pagePositions.getY(i+j));
+    const alongX=Math.max(...xs)-Math.min(...xs)>=Math.max(...ys)-Math.min(...ys);
+    for(let j=0;j<3;j++){
+      const along=alongX?pagePositions.getX(i+j)-left:pagePositions.getY(i+j)-bottom;
+      uv.setXY(i+j,along/(pageDepth*stripAspect),(pagePositions.getZ(i+j)+pageDepth/2)/pageDepth);
+    }
   }
-  const linesGeometry = new THREE.BufferGeometry();
-  linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3)); geometries.push(linesGeometry);
-  const linesMaterial = new THREE.LineBasicMaterial({color:0xbdb7aa, transparent:true, opacity:.35}); materials.push(linesMaterial);
-  const pageLines=new THREE.LineSegments(linesGeometry, linesMaterial);pageLines.name='paperback-page-lines';group.add(pageLines);
+  uv.needsUpdate=true;
+  const pagesMaterial = new THREE.MeshStandardMaterial({color:0x343532, roughness:.95});
+  const edgeMaterial = new THREE.MeshStandardMaterial({color:data.id==='green-arrow-year-one'?0xaaa9a4:0x343532, roughness:.95});
+  materials.push(pagesMaterial,edgeMaterial);
+  const pages=add(new THREE.Mesh(pagesGeometry, [pagesMaterial,edgeMaterial]));pages.name='paperback-pages';
   // One continuous C-shaped cover shell connects back, bound spine and front.
   // The 0.012-inch board is thin but physically present rather than three planes.
   const wrap = new THREE.Shape();
@@ -184,7 +187,15 @@ export function createPaperback(THREE, data) {
     uv.needsUpdate = true;
     face.material.uniforms.art.value = map;
   }
-  return {group, width, height, depth, setCover, dispose() {
+  function setPageEdge(map) {
+    if (!map) return;
+    map.wrapS=THREE.RepeatWrapping;
+    map.colorSpace=THREE.SRGBColorSpace;
+    edgeMaterial.color.set(0xffffff);
+    edgeMaterial.map=map;
+    edgeMaterial.needsUpdate=true;
+  }
+  return {group, width, height, depth, setCover, setPageEdge, dispose() {
     geometries.forEach(geometry => geometry.dispose());
     materials.forEach(material => material.dispose());
     placeholders.forEach(texture => texture.dispose());

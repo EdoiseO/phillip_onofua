@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.1';
-import {createPaperback} from './paperback.js?v=2.0';
+import {compacts} from './comics.js?v=39.2';
+import {createPaperback} from './paperback.js?v=2.1';
 
 // These display studies are created only on request, after the short box paints.
 export function openCompactDisplays({box,inline=false}){
@@ -15,6 +15,7 @@ export function openCompactDisplays({box,inline=false}){
   const listeners=new AbortController(), eventOptions={signal:listeners.signal};
   const textures=[];const loader=new THREE.TextureLoader();
   compacts.forEach((data,i)=>['front','back','spine'].forEach(side=>loader.load(data[side],texture=>{if(closed){texture.dispose();return;}texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);books[i].setCover(side,texture);},undefined,error=>console.warn('Paperback photograph unavailable',data[side],error))));
+  compacts.forEach((data,i)=>loader.load(data.pageEdge,texture=>{if(closed){texture.dispose();return;}textures.push(texture);books[i].setPageEdge(texture);},undefined,error=>console.warn('Paperback page edge unavailable',data.pageEdge,error)));
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;const shadowCtx=shadowCanvas.getContext('2d'),gradient=shadowCtx.createRadialGradient(64,64,2,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.36)');gradient.addColorStop(1,'rgba(0,0,0,0)');shadowCtx.fillStyle=gradient;shadowCtx.fillRect(0,0,128,128);const shadowTexture=new THREE.CanvasTexture(shadowCanvas),shadowMaterial=new THREE.MeshBasicMaterial({map:shadowTexture,transparent:true,depthWrite:false});
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
