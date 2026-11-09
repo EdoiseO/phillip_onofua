@@ -1,32 +1,44 @@
 // A sealed premium mystery bag. The pouch, its tear and the falling strip
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
-import { createComicBook } from './comic-book.js?v=39.0';
+import { createComicBook } from './comic-book.js?v=40.0';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
 const BAG_SCALE=.9;
 export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
-export function createBlindBag(THREE,gltf,{comicModel,frontTexture,backTexture=null,pullTextures,pullBacks=[],pulls}){
+export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls}){
   const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
   const group=new THREE.Group();group.name='blind-bag';
   const bag=gltf.scene.clone(true);bag.scale.setScalar(BAG_SCALE);group.add(bag);
   // glTF UVs expect unflipped images. Share the loaded cover, not a copy of its pixels.
   const unflipped=texture=>{const t=texture.clone();t.flipY=false;t.needsUpdate=true;return t;};
-  const ownTextures=[];
+  const ownTextures=[],artMeshes={front:[],back:[]},fins=[];
   bag.traverse(o=>{
     if(!o.isMesh)return;
     o.castShadow=true;o.receiveShadow=true;o.material=o.material.clone();
     const name=o.material.name;
-    if(name==='art_front'&&frontTexture){o.material.map=unflipped(frontTexture);ownTextures.push(o.material.map);}
-    if(name==='art_back'){
-      if(backTexture){o.material.map=unflipped(backTexture);ownTextures.push(o.material.map);}
-      else{o.material.map=null;o.material.color.set(0xe7e7e2);}
+    o.userData.baseColor=o.material.color.clone();
+    if(name==='art_front')artMeshes.front.push(o);
+    if(name==='art_back')artMeshes.back.push(o);
+    if(name.startsWith('fin_'))fins.push(o);
+  });
+  // Photographs can arrive after the bag is built; until then the art faces stay plain film.
+  function setArt(side,texture){
+    for(const o of artMeshes[side]){
+      // Only dispose maps this bag made; a glTF default map belongs to the shared model.
+      const owned=ownTextures.indexOf(o.material.map);
+      if(owned>=0){ownTextures.splice(owned,1);o.material.map.dispose();}
+      if(texture){o.material.map=unflipped(texture);o.material.color.copy(o.userData.baseColor);ownTextures.push(o.material.map);}
+      else{o.material.map=null;if(side==='back')o.material.color.set(0xe7e7e2);}
+      o.material.needsUpdate=true;
     }
     // A photographed back already shows its own printed fin seam.
-    if(backTexture&&name.startsWith('fin_'))o.visible=false;
-  });
+    if(side==='back')fins.forEach(o=>{o.visible=!texture;});
+  }
+  if(frontTexture)setArt('front',frontTexture);
+  setArt('back',backTexture);
   const pouch=['bag_body','seal_bottom'].map(name=>bag.getObjectByName(name));
   const mixer=new THREE.AnimationMixer(bag);
   const clip=name=>THREE.AnimationClip.findByName(gltf.animations,name);
@@ -36,10 +48,11 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture,backTexture=n
 
   // The pulls wait inside, stacked front to back, until the mouth is open.
   const pullGroup=new THREE.Group();pullGroup.scale.setScalar(BAG_SCALE);pullGroup.visible=false;group.add(pullGroup);
-  const books=pulls.map((pull,k)=>{
-    const booklet=createComicBook(THREE,{template:comicModel,frontTexture:pullTextures[k],backTexture:pullBacks[k]??null,foil:pull.finish==='foil'});
-    pullGroup.add(booklet.group);return booklet.group;
+  const booklets=pulls.map((pull,k)=>{
+    const booklet=createComicBook(THREE,{template:comicModel,frontTexture:pullTextures[k]??null,backTexture:pullBacks[k]??null,foil:pull.finish==='foil'});
+    pullGroup.add(booklet.group);return booklet;
   });
+  const books=booklets.map(booklet=>booklet.group);
 
   let open=false,tearTime=0,reveal=0,crinkleTime=-1,moving=false;
   function pose(){
@@ -79,6 +92,13 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture,backTexture=n
       if(pullGroup.visible)target.expandByObject(pullGroup);
       return target;
     },
-    dispose(){mixer.stopAllAction();ownTextures.forEach(t=>t.dispose());}
+    /** Applies photographs that loaded after the bag was shown. Any argument may be left out. */
+    setTextures({frontTexture,backTexture,pullTextures,pullBacks}={}){
+      if(frontTexture!==undefined)setArt('front',frontTexture);
+      if(backTexture!==undefined)setArt('back',backTexture);
+      pullTextures?.forEach((t,k)=>{if(t)booklets[k]?.setCover(true,t);});
+      pullBacks?.forEach((t,k)=>{if(t)booklets[k]?.setCover(false,t);});
+    },
+    dispose(){mixer.stopAllAction();ownTextures.forEach(t=>t.dispose());booklets.forEach(b=>b.dispose());}
   };
 }

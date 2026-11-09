@@ -3,8 +3,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=16.1';
 import { createComicSleeve } from './comic-sleeve.js?v=38.0';
-import { createComicBook } from './comic-book.js?v=39.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=39.0';
+import { createComicBook } from './comic-book.js?v=40.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=40.0';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
@@ -28,6 +28,11 @@ function addMesh(group,geometry,material,pos,rotation){
 function block(g,w,h,d,mat,pos){return addMesh(g,new RoundedBoxGeometry(w,h,d,2,.018),mat,pos);}
 
 export async function createBox(stage,comics){
+  // The models download alongside the cardboard maps below.
+  const modelsReady=Promise.all([
+    loadModel('./assets/models/comic-set.glb'),
+    comics.some(c=>c.blindBag)?loadBlindBag():null,
+  ]);
   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x0b0e13,0);
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
@@ -90,27 +95,21 @@ export async function createBox(stage,comics){
   // Cardboard, not animated sticker curls, determines camera framing and the floor.
   const bodyLocalBounds=new THREE.Box3().setFromObject(body),lidLocalBounds=new THREE.Box3().setFromObject(lid);
   lid.position.y=lidClosedY;
-  const textureLoader=new THREE.TextureLoader();
-  const textures=await Promise.all(comics.map(c=>textureLoader.loadAsync(c.cover).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;})));
-  const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;});
-  const backTextures=await Promise.all(comics.map(c=>c.backCover&&!c.blindBag?loadColor(c.backCover):null));
-  // Blind bags are sealed packs, not sleeved comics. Their pulls load with them.
-  const comicModel=await loadModel('./assets/models/comic-set.glb');
-  const bagModel=comics.some(c=>c.blindBag)?await loadBlindBag():null;
-  // Pulls that share a printed back share its texture.
-  const pullBackCache=new Map(),loadPullBack=url=>{if(!pullBackCache.has(url))pullBackCache.set(url,loadColor(url));return pullBackCache.get(url);};
-  const bagTextures=await Promise.all(comics.map(c=>c.blindBag?Promise.all([c.bagBack?loadColor(c.bagBack):null,Promise.all(c.pulls.map(pull=>loadColor(pull.cover))),Promise.all(c.pulls.map(pull=>pull.back?loadPullBack(pull.back):null))]):null));
-  const cards=textures.map((tex,i)=>{
+  const textureLoader=new THREE.TextureLoader(),loadedArt=new Set();
+  const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();if(disposed){t.dispose();return null;}loadedArt.add(t);return t;});
+  // Only the models hold up the first frame. The box opens closed, so no comic
+  // is visible yet: covers, backs and pulls stream in once it is on screen.
+  const [comicModel,bagModel]=await modelsReady;
+  const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     if(comics[i].blindBag){
-      const [backTexture,pullTextures,pullBacks]=bagTextures[i];
-      const blind=createBlindBag(THREE,bagModel,{comicModel,frontTexture:tex,backTexture,pullTextures,pullBacks,pulls:comics[i].pulls});
+      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comics[i].pulls});
       g.add(blind.group);
       g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
       g.rotation.set(-.025,0,(i%3-1)*.009);
-      return {group:g,blind,pullTextures:[...pullTextures,backTexture].filter(Boolean),baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
+      return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
     }
-    const booklet=createComicBook(THREE,{template:comicModel,frontTexture:tex,frontQuad:comics[i].frontQuad,backTexture:backTextures[i],backQuad:comics[i].backQuad});
+    const booklet=createComicBook(THREE,{template:comicModel,frontQuad:comics[i].frontQuad,backQuad:comics[i].backQuad});
     const book=booklet.group,bag=createComicSleeve(THREE,comicModel),sleeve=bag.group;
     const [widthIn,heightIn]=comics[i].physicalSizeInches??[6.625,10.25];
     // The model is a standard 6⅝ × 10¼ in comic; smaller formats scale from it.
@@ -310,22 +309,46 @@ export async function createBox(stage,comics){
     if(dirty||!settled||floatStrength>.0001||stickersMoving){renderer.render(scene,camera);dirty=false;}
   }
   frame=requestAnimationFrame(update);
+  // Stream artwork into the visible box: every front first, in shelf order,
+  // then backs and blind-bag contents. A comic that is selected or inspected
+  // jumps the queue for its back. Shared images (pull backs) load once.
+  let disposed=false;
+  const art=new Map(),backsStarted=new Set();
+  const fetchArt=url=>{
+    if(!url)return Promise.resolve(null);
+    if(!art.has(url))art.set(url,loadColor(url).catch(error=>{console.warn('Artwork unavailable',url,error);return null;}));
+    return art.get(url);
+  };
+  const applyArt=fn=>value=>{if(!disposed){fn(value);dirty=true;}};
+  const fronts=comics.map((comic,i)=>fetchArt(comic.cover).then(applyArt(t=>{
+    if(!t)return;
+    if(cards[i].blind)cards[i].blind.setTextures({frontTexture:t});else cards[i].booklet.setCover(true,t);
+  })));
+  function loadBack(i){
+    if(backsStarted.has(i)||disposed)return;backsStarted.add(i);
+    const comic=comics[i],card=cards[i];
+    if(comic.blindBag){
+      Promise.all([fetchArt(comic.bagBack),Promise.all(comic.pulls.map(pull=>fetchArt(pull.cover))),Promise.all(comic.pulls.map(pull=>fetchArt(pull.back)))])
+        .then(applyArt(([backTexture,pullTextures,pullBacks])=>card.blind.setTextures({backTexture:backTexture??undefined,pullTextures,pullBacks})));
+    }else if(comic.backCover)fetchArt(comic.backCover).then(applyArt(t=>{if(t)card.booklet.setCover(false,t);}));
+  }
+  Promise.allSettled(fronts).then(()=>comics.forEach((_,i)=>loadBack(i)));
   const raycaster=new THREE.Raycaster();
   return {
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
-    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;dirty=true;stage.dataset.activeIndex=String(index);},
+    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
     rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
     stickers:stickerSystem,
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
     decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
-    focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;cards[selected].blind?.crinkle();}else{focusProgress=0;unwrapProgress=0;cards.forEach(c=>c.blind?.reset());}dirty=true;},
+    focus(value){wantedDetail=0;inspecting=value;unwrapped=false;held=false;floatTime=0;floatStrength=0;if(value){wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();}else{focusProgress=0;unwrapProgress=0;cards.forEach(c=>c.blind?.reset());}dirty=true;},
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.pullTextures?.forEach(t=>t.dispose());});[...textures,...backTextures,...cardboardMaps].filter(Boolean).forEach(t=>t.dispose());pullBackCache.forEach(p=>p.then(t=>t.dispose()));}
+    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});disposed=true;cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
   };
 }
