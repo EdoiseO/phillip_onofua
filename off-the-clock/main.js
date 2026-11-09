@@ -1,5 +1,5 @@
 import {comics} from './comics.js?v=38.0';
-import {createBox} from './model.js?v=40.1';
+import {createBox} from './model.js?v=40.2';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -13,7 +13,16 @@ document.addEventListener('pointerdown',()=>{stage.dataset.pointerFocus='';},tru
 document.addEventListener('keydown',e=>{if(!e.metaKey&&!e.ctrlKey&&!e.altKey)delete stage.dataset.pointerFocus;},true);
 const stageAnchor=document.createComment('3D scene home');stage.before(stageAnchor);
 let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,clickTimer=0,focusStarted=0,inspectionView='front';
-let lidSide=1,lidTilt=0,pullsShown=false,pullTimer=0,bagTorn=false;
+let lidSide=1,lidTilt=0,pullsShown=false,pullTimer=0,bagTorn=false,returning=false;
+// While the camera and comic return, ignore collection actions rather than
+// letting a new selection interrupt the movement or alter the active book.
+for(const type of ['pointerdown','pointerup','click','dblclick','wheel','input','change','keydown']){
+  document.addEventListener(type,event=>{
+    if(returning && event.target instanceof Element && event.target.closest('#experience, .footer')){
+      event.preventDefault();event.stopImmediatePropagation();
+    }
+  },{capture:true,passive:false});
+}
 function positionLid(side,tilt=0){lidSide=Math.max(-1,Math.min(1,side));lidTilt=Math.max(-.16,Math.min(.24,tilt));box?.setLid(lidSide,lidTilt);}
 const media=matchMedia('(prefers-reduced-motion: reduce)');
 let reduced=media.matches;
@@ -77,7 +86,7 @@ function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=va
 function select(i){if(!box)return;index=Math.max(0,Math.min(comics.length-1,i));if(!opened)setOpen(true);box.select(index);render();const strip=$('comic-tabs');strip.scrollTo({left:tabs[index].offsetLeft-strip.offsetLeft-strip.clientWidth/2+tabs[index].clientWidth/2,behavior:reduced?'instant':'smooth'});announce(`${index+1} of ${comics.length}. ${comics[index].title}. ${comics[index].variant}.`);}
 function step(direction){if(inspecting)return;if(!opened){setOpen(true);return;}select(index+direction);}
 function enterInspection(i=index){
-  if(!box||inspecting)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
+  if(!box||inspecting||returning)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
   $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
   const bag=!!comics[index].blindBag;
   stage.setAttribute('aria-label',bag?'Blind bag close-up. Drag or use arrow keys to rotate. Enter or Space tears the bag open and shows the three comics inside. R resets the view. Click empty space or press Escape to return to the box.':'Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
@@ -85,8 +94,11 @@ function enterInspection(i=index){
 }
 function leaveInspection(){
   if(!inspecting)return;clearTimeout(clickTimer);clearTimeout(pullTimer);pullsShown=false;bagTorn=false;inspecting=false;unwrapped=false;pointer=null;
-  box.focus(false);dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
-  stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});announce('Returned to the box.');
+  dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
+  returning=!reduced;const finished=box.focus(false);
+  stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
+  if(returning)announce('Returning to the box.');
+  finished.then(()=>{returning=false;announce('Returned to the box.');});
 }
 function toggleSleeve(){
   if(!inspecting)return;const comic=comics[index];unwrapped=!unwrapped;
