@@ -23,9 +23,10 @@ const collectionRuler=createRuler(comicRuler,{ticks:comics.length*2-1,start:'FIR
 comicRuler.addEventListener('input',()=>select(Number(comicRuler.value)));
 for(const series of new Set(comics.map(c=>c.series))){const option=document.createElement('option');option.value=series;option.textContent=series;seriesSelect.append(option);}
 seriesSelect.addEventListener('change',()=>select(comics.findIndex(c=>c.series===seriesSelect.value)));
+const thumbnailImages=[];
 const tabs=comics.map((comic,i)=>{
   const b=document.createElement('button');b.className='comic-tab';b.setAttribute('aria-label',`${comic.title}, ${comic.variant}`);b.setAttribute('aria-pressed','false');b.title=`${comic.title} · ${comic.variant}${comic.collectionStatus==='Incoming'?' · Incoming':''}`;b.dataset.series=comic.series;
-  const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.src=comic.cover;img.alt='';b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
+  const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt='';thumbnailImages.push([img,comic.cover]);b.append(img);b.addEventListener('click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
 });
 function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
 function pullLabel(pull){return `${pull.variant.replace(' - ',' · ')}${pull.artist?' — '+pull.artist:''}`;}
@@ -178,6 +179,7 @@ stage.addEventListener('lostpointercapture',()=>{if(pointer)cancelPointer();});
 window.addEventListener('blur',cancelPointer);
 try{
   box=await createBox(stage,comics);box.select(0);box.setOpen(false);updateMotion();render();seriesSelect.disabled=false;$('loading').hidden=true;
+  box.firstPaint.then(shown=>{if(shown)thumbnailImages.forEach(([img,url])=>{img.src=url;});});
   createStickerStudio({stage,box,beforeOpen:()=>{if(inspecting)leaveInspection();setOpen(false);},afterClose:()=>{stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag to turn. Escape closes.');render();}});
   $('decorate-button').disabled=false;
 }catch(error){console.error('Unable to prepare the 3D collection',error);$('loading').hidden=true;$('unavailable').hidden=false;$('open-cue').hidden=true;}

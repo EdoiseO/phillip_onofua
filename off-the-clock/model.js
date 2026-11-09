@@ -186,6 +186,11 @@ export async function createBox(stage,comics){
   const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
   const overviewBounds=Array.from({length:3},()=>new THREE.Box3()),overviewCorners=Array.from({length:24},()=>new THREE.Vector3()),relative=new THREE.Vector3();
   const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible)dirty=true;});io.observe(stage);
+  // A frame rendered by WebGL is presented after its rAF callback returns.
+  // Resolve on the next frame so artwork requests cannot compete with the
+  // first visible box, even when the user immediately opens or selects one.
+  let disposed=false,firstPaintFrame=0,firstRender=false,resolveFirstPaint;
+  const firstPaint=new Promise(resolve=>{resolveFirstPaint=resolve;});
   function update(now){
     frame=requestAnimationFrame(update);const dt=Math.min((now-last)/1000,.035);last=now;
     if(document.hidden||!visible)return;
@@ -341,35 +346,49 @@ export async function createBox(stage,comics){
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving;
     stage.dataset.motionSettled=String(settled);
     wasSettled=settled;
-    if(dirty||!settled||floatStrength>.0001||stickersMoving){renderer.render(scene,camera);dirty=false;}
+    if(dirty||!settled||floatStrength>.0001||stickersMoving){
+      renderer.render(scene,camera);dirty=false;
+      if(!firstRender){
+        firstRender=true;
+        firstPaintFrame=requestAnimationFrame(()=>{if(!disposed){stage.dataset.boxPainted='true';resolveFirstPaint(true);}});
+      }
+    }
   }
   frame=requestAnimationFrame(update);
   // Stream artwork into the visible box: every front first, in shelf order,
   // then backs and blind-bag contents. A comic that is selected or inspected
   // jumps the queue for its back. Shared images (pull backs) load once.
-  let disposed=false;
-  const art=new Map(),backsStarted=new Set();
+  let painted=false;
+  const art=new Map(),backsStarted=new Set(),pendingBacks=new Set();
   const fetchArt=url=>{
     if(!url)return Promise.resolve(null);
     if(!art.has(url))art.set(url,loadColor(url).catch(error=>{console.warn('Artwork unavailable',url,error);return null;}));
     return art.get(url);
   };
   const applyArt=fn=>value=>{if(!disposed){fn(value);dirty=true;}};
-  const fronts=comics.map((comic,i)=>fetchArt(comic.cover).then(applyArt(t=>{
-    if(!t)return;
-    if(cards[i].blind)cards[i].blind.setTextures({frontTexture:t});else cards[i].booklet.setCover(true,t);
-  })));
   function loadBack(i){
-    if(backsStarted.has(i)||disposed)return;backsStarted.add(i);
+    if(disposed||backsStarted.has(i))return;
+    if(!painted){pendingBacks.add(i);return;}
+    backsStarted.add(i);
     const comic=comics[i],card=cards[i];
     if(comic.blindBag){
       Promise.all([fetchArt(comic.bagBack),Promise.all(comic.pulls.map(pull=>fetchArt(pull.cover))),Promise.all(comic.pulls.map(pull=>fetchArt(pull.back)))])
         .then(applyArt(([backTexture,pullTextures,pullBacks])=>card.blind.setTextures({backTexture:backTexture??undefined,pullTextures,pullBacks})));
     }else if(comic.backCover)fetchArt(comic.backCover).then(applyArt(t=>{if(t)card.booklet.setCover(false,t);}));
   }
-  Promise.allSettled(fronts).then(()=>comics.forEach((_,i)=>loadBack(i)));
+  firstPaint.then(shown=>{
+    if(!shown||disposed)return;
+    painted=true;
+    const fronts=comics.map((comic,i)=>fetchArt(comic.cover).then(applyArt(t=>{
+      if(!t)return;
+      if(cards[i].blind)cards[i].blind.setTextures({frontTexture:t});else cards[i].booklet.setCover(true,t);
+    })));
+    pendingBacks.forEach(loadBack);pendingBacks.clear();
+    Promise.allSettled(fronts).then(()=>comics.forEach((_,i)=>loadBack(i)));
+  });
   const raycaster=new THREE.Raycaster();
   return {
+    firstPaint,
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
     select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
@@ -384,6 +403,6 @@ export async function createBox(stage,comics){
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});disposed=true;cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
+    dispose(){disposed=true;cancelAnimationFrame(firstPaintFrame);resolveFirstPaint(false);stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
   };
 }
