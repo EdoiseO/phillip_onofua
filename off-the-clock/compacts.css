@@ -12,3 +12,10 @@
 @media(max-width:650px){.compact-dialog[data-inline].compact-inspecting .compact-header{padding:12px 16px}.compact-dialog[data-inline].compact-inspecting .compact-header h2{font-size:18px}}
 .viewer.compact-active{min-height:clamp(520px,72vh,780px)}
 @media(max-width:650px){.viewer.compact-active{min-height:550px}}
+/* The collection switch already provides the return control. Keep the inline
+   header within the viewer column and avoid a wrapped duplicate on phones. */
+.compact-dialog[data-inline] .compact-header{display:flex;justify-content:center;text-align:center;min-width:0}
+.compact-dialog[data-inline] .compact-header>button{display:none}
+.compact-dialog[data-inline] .compact-header>div{min-width:0}
+.compact-dialog[data-inline] .compact-header h2{overflow-wrap:anywhere}
+.compact-dialog:has(.compact-inspect-controls:not([hidden])) .compact-canvas canvas{touch-action:none;cursor:grab}

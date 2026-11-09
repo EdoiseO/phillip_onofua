@@ -38,3 +38,24 @@ test('paperback photo mapping keeps a continuous grid and survives replacement',
     book.dispose();
   }finally{globalThis.document=previous;}
 });
+
+
+test('paperback has a connected cover and a recessed, three-edged page block',async()=>{
+  const THREE=await import('./vendor/three.module.js');
+  const {createPaperback}=await import('./paperback.js');
+  const previous=globalThis.document;
+  globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
+  try{
+    const book=createPaperback(THREE,compacts[0]);
+    const wrap=book.group.getObjectByName('paperback-cover-wrap'),pages=book.group.getObjectByName('paperback-pages');
+    assert.ok(wrap&&pages,'cover shell and page block exist');
+    wrap.geometry.computeBoundingBox();pages.geometry.computeBoundingBox();
+    const cover=wrap.geometry.boundingBox,block=pages.geometry.boundingBox;
+    assert.ok(cover.max.x>block.max.x&&cover.max.y>block.max.y&&cover.min.y<block.min.y,'cover overhangs pages');
+    assert.ok(cover.max.z>block.max.z&&cover.min.z<block.min.z,'cover has front and back thickness');
+    const lines=book.group.getObjectByName('paperback-page-lines').geometry.attributes.position;
+    const normals=new Set();for(let i=0;i<lines.count;i+=2){const a=[lines.getX(i),lines.getY(i),lines.getZ(i)],b=[lines.getX(i+1),lines.getY(i+1),lines.getZ(i+1)];normals.add(Math.abs(a[1]-b[1])>0?'fore':Math.sign(a[1]));}
+    assert.deepEqual(normals,new Set(['fore',1,-1]),'page lines run on fore, top and bottom edges');
+    book.dispose();
+  }finally{globalThis.document=previous;}
+});
