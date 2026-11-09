@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
@@ -185,12 +186,9 @@ export async function createBox(stage,comics){
   const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
   const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
   const overviewBounds=Array.from({length:3},()=>new THREE.Box3()),overviewCorners=Array.from({length:24},()=>new THREE.Vector3()),relative=new THREE.Vector3();
-  const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible)dirty=true;});io.observe(stage);
-  // A frame rendered by WebGL is presented after its rAF callback returns.
-  // Resolve on the next frame so artwork requests cannot compete with the
-  // first visible box, even when the user immediately opens or selects one.
-  let disposed=false,firstPaintFrame=0,firstRender=false,resolveFirstPaint;
-  const firstPaint=new Promise(resolve=>{resolveFirstPaint=resolve;});
+  let disposed=false,firstRender=false;
+  const artworkGate=createArtworkGate(stage),firstPaint=artworkGate.ready;
+  const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;artworkGate.visibility(visible);if(visible)dirty=true;});io.observe(stage);
   function update(now){
     frame=requestAnimationFrame(update);const dt=Math.min((now-last)/1000,.035);last=now;
     if(document.hidden||!visible)return;
@@ -350,7 +348,7 @@ export async function createBox(stage,comics){
       renderer.render(scene,camera);dirty=false;
       if(!firstRender){
         firstRender=true;
-        firstPaintFrame=requestAnimationFrame(()=>{if(!disposed){stage.dataset.boxPainted='true';resolveFirstPaint(true);}});
+        artworkGate.rendered();
       }
     }
   }
@@ -421,6 +419,6 @@ export async function createBox(stage,comics){
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){disposed=true;cancelAnimationFrame(firstPaintFrame);resolveFirstPaint(false);stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
+    dispose(){disposed=true;artworkGate.dispose();stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
   };
 }
