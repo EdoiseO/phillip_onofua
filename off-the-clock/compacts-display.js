@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.0';
+import {compacts} from './comics.js?v=39.1';
 import {createPaperback} from './paperback.js?v=1.0';
 
 // These display studies are created only on request, after the short box paints.

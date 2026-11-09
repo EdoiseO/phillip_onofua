@@ -1235,25 +1235,25 @@ export const compacts = [
   {
     id: 'static-season-one', format: 'compact-paperback', title: 'Static: Season One',
     series: 'DC Compact Comics', publisher: 'DC Comics', year: 2025, pageCount: 184,
-    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.52,
-    thicknessBasis: 'Approximate from photographed spine width relative to its height; perspective and cover edges make this uncertain.',
+    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.46,
+    thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
     source: 'https://www.penguinrandomhouse.com/books/773606/static-season-one-dc-compact-comics-edition-by-vita-ayala/',
     front: './assets/compacts/static-season-one-front.jpg', back: './assets/compacts/static-season-one-back.jpg', spine: './assets/compacts/static-season-one-spine.jpg',
-    frontQuad: [[.023232,.020270],[.972727,.010811],[.929293,.979730],[.030303,.966216]],
-    backQuad: [[.021053,.012632],[.973684,.028070],[.915789,.971930],[.042105,.982456]],
-    spineQuad: [[.125714,.013072],[.565714,.013072],[.851429,.983660],[.405714,.986928]],
+    frontQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backQuad: [[0,0],[1,0],[1,1],[0,1]],
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
     backImageNote: 'Photographed from my copy'
   },
   {
     id: 'green-arrow-year-one', format: 'compact-paperback', title: 'Green Arrow: Year One',
     series: 'DC Compact Comics', publisher: 'DC Comics', year: 2026, pageCount: 152,
-    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.47,
-    thicknessBasis: 'Approximate from photographed spine width relative to its height; perspective and cover edges make this uncertain.',
+    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.42,
+    thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
     source: 'https://www.penguinrandomhouse.com/books/811893/green-arrow-year-one-dc-compact-comics-edition-by-andy-diggle/9781799508083/',
     front: './assets/compacts/green-arrow-year-one-front.jpg', back: './assets/compacts/green-arrow-year-one-back.jpg', spine: './assets/compacts/green-arrow-year-one-spine.jpg',
-    frontQuad: [[.020619,.013699],[.938144,.013699],[.974227,.979452],[.032990,.980822]],
-    backQuad: [[.046296,.014198],[.958333,.026543],[.970370,.981481],[.016667,.986420]],
-    spineQuad: [[.113333,.012000],[.633333,.012000],[.840000,.973333],[.306667,.980000]],
+    frontQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backQuad: [[0,0],[1,0],[1,1],[0,1]],
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
     backImageNote: 'Photographed from my copy'
   }
 ];
