@@ -58,7 +58,7 @@ test('paperback has a connected cover and a recessed, three-edged page block',as
     assert.equal(book.group.getObjectByName('paperback-page-lines'),undefined,'page lines come from the photo');
     const edgeTexture=new THREE.Texture();book.setPageEdge(edgeTexture);
     assert.equal(pages.material[1].map,edgeTexture);
-    assert.equal(edgeTexture.wrapS,THREE.RepeatWrapping);
+    assert.equal(edgeTexture.wrapS,THREE.MirroredRepeatWrapping);
     const positions=pages.geometry.attributes.position,uv=pages.geometry.attributes.uv,side=pages.geometry.groups.find(g=>g.materialIndex===1);
     const seen=new Set();
     for(let i=side.start;i<side.start+side.count;i+=3){

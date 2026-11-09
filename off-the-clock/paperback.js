@@ -189,7 +189,8 @@ export function createPaperback(THREE, data) {
   }
   function setPageEdge(map) {
     if (!map) return;
-    map.wrapS=THREE.RepeatWrapping;
+    // Mirroring adjoining tiles prevents a hard jump where the photo repeats.
+    map.wrapS=THREE.MirroredRepeatWrapping;
     map.colorSpace=THREE.SRGBColorSpace;
     edgeMaterial.color.set(0xffffff);
     edgeMaterial.map=map;
