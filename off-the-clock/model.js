@@ -355,7 +355,9 @@ export async function createBox(stage,comics){
     stage.dataset.motionSettled=String(settled && (!returnState || returnState.complete));
     if(returnState?.complete && settled){
       const finished=returnState;returnState=null;cards[selected].blind?.reset();
-      stage.dataset.returning='false';finished.resolve();
+      // Render the exact seated pose even when the scene becomes settled on
+      // this frame; otherwise the previous raised frame can remain on screen.
+      dirty=true;stage.dataset.returning='false';finished.resolve();
     }
     wasSettled=settled;
     if(dirty||!settled||floatStrength>.0001||stickersMoving){
