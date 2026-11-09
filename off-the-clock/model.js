@@ -174,7 +174,7 @@ export async function createBox(stage,comics){
   if(stickerSystem.hasSaved)await stickerSystem.ready().catch(error=>console.warn('Saved stickers could not load',error));
   const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
-  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null;
+  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null,returnParked=false;
   const lerp=THREE.MathUtils.lerp;
   let viewportWidth=1,viewportHeight=1;
   const resize=()=>{viewportWidth=Math.max(1,stage.clientWidth);viewportHeight=Math.max(1,stage.clientHeight);renderer.setSize(viewportWidth,viewportHeight,false);dirty=true;};
@@ -234,9 +234,12 @@ export async function createBox(stage,comics){
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
     let bagsMoving=false;
     cards.forEach((card,i)=>{
-      const active=i===selected, lift=active?reveal:0;
+      const active=i===selected, lift=active&&!returnParked?reveal:0;
       const target=1.42+lift*3.13;
-      if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
+      if(active&&returnState){
+        const progress=returnState.motion.focus>0?1-focusProgress/returnState.motion.focus:1;
+        card.y=lerp(returnState.startY,1.42,clamp(progress,0,1));card.v=0;
+      }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
       card.group.visible=active||focus<.995;
       card.group.position.y=active?lerp(card.y,3.2,focus):card.y-7*focus;
       const amount=clamp((card.y-1.42)/3.13,0,1);
@@ -399,8 +402,8 @@ export async function createBox(stage,comics){
   return {
     firstPaint,
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
-    setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
-    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
+    setOpen(value){opened=value;if(value)returnParked=false;dirty=true;stage.dataset.state=value?'open':'closed';},
+    select(index){if(index!==selected)cards[index].blind?.crinkle();returnParked=false;selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
     rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
     stickers:stickerSystem,
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
@@ -409,11 +412,11 @@ export async function createBox(stage,comics){
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
     focus(value){
       wantedDetail=0;inspecting=value;held=false;floatTime=0;floatStrength=0;
-      if(value){unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
-      const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
+      if(value){returnParked=false;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
+      const needsRestore=unwrapped||unwrapProgress>.001;returnParked=true;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
-      return new Promise(resolve=>{returnState={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),complete:false,resolve};});
+      return new Promise(resolve=>{returnState={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),startY:cards[selected].y,complete:false,resolve};});
     },
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
