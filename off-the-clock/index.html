@@ -7,7 +7,7 @@
   <title>Off the clock — Phillip Onofua</title>
   <link rel="canonical" href="https://philliponofua.vercel.app/off-the-clock/">
   <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="./style.css?v=37.0">
+  <link rel="stylesheet" href="./style.css?v=38.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=26.0">
   <link rel="stylesheet" href="./mobile-controls.css?v=36.1">
@@ -38,6 +38,11 @@
         <div class="actions">
           <button class="inspect-button" id="inspect-button" hidden>Take a closer look <span aria-hidden="true">⤢</span></button>
           <button class="decorate-button" id="decorate-button" disabled><span class="sticker-icon" aria-hidden="true">✦</span> Make it yours <span class="sticker-button-note">STICKER PACK / 01</span></button>
+          <button class="compact-launch" id="compact-launch" disabled>Explore paperback displays ↗</button>
+          <div class="compact-collection-switch" role="group" aria-label="Choose collection">
+            <button type="button" id="collection-comics" aria-pressed="true">Comics</button>
+            <button type="button" id="collection-compacts" aria-pressed="false" disabled>Compacts</button>
+          </div>
           <p class="small-hint" id="left-hint">A SMALL COLLECTION. A FEW BIG ADVENTURES.</p>
         </div>
         <div class="reading-progress" id="reading-progress" hidden><span id="issue-count">01 / 05</span><div class="progress-track"><div id="progress-fill"></div></div><span>THE COLLECTION</span></div>
@@ -67,6 +72,31 @@
     <footer class="footer"><span>THE SHORT BOX <span class="footer-number">/ 001</span></span><span class="footer-center"><i></i><span id="scene-status">WAITING TO BE OPENED</span></span><button class="motion-toggle" id="motion-toggle" aria-pressed="false">Motion on</button></footer>
     <p class="sr-only" aria-live="polite" id="announcement"></p>
   </div>
+  <dialog class="compact-dialog" id="compact-dialog" aria-labelledby="compact-title">
+    <header class="compact-header">
+      <button id="compact-close" type="button">← Back to comics</button>
+      <div><p>A CLOSER LOOK AT THE COLLECTION</p><h2 id="compact-title">Compact Comics displays</h2></div>
+      <span>01 / 04</span>
+    </header>
+    <nav class="compact-options" aria-label="Choose a paperback display">
+      <button type="button" data-display="shelf" aria-pressed="true">Shelf beside box</button>
+      <button type="button" data-display="stand" aria-pressed="false">Face-out stand</button>
+      <button type="button" data-display="stack" aria-pressed="false">Desk stack</button>
+      <button type="button" data-display="switch" aria-pressed="false">Compacts shelf</button>
+    </nav>
+    <div class="compact-inspect-controls" hidden role="group" aria-label="Paperback viewing angle">
+      <button type="button" data-view="front" aria-pressed="true">Front</button>
+      <button type="button" data-view="back" aria-pressed="false">Back</button>
+      <button type="button" data-view="spine" aria-pressed="false">Spine</button>
+    </div>
+    <div class="compact-canvas" id="compact-canvas" tabindex="0" role="region" aria-label="Paperback display. Select a book to inspect it."></div>
+    <p class="compact-note" id="compact-note">Choose a book to take a closer look.</p>
+    <div class="compact-book-controls" role="group" aria-label="Choose a paperback">
+      <button type="button" data-book="0">Inspect Static: Season One</button>
+      <button type="button" data-book="1">Inspect Green Arrow: Year One</button>
+      <button type="button" id="compact-return" hidden>← Back to display</button>
+    </div>
+  </dialog>
   <dialog class="inspection" id="inspection" aria-labelledby="inspection-title" aria-describedby="inspection-instructions">
     <header class="inspection-header">
       <button class="back-button" id="return-button">← <span>Back to the box</span></button>
@@ -140,6 +170,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=45.3"></script>
+  <script type="module" src="./main.js?v=49.0"></script>
 </body>
 </html>

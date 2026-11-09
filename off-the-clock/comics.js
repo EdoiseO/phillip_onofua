@@ -1228,3 +1228,36 @@ export const comics = [
     "backQualityNote": "Seller photograph; some reflections remain."
   }
 ];
+
+// Paperbacks are displayed separately and are not part of the short box.
+// Photographic thickness estimates are approximate: camera perspective affects the ratio.
+export const compacts = [
+  {
+    id: 'static-season-one', format: 'compact-paperback', title: 'Static: Season One',
+    series: 'DC Compact Comics', publisher: 'DC Comics', year: 2025, pageCount: 184,
+    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.46,
+    thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
+    source: 'https://www.penguinrandomhouse.com/books/773606/static-season-one-dc-compact-comics-edition-by-vita-ayala/',
+    front: './assets/compacts/static-season-one-front.jpg', back: './assets/compacts/static-season-one-back.jpg', spine: './assets/compacts/static-season-one-spine.jpg',
+    pageEdge: './assets/compacts/static-season-one-page-edge.jpg',
+    pageEdgeNote: 'Page edge photographed from my copy.',
+    frontQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backQuad: [[0,0],[1,0],[1,1],[0,1]],
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backImageNote: 'Photographed from my copy'
+  },
+  {
+    id: 'green-arrow-year-one', format: 'compact-paperback', title: 'Green Arrow: Year One',
+    series: 'DC Compact Comics', publisher: 'DC Comics', year: 2026, pageCount: 152,
+    physicalSizeInches: [5.5, 8.5], thicknessInches: 0.42,
+    thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
+    source: 'https://www.penguinrandomhouse.com/books/811893/green-arrow-year-one-dc-compact-comics-edition-by-andy-diggle/9781799508083/',
+    front: './assets/compacts/green-arrow-year-one-front.jpg', back: './assets/compacts/green-arrow-year-one-back.jpg', spine: './assets/compacts/green-arrow-year-one-spine.jpg',
+    pageEdge: './assets/compacts/green-arrow-year-one-page-edge-estimate.jpg',
+    pageEdgeNote: 'Estimated page edge: a lightened version of the Static photograph; this book was not photographed edge-on.',
+    frontQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backQuad: [[0,0],[1,0],[1,1],[0,1]],
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
+    backImageNote: 'Photographed from my copy'
+  }
+];
