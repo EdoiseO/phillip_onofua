@@ -2,23 +2,22 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,sampleSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxOffset,returnBoxTimeline,correctReturnCameraComponent,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
 
-test('slide-out reverses staged sleeve movement before the camera pulls out',()=>{
+test('slide-out overlaps the sleeve and the camera in one motion',()=>{
   const state=createReturnMotion(1,1,true);
-  assert.equal(state.duration,1.16);
+  assert.equal(state.duration,1.4);
   let frame=advanceReturnMotion(state,.25);
-  assert.equal(frame.focus,1);assert.ok(frame.extraction>0&&frame.extraction<1);
-  assert.ok(frame.unzoom>.8,'zoom resolves early in sleeve phase');
-  frame=advanceReturnMotion(state,.34);
-  assert.ok(frame.extraction<.02,'film nearly closed before the camera moves');
-  assert.ok(frame.focus<1&&frame.extraction>0,'camera overlaps the last part of closing');
-  frame=advanceReturnMotion(state,.6);
+  assert.equal(frame.focus,1,'camera waits for the zoom-out to get going');
+  assert.ok(frame.extraction>0&&frame.extraction<1);assert.ok(frame.unzoom>.3);
+  frame=advanceReturnMotion(state,.35);
+  assert.ok(frame.focus<1&&frame.extraction>0,'camera starts while the film is still closing');
+  frame=advanceReturnMotion(state,.9);
   assert.equal(frame.focus,0);assert.equal(frame.extraction,0);assert.equal(frame.blend,1);assert.equal(frame.done,true);
 });
 
 test('board and sleeve return before the comic descends and the film closes',()=>{
   const state=createReturnMotion(1,1,true);
   let previous=sampleSleeveRig(1), settleDone=false,pullDone=false,bagDone=false;
-  for(let i=0;i<80;i++){
+  for(let i=0;i<180;i++){
     const frame=advanceReturnMotion(state,1/120), rig=sampleSleeveRig(frame.extraction);
     if(rig.pull<previous.pull-1e-9)assert.ok(rig.settle<.01,'comic descent waits for board and sleeve');
     if(rig.bagOpen<previous.bagOpen-1e-9)assert.ok(rig.pull<.06,'film closes only after comic is mostly down');
@@ -32,28 +31,35 @@ test('board and sleeve return before the comic descends and the film closes',()=
 
 test('return without extraction begins moving immediately and ends at its target',()=>{
   const state=createReturnMotion(.7,0,false);
-  assert.equal(state.duration,.96);
-  const mid=advanceReturnMotion(state,.48);
+  assert.equal(state.duration,1.05);
+  const mid=advanceReturnMotion(state,.52);
   assert.ok(mid.focus>0&&mid.focus<.7);assert.equal(mid.extraction,0);
   const end=advanceReturnMotion(state,1);assert.equal(end.focus,0);assert.equal(end.extraction,0);assert.equal(end.done,true);
 });
 
-test('camera and viewport remain still until the film is nearly closed',()=>{
-  const state=createReturnMotion(1,.73,true);
-  const frame=advanceReturnMotion(state,.5);
-  assert.equal(frame.focus,1);
-  assert.equal(frame.cameraTimeline,0);
-  assert.equal(frame.unzoom,1);
-  assert.ok(frame.extraction>=0&&frame.extraction<.73);
-  assert.deepEqual(sampleSleeveRig(0),{pull:0,settle:0,free:0,bagOpen:0,bagFinish:0,bookFocus:0});
+test('nothing holds still mid-return and no frame jumps',()=>{
+  for(const needsRestore of [true,false]){
+    const state=createReturnMotion(1,needsRestore?1:0,needsRestore),dt=1/60;
+    let previous=advanceReturnMotion(state,0),still=0,longestStill=0,peak=0;
+    while(!previous.done){
+      const frame=advanceReturnMotion(state,dt);
+      const deltas=[frame.focus-previous.focus,frame.extraction-previous.extraction,frame.unzoom-previous.unzoom].map(Math.abs);
+      const change=deltas[0]+deltas[1]+deltas[2];
+      peak=Math.max(peak,...deltas);
+      if(!frame.done&&frame.timeline>.05&&frame.timeline<.95){still=change<1e-3?still+dt:0;longestStill=Math.max(longestStill,still);}
+      previous=frame;
+    }
+    assert.ok(longestStill<.08,`motion pauses for ${longestStill.toFixed(2)} s (restore=${needsRestore})`);
+    assert.ok(peak<.05,`a frame changes by ${peak.toFixed(3)} (restore=${needsRestore})`);
+  }
 });
 
-test('box rises during sleeve restoration before the camera pulls out',()=>{
+test('box rises while the sleeve closes and the camera begins',()=>{
   const state=createReturnMotion(1,1,true), start=-7;
   assert.equal(returnBoxOffset(start,returnBoxTimeline(0,0,true)),start);
-  const frame=advanceReturnMotion(state,.46);
+  const frame=advanceReturnMotion(state,.6);
   const boxTimeline=returnBoxTimeline(frame.timeline,frame.cameraTimeline,true);
-  assert.equal(frame.cameraTimeline,0);
+  assert.ok(frame.cameraTimeline>0&&frame.cameraTimeline<.5,'camera has started');
   assert.ok(sampleSleeveRig(frame.extraction).bagOpen>0,'film is still closing');
   assert.ok(returnBoxOffset(start,boxTimeline)>start/2,'box is already coming into view');
   assert.equal(returnBoxTimeline(.3,.3,false),.3,'ordinary returns keep their existing timing');
@@ -80,7 +86,7 @@ test('60 fps return frames stay continuous through overlap and final handoff',()
   const target={turn:.08,tilt:-.025,zoom:0,height:4.55};
   const rig=sampleSleeveRig(1);
   let previous={focus:1,extraction:1,...start,...rig}, final;
-  for(let i=0;i<74;i++){
+  for(let i=0;i<90;i++){
     const frame=advanceReturnMotion(state,1/60), pose=interpolateReturnPose(start,target,frame.blend);
     pose.zoom=start.zoom*(1-frame.unzoom);
     const current={focus:frame.focus,extraction:frame.extraction,...pose,...sampleSleeveRig(frame.extraction)};
@@ -114,7 +120,7 @@ test('stage relocation stays continuous at 60 fps and ends at its layout bounds'
 test('page controls fade in continuously over the first half of the return',()=>{
   const frames=createPageReturnFrames();
   assert.equal(frames[0].opacity,0);
-  assert.equal(frames[15].opacity,.5);
+  assert.ok(Math.abs(frames[15].opacity-.5)<1e-9);
   assert.equal(frames[30].opacity,1);
   assert.equal(frames[60].opacity,1);
   for(let i=1;i<frames.length;i++){
@@ -141,7 +147,7 @@ test('return unlocks even when another scene component never settles',()=>{
   const stage={dataset:{returning:'true'}};
   let resolved=0;
   const state={motion:createReturnMotion(1,1,true),complete:false,resolve:()=>{resolved++;}};
-  for(let frame=0;frame<90&&stage.dataset.returning==='true';frame++){
+  for(let frame=0;frame<120&&stage.dataset.returning==='true';frame++){
     state.complete=advanceReturnMotion(state.motion,1/60).done;
     finishReturnIfReady(state,stage,false,1/60);
   }
@@ -156,7 +162,7 @@ test('a momentarily settled return continues ticking until it unlocks',()=>{
   let resolved=0;
   const state={motion:createReturnMotion(1,0,false),complete:false,resolve:()=>{resolved++;}};
   // Simulate the render loop becoming clean and settled before the last frame.
-  for(let frame=0;frame<60&&stage.dataset.returning==='true';frame++){
+  for(let frame=0;frame<80&&stage.dataset.returning==='true';frame++){
     if(shouldSkipSceneFrame(true,false,true,0,false))continue;
     state.complete=advanceReturnMotion(state.motion,1/60).done;
     finishReturnIfReady(state,stage,true,1/60);
@@ -180,7 +186,7 @@ test('watchdog unlocks an offscreen return when no animation frames arrive',()=>
   let resolved=0, reset=0, callback, delay;
   const state={complete:false,resolve:()=>{resolved++;}};
   scheduleReturnWatchdog(state,stage,()=>{reset++;},(fn,ms)=>{callback=fn;delay=ms;return 1;});
-  assert.equal(delay,2400);
+  assert.equal(delay,2800);
   callback();
   assert.equal(stage.dataset.returning,'false');
   assert.equal(reset,1);
