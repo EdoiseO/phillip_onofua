@@ -131,7 +131,15 @@ export function mountOffTheClock(stage, pageRoot) {
     }
   }
   function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=value;box.setOpen(value);render();announce(value?`Box opened. ${comics[index].title}, ${comics[index].variant}.`:'Box closed.');}
-  function select(i){if(!box)return;index=Math.max(0,Math.min(comics.length-1,i));if(!opened)setOpen(true);box.select(index);render();const strip=$('comic-tabs');strip.scrollTo({left:tabs[index].offsetLeft-strip.offsetLeft-strip.clientWidth/2+tabs[index].clientWidth/2,behavior:reduced?'instant':'smooth'});announce(`${index+1} of ${comics.length}. ${comics[index].title}. ${comics[index].variant}.`);}
+  function select(i,prefix=''){
+    if(!box)return;
+    index=Math.max(0,Math.min(comics.length-1,i));
+    if(!opened)setOpen(true);
+    box.select(index);render();
+    const strip=$('comic-tabs'),tab=tabs[index];
+    strip.scrollTo({left:tab.offsetLeft-strip.offsetLeft-(strip.clientWidth-tab.clientWidth)/2,behavior:reduced?'instant':'smooth'});
+    announce(`${prefix}${index+1} of ${comics.length}. ${comics[index].title}. ${comics[index].variant}.`);
+  }
   function step(direction){if(inspecting)return;if(!opened){setOpen(true);return;}select(index+direction);}
   function enterInspection(i=index){
     if(!box||inspecting||returning)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
@@ -175,12 +183,15 @@ export function mountOffTheClock(stage, pageRoot) {
     });
     stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
     if(returning)announce(filing?'Filing the three pulls.':'Returning to the box.');
-    Promise.all([finished,filing]).then(() => {
+    Promise.all([finished,filing]).then(([,pulls]) => {
       if (signal.aborted) return;
       stopReturnAnimation?.();
       returning = false;
-      if(filing){refreshFiledTabs();render();}
-      announce(filing?'Three new comics are filed in the box.':'Returned to the box.');
+      if(pulls?.length){
+        const firstNewPull=tabs.length;
+        refreshFiledTabs();
+        select(firstNewPull,`${pulls.length} new comics filed. `);
+      }else announce('Returned to the box.');
     });
   }
   function toggleSleeve(){
