@@ -42,11 +42,7 @@ export function openCompactDisplays({box,inline=false}){
       const bounds=new THREE.Box3().setFromObject(selected>=0?books[selected].group:root);
       const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
       const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
-      // Reserve space around an inspected book on desktop: a 1.38 margin
-      // fits its bounds to approximately 70% of the stage height. Keep the
-      // existing phone and shelf framing.
-      const margin=selected>=0&&!mobile?1.38:1.14;
-      const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*margin;
+      const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*1.14;
       camera.position.set(center.x,center.y,bounds.max.z+distance);camera.lookAt(center);
     }else{camera.position.set((display==='stack'?-1:1)*(mobile?2.2:4.0),mobile?4.0:4.2,mobile?15.5:10.8);camera.lookAt(0,1.5,0);}
   }
