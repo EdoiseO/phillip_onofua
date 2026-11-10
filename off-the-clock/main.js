@@ -283,7 +283,7 @@ export function mountOffTheClock(stage, pageRoot) {
           if (!await box.firstPaint || signal.aborted) return;
           await loadCompactsStyle();
           if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.19');
+          const { openCompactDisplays } = await import('./compacts-display.js?v=2.20');
           if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
         } catch (error) {
           if (signal.aborted) return;

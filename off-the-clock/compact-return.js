@@ -1,5 +1,9 @@
 import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.6';
 
+export function shouldReturnFromCompactTap({startedOnBook, endedOnBook, distance, elapsed}) {
+  return !startedOnBook && !endedOnBook && distance < 7 && elapsed > 450;
+}
+
 // Run a continuous return, with a watchdog so an interrupted animation cannot
 // leave the display controls locked. Cancellation is reserved for teardown.
 export function startCompactReturn({onFrame,onComplete,request=requestAnimationFrame,cancel=cancelAnimationFrame,setTimer=setTimeout,clearTimer=clearTimeout,now=()=>performance.now()}){

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.5';
-import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc} from './compact-return.js?v=1.5';
+import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.6';
 import {createPaperback} from './paperback.js?v=2.4';
 
 // These display studies are created only on request, after the short box paints.
@@ -27,6 +27,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
   let display='switch',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
+  let inspectionStarted = 0;
   const title=dialog.querySelector('#compact-title'),note=dialog.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
   const noteLabel = note.querySelector('#compact-note-label');
   const shelfCue = () => `${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Click'} a book to take a closer look`;
@@ -155,6 +156,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
   const draw=()=>{if(closed)return;renderer.render(activeScene,camera);frame=requestAnimationFrame(draw);};
   const select=i=>{
     if(moving||selected>=0)return;
+    inspectionStarted = performance.now();
     const finishInstant=()=>{selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;build();views[0].focus();};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){finishInstant();return;}
     moving=true;mount.dataset.picking='true';
@@ -200,6 +202,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
   bookButtons.forEach(button=>button.addEventListener('click',()=>select(Number(button.dataset.book)),eventOptions));
   const returnDisplay=()=>{
     if(moving||selected<0)return;
+    drag = null;
     const returningIndex=selected, book=books[returningIndex].group;
     const focus=()=>{(inline?bookButtons[returningIndex]:options.find(x=>x.dataset.display===display)).focus();};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){
@@ -239,10 +242,58 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
     });
   };
   backButton.addEventListener('click',returnDisplay,eventOptions);
-  mount.addEventListener('pointerdown',event=>{if(moving||selected<0)return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};mount.setPointerCapture(event.pointerId);},eventOptions);
-  mount.addEventListener('pointermove',event=>{if(moving||selected<0||!drag||drag.id!==event.pointerId)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;drag.x=event.clientX;drag.y=event.clientY;inspectYaw+=dx*.012;inspectPitch=THREE.MathUtils.clamp(inspectPitch+dy*.01,-.7,.7);books[selected].group.rotation.set(inspectPitch,inspectYaw,0);frameScene();},eventOptions);
-  mount.addEventListener('pointercancel',()=>{drag=null;},eventOptions);
-  mount.addEventListener('pointerup',event=>{if(selected>=0){drag=null;return;}const r=mount.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(books.map(b=>b.group),true);let object=hits[0]?.object;while(object&&object.userData.compactIndex===undefined)object=object.parent;if(object)select(object.userData.compactIndex);},eventOptions);
+  function raycastBooks(event, groups) {
+    const bounds = mount.getBoundingClientRect();
+    pointer.set((event.clientX-bounds.left)/bounds.width*2-1, -(event.clientY-bounds.top)/bounds.height*2+1);
+    ray.setFromCamera(pointer, camera);
+    return ray.intersectObjects(groups, true);
+  }
+  function hitsSelectedBook(event) {
+    // The crease lines have a broad raycast tolerance that reaches past the cover.
+    return raycastBooks(event, [books[selected].group]).some(({object}) => object.isMesh);
+  }
+  mount.addEventListener('pointerdown', event => {
+    if (moving || returning || selected < 0 || drag || !event.isPrimary || event.button !== 0) return;
+    drag = {
+      id: event.pointerId, x: event.clientX, y: event.clientY, distance: 0,
+      startedOnBook: hitsSelectedBook(event),
+    };
+    mount.setPointerCapture(event.pointerId);
+  }, eventOptions);
+  mount.addEventListener('pointermove', event => {
+    if (moving || returning || selected < 0 || drag?.id !== event.pointerId) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    drag.distance += Math.abs(dx) + Math.abs(dy);
+    drag.x = event.clientX;
+    drag.y = event.clientY;
+    inspectYaw += dx * .012;
+    inspectPitch = THREE.MathUtils.clamp(inspectPitch + dy * .01, -.7, .7);
+    books[selected].group.rotation.set(inspectPitch, inspectYaw, 0);
+    frameScene();
+  }, eventOptions);
+  function cancelDrag(event) {
+    if (drag?.id === event.pointerId) drag = null;
+  }
+  mount.addEventListener('pointercancel', cancelDrag, eventOptions);
+  mount.addEventListener('lostpointercapture', cancelDrag, eventOptions);
+  mount.addEventListener('pointerup', event => {
+    if (moving || returning) return;
+    if (selected >= 0) {
+      if (drag?.id !== event.pointerId) return;
+      const {startedOnBook, x, y, distance} = drag;
+      drag = null;
+      const endedOnBook = hitsSelectedBook(event);
+      if (shouldReturnFromCompactTap({
+        startedOnBook, endedOnBook,
+        distance: distance + Math.abs(event.clientX - x) + Math.abs(event.clientY - y),
+        elapsed: performance.now() - inspectionStarted,
+      })) returnDisplay();
+      return;
+    }
+    let object = raycastBooks(event, books.map(book => book.group))[0]?.object;
+    while (object && object.userData.compactIndex === undefined) object = object.parent;
+    if (object) select(object.userData.compactIndex);
+  }, eventOptions);
   const close=()=>{dialog.close();};dialog.querySelector('#compact-close').addEventListener('click',close,eventOptions);
   dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(inline&&selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
   function dispose({ restoreFocus = false } = {}) {
