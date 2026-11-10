@@ -4,9 +4,9 @@ import {readFileSync} from 'node:fs';
 import * as THREE from './vendor/three.module.js';
 import {comics} from './comics.js';
 import {createComicBook} from './comic-book.js';
-import {createComicSleeve,poseComicSleeve,posePackSleeve} from './comic-sleeve.js';
-import {advanceReturnMotion,createReturnMotion,sampleSleeveRig} from './return-motion.js';
-import {FILE_DURATION,PACK_DURATION,TEAR_THRESHOLD,makePackEntries,sampleFile,samplePack,samplePouch,sampleTear,tearProgress} from './pack-motion.js';
+import {createComicSleeve,poseComicSleeve,posePackSleeve,FLAP_OPEN} from './comic-sleeve.js';
+import {advanceReturnMotion,createReturnMotion,sampleSleeveRig,easeInOutSine} from './return-motion.js';
+import {FILE_DURATION,PACK_DURATION,TEAR_THRESHOLD,BAG_SCALE,SHORT_BOX,SLOT_LEAN,collectionSlot,showTearStrip,tornPouchSeat,makePackEntries,sampleFile,samplePack,samplePouch,sampleTear,tearProgress} from './pack-motion.js';
 
 // Load the exact GLBs served to visitors. Resolve the same vendor import map
 // inside Node; textures are irrelevant to clearance, so only decode geometry.
@@ -89,7 +89,7 @@ test('new sleeves receive the board and comic through the open mouth at 60 fps',
       if(!pose.filmVisible)continue;
       rig.group.updateMatrixWorld(true);
       clearance(rig.bag.film,[['comic',rig.book],['board',rig.bag.board]],`pull ${k+1} at ${i/60}s`);
-      if(pose.bookY-pose.filmY>.025)assert.equal(pose.flap,1,'flap stays open during insertion');
+      if(pose.filmZ===0&&pose.bookY-pose.filmY>.025)assert.equal(pose.flap,1,'flap stays open during insertion');
     }
   }
 });
@@ -121,10 +121,10 @@ test('pack poses are continuous at 60 fps and the actions are staggered',()=>{
     let previous=samplePack(0,k,phone);
     for(let f=1;f<=138;f++){
       const p=samplePack(f/60,k,phone);
-      for(const key of ['x','y','z','bookY','boardY','filmY','flap','scale']){
+      for(const key of ['x','y','z','bookY','boardY','filmY','filmZ','flap','scale']){
         assert.ok(Math.abs(p[key]-previous[key])<.43,`${key} jumps at frame ${f} for pull ${k+1}`);
       }
-      if(p.filmVisible)assert.ok(p.boardVisible);
+      if(p.boardVisible)assert.ok(p.filmVisible);
       previous=p;
     }
     assert.equal(previous.bookY,0);assert.equal(previous.boardY,0);assert.equal(previous.filmY,0);assert.equal(previous.flap,0);
@@ -157,5 +157,94 @@ test('tear follows the gesture in one direction and filing ends in three distinc
         previous=next;
       }
     }
+  }
+});
+
+test('the real sleeve flap opens fully before motion in both directions and closes only once seated or clear',async()=>{
+  const rig=makeRig(await comicModel);
+  // Read the front and back faces at the actual open mouth, excluding the
+  // curved side welds. Compare this gap with both the comic and board depth.
+  const mouthDepth=object=>{
+    const top=new THREE.Box3().setFromObject(object,true).max.y;
+    const depth=[];
+    object.traverse(mesh=>{
+      if(!mesh.isMesh)return;
+      const v=new THREE.Vector3();
+      for(let i=0;i<mesh.geometry.attributes.position.count;i++){
+        mesh.getVertexPosition(i,v).applyMatrix4(mesh.matrixWorld);
+        if(v.y>top-.0005&&Math.abs(v.x)<.75)depth.push(v.z);
+      }
+    });
+    assert.ok(depth.length);
+    return depth;
+  };
+  poseComicSleeve(rig,sampleSleeveRig(.14));rig.group.updateMatrixWorld(true);
+  const front=mouthDepth(rig.bag.film.getObjectByName('sleeve_front'));
+  const back=mouthDepth(rig.bag.film.getObjectByName('sleeve_back'));
+  const contents=new THREE.Box3().setFromObject(rig.book,true).union(new THREE.Box3().setFromObject(rig.bag.board,true));
+  assert.equal(rig.bag.flap.rotation.x,FLAP_OPEN);
+  assert.ok(Math.min(...front)-Math.max(...back)>contents.max.z-contents.min.z,
+    'the physical mouth fits the comic and board depth together');
+  for(const direction of [1,-1]){
+    const backToBox=createReturnMotion(1,1,true);
+    const travel=Array.from({length:69},(_,i)=>easeInOutSine(i/68));
+    const ranges=direction===1?[travel]:[travel.toReversed(),
+      Array.from({length:133},(_,i)=>advanceReturnMotion(backToBox,i===0?0:1/60).extraction)];
+    for(const range of ranges){
+      let previous=sampleSleeveRig(range[0]);
+      assert.equal(previous.bagOpen,0);
+      for(const out of range.slice(1)){
+        const p=sampleSleeveRig(out);
+        const moving=['pull','separate','lower','free'].some(key=>p[key]!==previous[key]);
+        if(moving){
+          assert.equal(previous.bagOpen,1,'the previous frame already has the flap fully open');
+          assert.equal(p.bagOpen,1,'the flap stays open throughout the movement');
+        }
+        previous=p;
+      }
+      assert.equal(previous.bagOpen,0);
+    }
+  }
+  for(let k=0;k<3;k++){
+    let previous=samplePack(0,k);
+    for(let i=1;i<=138;i++){
+      const p=samplePack(i/60,k);
+      if(['bookY','boardY','filmY','filmZ'].some(key=>p[key]!==previous[key])){
+        assert.equal(p.flap,1,'board, book and film move only while the flap is open');
+        assert.equal(previous.flap,1,'the flap is open before moving a pull');
+      }
+      previous=p;
+    }
+    assert.equal(previous.flap,0);
+  }
+});
+
+test('the posed torn wrapper fits below the rim in every slot without the detached strip',async()=>{
+  const {scene,animations}=await loadGlb('blind-bag');
+  const clip=THREE.AnimationClip.findByName(animations,'tear_open');
+  const mixer=new THREE.AnimationMixer(scene),action=mixer.clipAction(clip).setLoop(THREE.LoopOnce,1);
+  action.clampWhenFinished=true;action.play();action.paused=true;action.time=clip.duration;mixer.update(0);
+  const strip=scene.getObjectByName('tear_strip');
+  strip.visible=showTearStrip('filed',PACK_DURATION);
+  assert.equal(strip.visible,false);
+  assert.equal(showTearStrip('opening',1.02),false);
+  assert.equal(showTearStrip('opening',.3),true);
+  const {width,height,depth,wall}=SHORT_BOX;
+  const interior=new THREE.Box3(new THREE.Vector3(-width/2+wall/2,wall,-depth/2+wall/2),new THREE.Vector3(width/2-wall/2,height,depth/2-wall/2));
+  const card=new THREE.Group(),bounds=new THREE.Box3();
+  card.add(scene);
+  function measure(){
+    card.updateMatrixWorld(true);bounds.makeEmpty();
+    for(const name of ['bag_body','fin_seal','seal_bottom'])bounds.union(new THREE.Box3().setFromObject(scene.getObjectByName(name),true));
+    return bounds;
+  }
+  const seat=tornPouchSeat(1);
+  for(const count of [30,33,36])for(let index=0;index<count;index++){
+    const slot=collectionSlot(index,count);
+    card.position.set(slot.x,slot.y,slot.z);card.rotation.set(SLOT_LEAN,0,slot.roll);
+    scene.scale.setScalar(BAG_SCALE);scene.position.y=0;
+    assert.ok(measure().min.y<interior.min.y,'the old raised-display geometry clipped the box floor');
+    scene.scale.setScalar(seat.scale);scene.position.y=seat.lift;
+    assert.ok(interior.containsBox(measure()),`torn pouch outside the box at ${index+1}/${count}`);
   }
 });

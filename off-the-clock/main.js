@@ -1,7 +1,7 @@
 import {comics as catalogue} from './comics.js?v=39.5';
-import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.1';
-import {createBox} from './model.js?v=46.2';
-import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.7';
+import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.2';
+import {createBox} from './model.js?v=46.3';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.8';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
@@ -371,7 +371,7 @@ export function mountOffTheClock(stage, pageRoot) {
           if (!await box.firstPaint || signal.aborted) return;
           await loadCompactsStyle();
           if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.21');
+          const { openCompactDisplays } = await import('./compacts-display.js?v=2.22');
           if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
         } catch (error) {
           if (signal.aborted) return;

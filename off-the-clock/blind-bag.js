@@ -2,12 +2,11 @@
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=39.1';
-import { PACK_DURATION, samplePack, samplePouch, sampleTear, smooth } from './pack-motion.js?v=1.1';
+import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=39.2';
+import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, smooth, tornPouchSeat } from './pack-motion.js?v=1.2';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
-const BAG_SCALE=.9;
 export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
 export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls,sparkles=false}){
@@ -75,16 +74,20 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
   }
 
   let phase='sealed',time=0,tearTime=0,tearFrom=0,crinkleTime=-1,spring=null,hover=-1;
-  let watchdog,resolveOpen,show=0,phone=false,wrapperOpacity=1,filing=false;
+  let watchdog,resolveOpen,show=0,phone=false,wrapperOpacity=1,filing=false,seated=0;
   const tilts=entries.map(()=>0);
   function pose(reduced=false){
     const pouchFrame=samplePouch(time),row=phase==='row';
     const rowAmount=row?smooth(.48,.94,show):1;
     wrapperOpacity=phase==='filed'?(filing?1-show:1):pouchFrame.opacity*(row?rowAmount:1)+(row?1-rowAmount:0);
     bag.visible=wrapperOpacity>.001;
-    bag.position.y=pouchFrame.y*rowAmount*(phase==='filed'?0:1);
+    // Once torn, the bottom seal is too low for the box floor in the
+    // presentation pose. Ease into a slightly smaller, raised seat.
+    const seat=tornPouchSeat(phase==='filed'||row?seated:0);
+    bag.position.y=(phase==='opening'?pouchFrame.y:0)+seat.lift;
+    bag.scale.setScalar(seat.scale);
     bag.traverse(o=>{if(o.isMesh)o.material.opacity=wrapperOpacity;});
-    strip.visible=phase==='sealed'||phase==='opening';
+    strip.visible=showTearStrip(phase,time);
     const sealed=tearTime===0;
     tear.enabled=!sealed||crinkleTime<0;crinkle.enabled=sealed&&crinkleTime>=0;
     tear.time=phase==='filed'?tearDuration:tearTime;crinkle.time=Math.max(0,crinkleTime);mixer.update(0);
@@ -142,9 +145,9 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
       phase='filed';filing=true;pose();return entries;
     },
     showKeepsake(){filing=false;pose();},
-    tick(dt,reduced,presentation,isPhone){
+    tick(dt,reduced,presentation,isPhone,seat){
       if(phase==='sealed'&&crinkleTime<0&&!spring)return false;
-      show=presentation;phone=isPhone;
+      show=presentation;phone=isPhone;seated=seat;
       if(spring){
         spring.time+=dt;tearTime=spring.start*(1-smooth(0,.26,spring.time));
         if(tearTime===0)spring=null;

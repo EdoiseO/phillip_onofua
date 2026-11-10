@@ -1,4 +1,4 @@
-import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.7';
+import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.8';
 
 export function shouldReturnFromCompactTap({startedOnBook, endedOnBook, distance, elapsed}) {
   return !startedOnBook && !endedOnBook && distance < 7 && elapsed > 450;

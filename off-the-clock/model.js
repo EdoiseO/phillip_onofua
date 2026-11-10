@@ -3,15 +3,15 @@ import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=39.1';
+import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=39.2';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.2';
-import { FILE_DURATION, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.1';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.3';
+import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.2';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
 import { mobileControlsQuery } from './ruler-control.js?v=19.1';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.7';
+import { createReturnMotion, advanceReturnMotion, easeInOutSine, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.8';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -147,7 +147,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   const innerFace=index=>Array.from({length:6},(_,i)=>i===index?inside:board);
   const edge=new THREE.MeshStandardMaterial({color:0xbcb4a2,roughness:1});
   const body=new THREE.Group();world.add(body);body.userData.box=true;
-  const W=2.16,H=2.9,D=4.15,T=.068;
+  const {width:W,height:H,depth:D,wall:T}=SHORT_BOX;
   const lidClosedY=H-.02;
   block(body,W,T,D,innerFace(2),[0,T/2,0]);
   for(const side of [-1,1])addMesh(body,bowedWallGeometry(T,H,D,side),innerFace(side<0?0:1),[side*W/2,H/2,0]);
@@ -188,15 +188,15 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   const [comicModel,bagModel]=await modelsReady;
   signal?.throwIfAborted();
   const sparkles=new URLSearchParams(location.search).get('sparkles')==='1';
-  const slot=(i,count)=>1.43-i*(2.86/Math.max(1,count-1));
+  const slot=(i,count)=>collectionSlot(i,count).z;
   const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
+    const {x,y,z,roll}=collectionSlot(i,comics.length);
+    g.position.set(x,y,z);g.rotation.set(SLOT_LEAN,0,roll);
     if(comics[i].blindBag){
       const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls,sparkles});
       g.add(blind.group);
-      g.position.set((i%3-1)*.014,1.42,slot(i,comics.length));
-      g.rotation.set(-.025,0,(i%3-1)*.009);
-      return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
+      return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:SLOT_HEIGHT,v:0};
     }
     const booklet=createComicBook(THREE,{template:comicModel,frontQuad:comics[i].frontQuad,backQuad:comics[i].backQuad});
     const book=booklet.group,bag=createComicSleeve(THREE,comicModel),sleeve=bag.group;
@@ -204,9 +204,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     // The model is a standard 6⅝ × 10¼ in comic; smaller formats scale from it.
     book.scale.set(widthIn/6.625,heightIn/10.25,comics[i].thicknessScale??1);
     g.add(book,sleeve);
-    g.position.set((i%3-1)*.014,1.42,slot(i,comics.length));
-    g.rotation.set(-.025,0,(i%3-1)*.009);
-    return {group:g,book,booklet,sleeve,bag,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
+    return {group:g,book,booklet,sleeve,bag,baseZ:g.position.z,baseX:g.position.x,y:SLOT_HEIGHT,v:0};
   });
   cleanups.push(() => cards.forEach(card => {
     card.blind?.dispose();
@@ -238,7 +236,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   signal?.throwIfAborted();
   const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
-  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null;
+  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null,unwrapMotion=null;
   const lerp=THREE.MathUtils.lerp;
   let viewportWidth=1,viewportHeight=1,renderWidth=0,renderHeight=0;
   // Resizing clears WebGL's drawing buffer, so defer it until immediately
@@ -262,7 +260,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     const {owner,resolve,watchdog,entries}=packFiling;
     clearTimeout(watchdog);
     cards.forEach((card,i)=>{card.baseZ=slot(i,cards.length);});
-    entries.forEach(({card})=>{card.group.position.set(card.baseX,1.42,card.baseZ);card.group.scale.setScalar(1);});
+    entries.forEach(({card})=>{card.group.position.set(card.baseX,SLOT_HEIGHT,card.baseZ);card.group.scale.setScalar(1);});
     owner.showKeepsake();
     packFiling=null;dirty=true;resolve();
   }
@@ -276,12 +274,12 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     filing.entries.forEach(({card,start,quaternion,scale,index},k)=>{
       const {liftUp,reach,drop,arc}=sampleFile(filing.time,k);
       const above=Math.max(H+1.58,start.y+.21);
-      const y=lerp(lerp(start.y,above,liftUp)+arc,1.42,drop);
+      const y=lerp(lerp(start.y,above,liftUp)+arc,SLOT_HEIGHT,drop);
       // Follow the same lean as the filed books, so the leading edge stays
       // between its neighbours even while one comic is higher than another.
-      const z=card.baseZ+Math.sin(-.025)*(y-1.42);
+      const z=card.baseZ+Math.sin(SLOT_LEAN)*(y-SLOT_HEIGHT);
       card.group.position.set(lerp(start.x,card.baseX,reach),y,lerp(start.z,z,reach));
-      fileRotation.setFromEuler(fileEuler.set(-.025,0,(index%3-1)*.009));
+      fileRotation.setFromEuler(fileEuler.set(SLOT_LEAN,0,collectionSlot(index,cards.length).roll));
       card.group.quaternion.copy(quaternion).slerp(fileRotation,reach);
       card.group.scale.setScalar(lerp(scale,1,reach));
     });
@@ -319,13 +317,19 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       if(position.done)returnState.complete=true;
     }else{
       focusProgress=reduced?Number(inspecting):damp(focusProgress,Number(inspecting),dt,5);
-      unwrapProgress=reduced?Number(unwrapped):damp(unwrapProgress,Number(unwrapped),dt,3.9);
+      if(reduced){unwrapProgress=Number(unwrapped);unwrapMotion=null;}
+      else if(unwrapMotion){
+        unwrapMotion.elapsed+=Math.min(elapsed,.1);
+        const fraction=clamp(unwrapMotion.elapsed/unwrapMotion.duration,0,1);
+        unwrapProgress=lerp(unwrapMotion.from,Number(unwrapped),easeInOutSine(fraction));
+        if(fraction===1)unwrapMotion=null;
+      }
       detailProgress=reduced?wantedDetail:damp(detailProgress,wantedDetail,dt,6);
       inspectYaw=reduced?wantedInspectYaw:damp(inspectYaw,wantedInspectYaw,dt,8);
       inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     }
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
-    const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:(returnState?unwrapProgress:smooth(0,1,unwrapProgress));
+    const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:unwrapProgress;
     const sleeveRig=sampleSleeveRig(extraction);
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
@@ -358,21 +362,21 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     let bagsMoving=false;
     cards.forEach((card,i)=>{
       if(packFiling&&i>=packFiling.previousSlots.length)return;
-      const active=i===selected, lift=active?reveal:0;
-      const target=1.42+lift*3.13;
+      const active=i===selected, keepSeated=card.seatAfterFiling, lift=active&&!keepSeated?reveal:0;
+      const target=SLOT_HEIGHT+lift*3.13;
       if(active&&returnState){
         card.y=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:target},returnState.blend).height;card.v=0;
       }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
       card.group.visible=active||boxVisible;
-      card.group.position.y=active?lerp(card.y,3.2,focus):card.y+boxOffset;
-      const amount=clamp((card.y-1.42)/3.13,0,1);
+      card.group.position.y=active?lerp(card.y,3.2,focus)+(keepSeated?boxOffset*(1-focus):0):card.y+boxOffset;
+      const amount=clamp((card.y-SLOT_HEIGHT)/3.13,0,1);
       card.group.position.z=THREE.MathUtils.lerp(card.baseZ,1.12,amount);
       card.group.position.x=THREE.MathUtils.lerp(card.baseX,.2,amount);
       card.group.rotation.y=amount*.33;
-      card.group.rotation.x=-.025*(1-amount)+amount*.025;
+      card.group.rotation.x=SLOT_LEAN*(1-amount)+amount*.025;
       card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
-      if(card.blind){bagsMoving=card.blind.tick(packFrame,reduced,active?focus:0,mobileView.matches)||bagsMoving;}
+      if(card.blind){bagsMoving=card.blind.tick(packFrame,reduced,active?focus:0,mobileView.matches,1-smooth(0,.45,Math.max(amount,active?focus:0)))||bagsMoving;}
       else poseComicSleeve(card,active?sleeveRig:restingSleeve);
       if(active){
         card.group.position.x=lerp(card.group.position.x,0,focus);
@@ -431,7 +435,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       if(stableUnzoom&&!returnState.wideCamera){
         const card=cards[selected];
         unzoomBounds.copy(inspectionBounds);
-        if(extraction>.68){
+        if(extraction>.56){
           bookBounds.setFromObject(card.book);
           unzoomDelta.set(0,3.05,0).sub(card.book.position).applyMatrix3(unzoomMatrix.setFromMatrix4(card.group.matrixWorld));
           unzoomBounds.union(bookBounds.translate(unzoomDelta));
@@ -588,7 +592,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     },
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
-    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
+    select(index){if(index!==selected)cards[index].blind?.crinkle();cards[index].seatAfterFiling=false;selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
     rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
     stickers:stickerSystem,
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
@@ -597,19 +601,19 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
     focus(value,onProgress){
       wantedDetail=0;inspecting=value;held=false;
-      if(value){floatTime=0;floatStrength=0;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;scheduleReturnWarmup();return Promise.resolve();}
-      const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
+      if(value){floatTime=0;floatStrength=0;unwrapped=false;unwrapProgress=0;unwrapMotion=null;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;scheduleReturnWarmup();return Promise.resolve();}
+      const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;unwrapMotion=null;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
-        const startExtraction=smooth(0,1,unwrapProgress);
+        const startExtraction=unwrapProgress;
         const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startBoxOffset:body.position.y,startCamera:camera.position.clone(),startTarget:cameraTarget.clone(),startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},blend:0,cameraTimeline:0,complete:false,resolve,onProgress};
         returnState=state;
         state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
           // Preserve a coherent final pose for the next visible frame.
           focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;floatStrength=0;
           const reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-          cards[selected].y=1.42+(opened?reveal*3.13:0);cards[selected].v=0;
+          cards[selected].y=SLOT_HEIGHT+(opened&&!cards[selected].seatAfterFiling?reveal*3.13:0);cards[selected].v=0;
           returnState=null;dirty=true;wasSettled=false;stage.dataset.motionSettled='false';
         });
       });
@@ -630,13 +634,15 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       const owner=cards[selected].blind,metadata=makePackEntries(comics[selected]);
       const pulls=owner.takePulls();
       if(!pulls.length)return Promise.resolve([]);
+      cards[selected].seatAfterFiling=true;
       const previousSlots=cards.map(c=>c.baseZ);
       const entries=pulls.map((card,k)=>{
         const index=cards.length;
         world.attach(card.group);
         delete card.group.userData.pullIndex;
         card.group.userData.comicIndex=index;
-        Object.assign(card,{baseX:(index%3-1)*.014,baseZ:slot(index,previousSlots.length+pulls.length),y:1.42,v:0});
+        const seat=collectionSlot(index,previousSlots.length+pulls.length);
+        Object.assign(card,{baseX:seat.x,baseZ:seat.z,y:seat.y,v:0});
         cards.push(card);
         backsStarted.add(index); // The pack already streams these exact textures.
         return {card,index,start:card.group.position.clone(),quaternion:card.group.quaternion.clone(),scale:card.group.scale.x};
@@ -649,7 +655,12 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       });
     },
     hold(value){held=value;dirty=true;},
-    unwrap(value){unwrapped=inspecting&&value;dirty=true;},
+    unwrap(value){
+      const next=inspecting&&value;
+      if(next===unwrapped)return;
+      unwrapped=next;dirty=true;
+      unwrapMotion={from:unwrapProgress,elapsed:0,duration:Math.max(.18,1.13*Math.abs(Number(next)-unwrapProgress))};
+    },
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){
       const r=stage.getBoundingClientRect();

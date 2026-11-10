@@ -5,8 +5,8 @@ export const FILM_WIDTH_SCALE=1.057;
 export const FILM_HEIGHT_SCALE=1.008;
 export const FILM_DEPTH_SCALE=1.16;
 export const EMPTY_FRONT_SCALE=.72;
-// The model's flap opens about its hinge's local +X, to 150° at most.
-const FLAP_OPEN=150*Math.PI/180;
+// Local +X swings the flap behind the board and fully out of the opening.
+export const FLAP_OPEN=Math.PI;
 
 export function createComicSleeve(THREE,template){
   const group=new THREE.Group();group.name='bagged-and-boarded';
@@ -97,7 +97,7 @@ export function createComicSleeve(THREE,template){
     front.scale.z=settle;seams.scale.z=settle;
   }
   update(0,0);
-  return {group,board,film:sleeve,update,shine(value){bodyFilm.uniforms.sweep.value=value;},dispose(){bodyFilm.dispose();flapFilm.dispose();}};
+  return {group,board,film:sleeve,flap,update,shine(value){bodyFilm.uniforms.sweep.value=value;},dispose(){bodyFilm.dispose();flapFilm.dispose();}};
 }
 
 // Both the interactive extraction and Back to the box pose this exact rig.
@@ -114,6 +114,6 @@ export function poseComicSleeve(card,{pull,separate,lower,free,bagOpen,bagFinish
 export function posePackSleeve({book,bag},p){
   book.position.y=p.bookY;
   bag.board.visible=p.boardVisible;bag.board.position.y=p.boardY;
-  bag.film.visible=p.filmVisible;bag.film.position.y=p.filmY;
+  bag.film.visible=p.filmVisible;bag.film.position.set(0,p.filmY,p.filmZ);
   bag.update(p.flap,0);bag.shine(p.shine);
 }

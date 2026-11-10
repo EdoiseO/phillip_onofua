@@ -2,6 +2,15 @@ export const PACK_DURATION=2.3;
 export const FILE_DURATION=1.5;
 export const TEAR_THRESHOLD=.6;
 export const PULL_SCALE=.975;
+export const BAG_SCALE=.9;
+export const SLOT_HEIGHT=1.42;
+export const SLOT_LEAN=-.025;
+export const collectionSlot=(i,count)=>({
+  x:(i%3-1)*.014,y:SLOT_HEIGHT,z:1.43-i*(2.86/Math.max(1,count-1)),roll:(i%3-1)*.009,
+});
+export const SHORT_BOX={width:2.16,height:2.9,depth:4.15,wall:.068};
+export const tornPouchSeat=amount=>({scale:BAG_SCALE-.025*amount,lift:.064*amount});
+export const showTearStrip=(phase,time)=>phase==='sealed'||(phase==='opening'&&time<1.02);
 export const PACK_STACK_Z=[0,.025,-.025];
 
 const clamp=t=>Math.max(0,Math.min(1,t));
@@ -30,8 +39,8 @@ export function samplePack(time,index,phone=false){
   const side=index-1;
   const rowZ=phone?[.015,.24,-.20]:[0,.16,0];
   const start=1.30+index*.15,t=time-start;
-  const board=smooth(0,.18,t),lift=smooth(.09,.30,t);
-  const insert=smooth(.30,.60,t),seal=smooth(.60,.69,t);
+  const board=smooth(.105,.20,t),lift=smooth(.15,.34,t),align=smooth(.34,.40,t);
+  const insert=smooth(.40,.625,t),seal=smooth(.64,.70,t);
   const prepared=2.84*lift*(1-insert);
   const filmY=.18*(1-insert);
   return {
@@ -42,11 +51,12 @@ export function samplePack(time,index,phone=false){
     yaw:-side*(phone?.045:.035)*spread,
     scale:mix(PULL_SCALE,1,spread),
     visible:time>=pop,
-    boardVisible:t>=0,filmVisible:t>=.30,
+    boardVisible:t>=.105,filmVisible:t>=0,
     // The film descends as the book and board drop further, entering via
     // its fully open top. Outside that window the film cannot touch either.
-    bookY:prepared+filmY*lift,boardY:prepared+filmY*lift-.82*(1-board),
-    filmY,flap:1-seal,shine:t<.60?-1:clamp((t-.60)/.10),
+    bookY:prepared+filmY*lift,boardY:prepared+filmY*lift-.66*(1-board),
+    filmY,filmZ:-.28*(1-align),flap:smooth(0,.095,t)*(1-seal),
+    shine:t<.625?-1:clamp((t-.625)/.075),
   };
 }
 
