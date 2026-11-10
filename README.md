@@ -130,6 +130,10 @@ Vite builds the site into `dist/`. The HTML pages keep their own entry points
 and `public/` keeps shared assets at their original URLs. Off the clock ships
 as a separate static page with its vendored Three.js scene.
 
+Privacy, Terms, Receipt Splitter and Overlay Studio render from React components
+in `src/pages/`. Vite inserts the rendered HTML at build time so these pages
+can load and work without a client JavaScript bundle.
+
 ```sh
 npm ci
 npm run build
