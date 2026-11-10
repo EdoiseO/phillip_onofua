@@ -1,6 +1,6 @@
 import {comics} from './comics.js?v=39.2';
-import {createBox} from './model.js?v=44.1';
-import {createStageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.2';
+import {createBox} from './model.js?v=44.2';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.3';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -101,17 +101,25 @@ function leaveInspection(){
   // Keep the canvas in the same screen-space position as it leaves the dialog,
   // then carry it smoothly to the box. A normal-flow placeholder preserves
   // the page layout while the stage is temporarily fixed to the viewport.
-  let stageAnimation=null,placeholder=null;
+  let stageAnimation=null,placeholder=null,pageAnimations=[];
   if(!reduced){
     const to=stage.getBoundingClientRect();
     placeholder=stage.cloneNode(false);placeholder.removeAttribute('id');placeholder.removeAttribute('tabindex');placeholder.setAttribute('aria-hidden','true');stage.before(placeholder);
     stageAnimation=stage.animate(createStageReturnFrames(from,to),{duration:RETURN_DURATION_MS,fill:'both'});
     stageAnimation.pause();stageAnimation.currentTime=0;
+    pageAnimations=Array.from(document.querySelectorAll('.portfolio-header-wrap, .story, .viewer > :not(.stage), .footer'),element=>{
+      const animation=element.animate(createPageReturnFrames(),{duration:RETURN_DURATION_MS,fill:'both'});
+      animation.pause();animation.currentTime=0;return animation;
+    });
   }
-  returning=!reduced;const finished=box.focus(false,progress=>{if(stageAnimation)stageAnimation.currentTime=progress*RETURN_DURATION_MS;});
+  returning=!reduced;const finished=box.focus(false,progress=>{
+    const time=progress*RETURN_DURATION_MS;
+    if(stageAnimation)stageAnimation.currentTime=time;
+    pageAnimations.forEach(animation=>{animation.currentTime=time;});
+  });
   stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
   if(returning)announce('Returning to the box.');
-  finished.then(()=>{if(stageAnimation){stageAnimation.cancel();placeholder.remove();}returning=false;announce('Returned to the box.');});
+  finished.then(()=>{if(stageAnimation){stageAnimation.cancel();placeholder.remove();}pageAnimations.forEach(animation=>animation.cancel());returning=false;announce('Returned to the box.');});
 }
 function toggleSleeve(){
   if(!inspecting)return;const comic=comics[index];unwrapped=!unwrapped;

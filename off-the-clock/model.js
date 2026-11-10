@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, interpolateSleeveRig, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.2';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, interpolateSleeveRig, returnBoxOffset, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.3';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -232,10 +232,13 @@ export async function createBox(stage,comics){
     advanceLidMotion(lidMotion,reduced?Number(opened):lidWanted,dt,reduced);lidProgress=lidMotion.progress;
     boxDetails.setLidShadow(1-smooth(0,.12,lidProgress));
     const lidT=lidProgress,reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-    body.position.y=-7*focus;body.visible=focus<.995;
-    lid.visible=focus<.995;
+    const timeline=returnState?clamp(returnState.motion.elapsed/returnState.motion.duration,0,1):0;
+    const boxOffset=returnState?returnBoxOffset(returnState.startBoxOffset,timeline):-7*focus;
+    const boxVisible=focus<.995||(returnState&&timeline>.22);
+    body.position.y=boxOffset;body.visible=boxVisible;
+    lid.visible=boxVisible;
     const pose=lidPose(THREE,lidT,lidSide,lidTilt);
-    lid.position.set(...pose.position);lid.position.y-=7*focus;lid.rotation.copy(pose.rotation);
+    lid.position.set(...pose.position);lid.position.y+=boxOffset;lid.rotation.copy(pose.rotation);
     // A small closed-pose offset reads as a loose lid and blends away as it lifts.
     const loose=1-smooth(0,.25,lidProgress);lid.position.x+=.012*loose;lid.position.z-=.008*loose;
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
@@ -246,8 +249,8 @@ export async function createBox(stage,comics){
       if(active&&returnState){
         card.y=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:target},returnState.blend).height;card.v=0;
       }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
-      card.group.visible=active||focus<.995;
-      card.group.position.y=active?lerp(card.y,3.2,focus):card.y-7*focus;
+      card.group.visible=active||boxVisible;
+      card.group.position.y=active?lerp(card.y,3.2,focus):card.y+boxOffset;
       const amount=clamp((card.y-1.42)/3.13,0,1);
       card.group.position.z=THREE.MathUtils.lerp(card.baseZ,1.12,amount);
       card.group.position.x=THREE.MathUtils.lerp(card.baseX,.2,amount);
@@ -444,7 +447,7 @@ export async function createBox(stage,comics){
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
         const startExtraction=smooth(0,1,unwrapProgress);
-        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},startRig:{pull:smooth(.12,.68,startExtraction),settle:smooth(.68,1,startExtraction),free:smooth(.72,1,startExtraction),bagOpen:smooth(0,.2,startExtraction),bagFinish:smooth(.65,1,startExtraction),bookFocus:smooth(.9,1,startExtraction)},blend:0,complete:false,resolve,onProgress};
+        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startBoxOffset:body.position.y,startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},startRig:{pull:smooth(.12,.68,startExtraction),settle:smooth(.68,1,startExtraction),free:smooth(.72,1,startExtraction),bagOpen:smooth(0,.2,startExtraction),bagFinish:smooth(.65,1,startExtraction),bookFocus:smooth(.9,1,startExtraction)},blend:0,complete:false,resolve,onProgress};
         returnState=state;
         state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
           // Preserve a coherent final pose for the next visible frame.

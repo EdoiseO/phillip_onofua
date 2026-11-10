@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,interpolateSleeveRig,createStageReturnFrames,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
+import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,interpolateSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxOffset,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
 
 test('return overlaps sleeve restoration and camera movement',()=>{
   const state=createReturnMotion(1,1,true);
@@ -52,6 +52,32 @@ test('stage relocation stays continuous at 60 fps and ends at its layout bounds'
     if(index===0)assert.equal(parseFloat(frame[key]),from[key]);
     if(index===frames.length-1)assert.equal(parseFloat(frame[key]),to[key]);
     if(index)assert.ok(Math.abs(parseFloat(frame[key])-parseFloat(frames[index-1][key]))<22,`${key} jumps at ${index}`);
+  }
+});
+
+test('page controls fade in continuously over the first half of the return',()=>{
+  const frames=createPageReturnFrames();
+  assert.equal(frames[0].opacity,0);
+  assert.equal(frames[15].opacity,.5);
+  assert.equal(frames[30].opacity,1);
+  assert.equal(frames[60].opacity,1);
+  for(let i=1;i<frames.length;i++){
+    assert.ok(frames[i].opacity>=frames[i-1].opacity);
+    assert.ok(frames[i].opacity-frames[i-1].opacity<.1,'opacity does not jump');
+  }
+});
+
+test('box and lid return early without changing their starting or final offsets',()=>{
+  const start=-7;
+  assert.equal(returnBoxOffset(start,0),start);
+  assert.ok(returnBoxOffset(start,.4)>start/2,'box is already more than halfway back');
+  assert.equal(returnBoxOffset(start,.65),0);
+  assert.equal(returnBoxOffset(start,1),0);
+  let previous=start;
+  for(let i=1;i<=60;i++){
+    const offset=returnBoxOffset(start,i/60);
+    assert.ok(offset>=previous && offset-previous<.6,`box jumps on frame ${i}`);
+    previous=offset;
   }
 });
 

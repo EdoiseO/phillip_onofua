@@ -27,6 +27,21 @@ export function createStageReturnFrames(from, to) {
   });
 }
 
+// Bring the page controls back over the first half of the same return clock.
+export function createPageReturnFrames() {
+  return Array.from({length:61},(_,i)=>{
+    const offset=i/60;
+    return {offset,opacity:easeInOutCubic(Math.min(1,offset*2))};
+  });
+}
+
+// The box and its contents return sooner than the camera, while beginning at
+// their actual previous position so an interrupted inspection stays smooth.
+export function returnBoxOffset(start, timeline) {
+  const progress=Math.max(0,Math.min(1,timeline/.65));
+  return progress===1?0:start*(1-easeInOutCubic(progress));
+}
+
 // All inspection transforms and the raised comic height use the same eased
 // timeline progress. Supplying the current raised target also permits the box to
 // finish opening while the comic is returning.
