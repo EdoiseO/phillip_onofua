@@ -1,6 +1,6 @@
 import {comics} from './comics.js?v=39.5';
-import {createBox} from './model.js?v=44.7';
-import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.6';
+import {createBox} from './model.js?v=45.0';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.7';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
@@ -283,7 +283,7 @@ export function mountOffTheClock(stage, pageRoot) {
           if (!await box.firstPaint || signal.aborted) return;
           await loadCompactsStyle();
           if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.20');
+          const { openCompactDisplays } = await import('./compacts-display.js?v=2.21');
           if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
         } catch (error) {
           if (signal.aborted) return;

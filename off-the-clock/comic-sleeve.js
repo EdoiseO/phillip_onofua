@@ -1,6 +1,10 @@
 // A current-size polypropylene bag (6⅞ × 10½ in) and its backing board, from
 // the reviewed comic-set model. The flap folds down the back of the board.
-const BOARD_Z=-.0185;
+export const BOARD_Z=-.0185;
+export const FILM_WIDTH_SCALE=1.057;
+export const FILM_HEIGHT_SCALE=1.008;
+export const FILM_DEPTH_SCALE=1.16;
+export const EMPTY_FRONT_SCALE=.72;
 // The model's flap opens about its hinge's local +X, to 150° at most.
 const FLAP_OPEN=150*Math.PI/180;
 
@@ -12,26 +16,32 @@ export function createComicSleeve(THREE,template){
   const board=template.scene.getObjectByName('backing_board').clone(true);board.name='backing-board';
   const sleeve=template.scene.getObjectByName('sleeve').clone(true);
   holder.add(board,sleeve);
+  // The photographed model tapers into its welds. Give the board clearance
+  // inside the taper as well as between the nominal side edges.
+  sleeve.scale.set(FILM_WIDTH_SCALE,FILM_HEIGHT_SCALE,FILM_DEPTH_SCALE);
   // Reflect bright studio strips and dark cards on the film itself. No diffuse grey layer,
   // refractive blur, or detached plane carrying an artificial highlight. The
   // flap drops the dark cards: over the white board they read as an opaque band.
   const filmMaterial=darkCards=>new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, depthTest:true, side:THREE.FrontSide,
     forceSinglePass:true,
-    uniforms:{darkCards:{value:darkCards}},
+    uniforms:{darkCards:{value:darkCards},sweep:{value:-1}},
     vertexShader:`
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
+      varying vec2 vFilm;
       void main(){
         vec4 world=modelMatrix*vec4(position,1.0);
         vWorldPosition=world.xyz;
+        vFilm=position.xy;
         vWorldNormal=normalize(mat3(modelMatrix)*normal);
         gl_Position=projectionMatrix*viewMatrix*world;
       }`,
     fragmentShader:`
-      uniform float darkCards;
+      uniform float darkCards,sweep;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
+      varying vec2 vFilm;
       float panel(vec2 p,vec2 center,vec2 size){
         vec2 d=abs(p-center);
         vec2 fall=vec2(1.0)-smoothstep(size,size+vec2(.12,.2),d);
@@ -56,6 +66,10 @@ export function createComicSleeve(THREE,template){
         darkCard+=.65*panel(studio,vec2(.66,.05),vec2(.04,1.9));
         float core=exp(-pow((studio.x+.70)/.024,2.0))*(1.0-smoothstep(1.5,2.3,abs(studio.y-.22)));
         float brightAlpha=light*(.25+.55*fresnel)+core*.17;
+        if(sweep>=0.0){
+          float stripe=(vFilm.x*.8+vFilm.y*.19+.95)/1.9;
+          brightAlpha+=.25*sin(sweep*3.14159265)*exp(-pow((stripe-sweep)/.095,2.0));
+        }
         float darkAlpha=min(darkCard,1.0)*(.20+.07*fresnel)*darkCards;
         float clearAlpha=.002+fresnel*.045;
         float total=brightAlpha+darkAlpha+clearAlpha;
@@ -79,9 +93,9 @@ export function createComicSleeve(THREE,template){
     if(Math.abs(previousEmpty-empty)<.0001&&Math.abs(previousOpening-opening)<.0001)return;
     previousOpening=opening;previousEmpty=empty;
     flap.rotation.x=FLAP_OPEN*opening;
-    const settle=THREE.MathUtils.lerp(1,.35,empty);
+    const settle=THREE.MathUtils.lerp(1,EMPTY_FRONT_SCALE,empty);
     front.scale.z=settle;seams.scale.z=settle;
   }
   update(0,0);
-  return {group,update,dispose(){bodyFilm.dispose();flapFilm.dispose();}};
+  return {group,board,film:sleeve,update,shine(value){bodyFilm.uniforms.sweep.value=value;},dispose(){bodyFilm.dispose();flapFilm.dispose();}};
 }

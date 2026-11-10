@@ -80,9 +80,10 @@ export function sampleSleeveRig(out) {
     return x * x * (3 - 2 * x);
   };
   return {
-    pull:smooth(.12,.68,out), settle:smooth(.68,1,out),
-    free:smooth(.72,1,out), bagOpen:smooth(0,.2,out),
-    bagFinish:smooth(.65,1,out), bookFocus:smooth(.9,1,out)
+    pull:smooth(.18,.68,out), settle:smooth(.68,1,out),
+    separate:smooth(.68,.84,out), lower:smooth(.78,1,out),
+    free:smooth(.81,1,out), bagOpen:smooth(0,.18,out),
+    bagFinish:smooth(.69,1,out), bookFocus:smooth(.9,1,out)
   };
 }
 

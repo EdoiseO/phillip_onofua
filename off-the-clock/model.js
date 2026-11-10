@@ -3,14 +3,14 @@ import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve } from './comic-sleeve.js?v=38.0';
+import { createComicSleeve } from './comic-sleeve.js?v=39.0';
 import { createComicBook } from './comic-book.js?v=40.0';
 import { loadBlindBag, createBlindBag } from './blind-bag.js?v=40.0';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
 import { mobileControlsQuery } from './ruler-control.js?v=19.1';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.6';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.7';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -208,6 +208,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   cleanups.push(() => cards.forEach(card => {
     card.blind?.dispose();
     card.booklet?.dispose();
+    card.bag?.dispose();
   }));
   const shadowMap=canvasTexture(256,256,(c,w,h)=>{const gradient=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);gradient.addColorStop(0,'rgba(0,0,0,.8)');gradient.addColorStop(.4,'rgba(0,0,0,.45)');gradient.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gradient;c.fillRect(0,0,w,h);});
   // Shadow helpers belong to the scene, not the rotating box. In particular,
@@ -243,6 +244,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   const ro=new ResizeObserver(resize);ro.observe(stage);resize();
   const bookBounds=new THREE.Box3();
   const inspectionBounds=new THREE.Box3(),inspectionCenter=new THREE.Vector3(),inspectionCamera=new THREE.Vector3();
+  const restingSleeve=sampleSleeveRig(0);
   const sleeveBounds=new THREE.Box3(),sleeveOffset=new THREE.Vector3(),inverseCardRotation=new THREE.Quaternion();
   const unzoomBounds=new THREE.Box3(),unzoomDelta=new THREE.Vector3(),unzoomMatrix=new THREE.Matrix3();
   const overviewCamera=homeCamera.clone(),overviewTarget=homeTarget.clone();
@@ -289,7 +291,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     }
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
     const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:(returnState?unwrapProgress:smooth(0,1,unwrapProgress));
-    const sleeveRig=returnState?sampleSleeveRig(extraction):null;
+    const sleeveRig=sampleSleeveRig(extraction);
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
@@ -334,13 +336,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
       if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(active&&returnState?dt*2.5:dt,reduced)||bagsMoving;}
       else{
-      const out=active?extraction:0,pull=active&&sleeveRig?sleeveRig.pull:smooth(.12,.68,out),settle=active&&sleeveRig?sleeveRig.settle:smooth(.68,1,out);
-      card.book.position.set(.75*settle,3.05*pull-2.57*settle,.36*settle);
-      card.book.rotation.z=-.025*settle;
-      card.booklet.setFree(active&&sleeveRig?sleeveRig.free:smooth(.72,1,out));
-      card.sleeve.position.set(-1.12*settle,-.26*settle,-.36*settle);
-      card.sleeve.rotation.set(0,-.28*settle,.1*settle);
-      card.bag.update(active&&sleeveRig?sleeveRig.bagOpen:smooth(0,.2,out),active&&sleeveRig?sleeveRig.bagFinish:smooth(.65,1,out));
+        const {pull,separate,lower,free,bagOpen,bagFinish}=active?sleeveRig:restingSleeve;
+        card.book.position.set(.75*separate,3.05*pull-2.57*lower,.36*separate);
+        card.book.rotation.z=-.025*separate;
+        card.booklet.setFree(free);
+        card.sleeve.position.set(-1.12*separate,-.26*separate,-.36*separate);
+        card.sleeve.rotation.set(0,-.28*separate,.1*separate);
+        card.bag.update(bagOpen,bagFinish);
       }
       if(active){
         card.group.position.x=lerp(card.group.position.x,0,focus);
@@ -391,7 +393,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       cards[selected].group.updateWorldMatrix(true,true);
       if(cards[selected].blind)cards[selected].blind.bounds(inspectionBounds);else inspectionBounds.setFromObject(cards[selected].group);
       inspectionBounds.getCenter(inspectionCenter);
-      const bookFocus=cards[selected].blind?0:(sleeveRig?sleeveRig.bookFocus:smooth(.9,1,extraction))*detailProgress;
+      const bookFocus=cards[selected].blind?0:sleeveRig.bookFocus*detailProgress;
       // During a zoomed slide-out return, capture a stable wide view once. The
       // extracted comic rises before descending, so include that peak pose in
       // the fit instead of chasing the changing bounds and zooming in and out.
