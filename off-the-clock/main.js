@@ -227,7 +227,7 @@ try{
         const style=document.createElement('link');style.rel='stylesheet';style.href='./compacts.css?v=2.11';style.dataset.compacts='';
         await new Promise((resolve,reject)=>{style.onload=resolve;style.onerror=()=>{style.remove();reject(new Error('Could not load paperback styles'));};document.head.append(style);});
       }
-      const {openCompactDisplays}=await import('./compacts-display.js?v=2.16');
+      const {openCompactDisplays}=await import('./compacts-display.js?v=2.17');
       openCompactDisplays({box,inline});
     }catch(error){console.error('Unable to prepare paperback displays',error);announce('The paperback displays could not be opened. Please try again.');}
     finally{compactsLoading=false;}

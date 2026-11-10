@@ -21,7 +21,7 @@ export function openCompactDisplays({box,inline=false}){
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;const shadowCtx=shadowCanvas.getContext('2d'),gradient=shadowCtx.createRadialGradient(64,64,2,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.36)');gradient.addColorStop(1,'rgba(0,0,0,0)');shadowCtx.fillStyle=gradient;shadowCtx.fillRect(0,0,128,128);const shadowTexture=new THREE.CanvasTexture(shadowCanvas),shadowMaterial=new THREE.MeshBasicMaterial({map:shadowTexture,transparent:true,depthWrite:false});
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
-  let display='stand',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
+  let display='switch',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
   const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
@@ -93,7 +93,8 @@ export function openCompactDisplays({box,inline=false}){
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
     }else{
       if(!preserveInspection){title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
-      // One display: the short box with both books face-out on the stand beside it.
+      // Shelf, stand and stack layouts are kept for reference; the page uses
+      // the Compacts shelf (display 'switch'): both books spine-out, no box.
       if(display!=='switch')showBox();
       if(display==='shelf'){
         cube(1.65,.12,.83,materials.wood,2.13,.75,0);cube(.08,.72,.7,materials.dark,2.23,1.14,0);cube(.10,.56,.10,materials.dark,1.60,.45,-.23);cube(.10,.56,.10,materials.dark,2.70,.45,-.23);contactShadow(2.02,.812,0,1.3,.7);
