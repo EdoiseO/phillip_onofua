@@ -88,7 +88,7 @@ export function HomeAbout() {
               </li>
               <li>
                 <a
-                  href="https://github.com/EdoiseO/phillip_onofua/blob/main/index.html"
+                  href="https://github.com/EdoiseO/phillip_onofua/blob/main/src/pages/Home.jsx"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="HTML: view portfolio markup"
