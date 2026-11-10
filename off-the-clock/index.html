@@ -74,7 +74,8 @@
   </div>
   <dialog class="compact-dialog" id="compact-dialog" aria-labelledby="compact-title">
     <header class="compact-header">
-      <button id="compact-close" type="button">← Back to comics</button>
+      <button class="back-button" id="compact-close" type="button">← <span>Back to comics</span></button>
+      <button class="back-button" id="compact-return" type="button" hidden>← <span>Back to display</span></button>
       <div><p>A CLOSER LOOK AT THE COLLECTION</p><h2 id="compact-title">Compact Comics displays</h2></div>
       <span>01 / 04</span>
     </header>
@@ -94,7 +95,6 @@
     <div class="compact-book-controls" role="group" aria-label="Choose a paperback">
       <button type="button" data-book="0">Inspect Static: Season One</button>
       <button type="button" data-book="1">Inspect Green Arrow: Year One</button>
-      <button type="button" id="compact-return" hidden>← Back to display</button>
     </div>
   </dialog>
   <dialog class="inspection" id="inspection" aria-labelledby="inspection-title" aria-describedby="inspection-instructions">
@@ -170,6 +170,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=51.2"></script>
+  <script type="module" src="./main.js?v=51.6"></script>
 </body>
 </html>

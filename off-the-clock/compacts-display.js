@@ -22,7 +22,7 @@ export function openCompactDisplays({box,inline=false}){
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
   let display=inline?'switch':'shelf',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
-  const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return');
+  const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
   const ro=new ResizeObserver(()=>{if(!moving&&!returning)frameScene();});ro.observe(mount);
@@ -57,7 +57,7 @@ export function openCompactDisplays({box,inline=false}){
       activeScene=separateScene;
     }else activeScene=scene;
     activeScene.add(root);
-    if(!preserveInspection){inspectControls.hidden=selected<0;backButton.hidden=selected<0;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});}
+    if(!preserveInspection){inspectControls.hidden=selected<0;backButton.hidden=selected<0;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});}
     if(selected>=0){
       title.textContent=compacts[selected].title;
       note.textContent=`${compacts[selected][`${angle}ImageNote`]} · Drag to turn`;
@@ -128,7 +128,7 @@ export function openCompactDisplays({box,inline=false}){
     const snapshots=snapshotUI({embedded:inline});
     selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;
     dialog.classList.toggle('compact-inspecting',inline);if(inline)dialog.setAttribute('aria-modal','true');
-    inspectControls.hidden=false;backButton.hidden=false;bookButtons.forEach(b=>b.hidden=true);options.forEach(b=>b.hidden=true);
+    inspectControls.hidden=false;backButton.hidden=false;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=true);options.forEach(b=>b.hidden=true);
     title.textContent=compacts[i].title;note.textContent=`${compacts[i].frontImageNote} · Drag to turn`;
     views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view==='front')));
     const ui=startUISwap(snapshots);uiCleanup=()=>{ui.dispose();uiCleanup=null;};
@@ -176,7 +176,7 @@ export function openCompactDisplays({box,inline=false}){
     const fromCamera=camera.position.clone(),fromCameraRotation=camera.quaternion.clone(),fromFov=camera.fov;
     const snapshots=snapshotUI();
     selected=-1;build({preserveInspection:true});
-    inspectControls.hidden=true;backButton.hidden=true;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
+    inspectControls.hidden=true;backButton.hidden=true;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
     title.textContent='Compact Comics displays';note.textContent='Choose a book to take a closer look.';
     dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
     const ui=startUISwap(snapshots,{inlineReturn:inline});uiCleanup=()=>{ui.dispose();uiCleanup=null;};
