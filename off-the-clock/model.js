@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion } from './return-motion.js?v=1.0';
+import { createReturnMotion, advanceReturnMotion, finishReturnIfReady, shouldSkipSceneFrame } from './return-motion.js?v=1.1';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -174,7 +174,7 @@ export async function createBox(stage,comics){
   if(stickerSystem.hasSaved)await stickerSystem.ready().catch(error=>console.warn('Saved stickers could not load',error));
   const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
-  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null,returnParked=false;
+  let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null;
   const lerp=THREE.MathUtils.lerp;
   let viewportWidth=1,viewportHeight=1;
   const resize=()=>{viewportWidth=Math.max(1,stage.clientWidth);viewportHeight=Math.max(1,stage.clientHeight);renderer.setSize(viewportWidth,viewportHeight,false);dirty=true;};
@@ -194,10 +194,10 @@ export async function createBox(stage,comics){
     frame=requestAnimationFrame(update);const elapsed=Math.max(0,(now-last)/1000),dt=Math.min(elapsed,.035);last=now;
     if(document.hidden||!visible)return;
     const stickersMoving=stickerSystem.tick(dt,reduced);
-    if(!dirty&&wasSettled&&floatStrength<=.0001&&!stickersMoving)return;
+    if(shouldSkipSceneFrame(Boolean(returnState),dirty,wasSettled,floatStrength,stickersMoving))return;
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     if(returnState){
-      const position=advanceReturnMotion(returnState.motion,reduced?10:elapsed);
+      const position=advanceReturnMotion(returnState.motion,reduced?10:dt);
       focusProgress=position.focus;unwrapProgress=position.extraction;
       if(position.done){returnState.complete=true;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;}
     }else{
@@ -234,11 +234,11 @@ export async function createBox(stage,comics){
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
     let bagsMoving=false;
     cards.forEach((card,i)=>{
-      const active=i===selected, lift=active&&!returnParked?reveal:0;
+      const active=i===selected, lift=active?reveal:0;
       const target=1.42+lift*3.13;
       if(active&&returnState){
         const progress=returnState.motion.focus>0?1-focusProgress/returnState.motion.focus:1;
-        card.y=lerp(returnState.startY,1.42,clamp(progress,0,1));card.v=0;
+        card.y=lerp(returnState.startY,target,clamp(progress,0,1));card.v=0;
       }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
       card.group.visible=active||focus<.995;
       card.group.position.y=active?lerp(card.y,3.2,focus):card.y-7*focus;
@@ -249,7 +249,7 @@ export async function createBox(stage,comics){
       card.group.rotation.x=-.025*(1-amount)+amount*.025;
       card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
-      if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(active&&returnState?elapsed*2.5:dt,reduced)||bagsMoving;}
+      if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(active&&returnState?dt*2.5:dt,reduced)||bagsMoving;}
       else{
       const out=active?extraction:0,pull=smooth(.12,.68,out),settle=smooth(.68,1,out);
       card.book.position.set(.75*settle,3.05*pull-2.57*settle,.36*settle);
@@ -353,11 +353,10 @@ export async function createBox(stage,comics){
     stage.dataset.halo=halo.visible?'on':'off';
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving;
     stage.dataset.motionSettled=String(settled && (!returnState || returnState.complete));
-    if(returnState?.complete && settled){
-      const finished=returnState;returnState=null;cards[selected].blind?.reset();
-      // Render the exact seated pose even when the scene becomes settled on
-      // this frame; otherwise the previous raised frame can remain on screen.
-      dirty=true;stage.dataset.returning='false';finished.resolve();
+    if(finishReturnIfReady(returnState,stage,settled,dt)){
+      returnState=null;cards[selected].blind?.reset();
+      // Render the final pose even if this is the last animated frame.
+      dirty=true;
     }
     wasSettled=settled;
     if(dirty||!settled||floatStrength>.0001||stickersMoving){
@@ -422,8 +421,8 @@ export async function createBox(stage,comics){
       return copy;
     },
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
-    setOpen(value){opened=value;if(value)returnParked=false;dirty=true;stage.dataset.state=value?'open':'closed';},
-    select(index){if(index!==selected)cards[index].blind?.crinkle();returnParked=false;selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
+    setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
+    select(index){if(index!==selected)cards[index].blind?.crinkle();selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
     rotate(dx,dy=0){if(inspecting){wantedInspectYaw+=dx;wantedInspectPitch=clamp(wantedInspectPitch+dy,-.85,.85);}else if(decorating){desiredYaw+=dx;desiredPitch=clamp(desiredPitch+dy,-.45,1.1);}else{desiredYaw=clamp(desiredYaw+dx,-.8,.8);desiredPitch=clamp(desiredPitch+dy,-.08,.12);}dirty=true;},
     stickers:stickerSystem,
     decorate(value){decorating=value;desiredYaw=0;desiredPitch=0;dirty=true;},
@@ -432,8 +431,8 @@ export async function createBox(stage,comics){
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
     focus(value){
       wantedDetail=0;inspecting=value;held=false;floatTime=0;floatStrength=0;
-      if(value){returnParked=false;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
-      const needsRestore=unwrapped||unwrapProgress>.001;returnParked=true;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
+      if(value){unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
+      const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{returnState={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),startY:cards[selected].y,complete:false,resolve};});
