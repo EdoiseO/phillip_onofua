@@ -3,9 +3,9 @@ import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.1';
+import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.2';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.6';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.7';
 import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.3';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
@@ -187,18 +187,19 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   // is visible yet: covers, backs and pulls stream in once it is on screen.
   const [comicModel,bagModel]=await modelsReady;
   signal?.throwIfAborted();
+  const visibleFilm=new URLSearchParams(location.search).get('film')==='visible';
   const slot=(i,count)=>collectionSlot(i,count).z;
   const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     const {x,y,z,roll}=collectionSlot(i,comics.length);
     g.position.set(x,y,z);g.rotation.set(SLOT_LEAN,0,roll);
     if(comics[i].blindBag){
-      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls});
+      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls,visibleFilm});
       g.add(blind.group);
       return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:SLOT_HEIGHT,v:0};
     }
     const booklet=createComicBook(THREE,{template:comicModel,frontQuad:comics[i].frontQuad,backQuad:comics[i].backQuad});
-    const book=booklet.group,bag=createComicSleeve(THREE,comicModel),sleeve=bag.group;
+    const book=booklet.group,bag=createComicSleeve(THREE,comicModel,{visibleFilm}),sleeve=bag.group;
     const [widthIn,heightIn]=comics[i].physicalSizeInches??[6.625,10.25];
     // The model is a standard 6⅝ × 10¼ in comic; smaller formats scale from it.
     book.scale.set(widthIn/6.625,heightIn/10.25,comics[i].thicknessScale??1);
