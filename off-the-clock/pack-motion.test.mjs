@@ -172,7 +172,7 @@ test('the real sleeve flap opens fully before motion in both directions and clos
       const v=new THREE.Vector3();
       for(let i=0;i<mesh.geometry.attributes.position.count;i++){
         mesh.getVertexPosition(i,v).applyMatrix4(mesh.matrixWorld);
-        if(v.y>top-.0005&&Math.abs(v.x)<.75)depth.push(v.z);
+        if(v.y>top-.0005)depth.push(v.z);
       }
     });
     assert.ok(depth.length);
@@ -182,7 +182,7 @@ test('the real sleeve flap opens fully before motion in both directions and clos
   const front=mouthDepth(rig.bag.film.getObjectByName('sleeve_front'));
   const back=mouthDepth(rig.bag.film.getObjectByName('sleeve_back'));
   const contents=new THREE.Box3().setFromObject(rig.book,true).union(new THREE.Box3().setFromObject(rig.bag.board,true));
-  assert.equal(rig.bag.flap.rotation.x,FLAP_OPEN);
+  assert.equal(rig.bag.flapPanel.rotation.x,FLAP_OPEN);
   assert.ok(Math.min(...front)-Math.max(...back)>contents.max.z-contents.min.z,
     'the physical mouth fits the comic and board depth together');
   for(const direction of [1,-1]){
@@ -247,4 +247,26 @@ test('the posed torn wrapper fits below the rim in every slot without the detach
     scene.scale.setScalar(seat.scale);scene.position.y=seat.lift;
     assert.ok(interior.containsBox(measure()),`torn pouch outside the box at ${index+1}/${count}`);
   }
+});
+
+test('the thin sleeve stays straight and its flap covers the opening when sealed',async()=>{
+  const rig=makeRig(await comicModel);
+  const bounds=name=>new THREE.Box3().setFromObject(rig.bag.film.getObjectByName(name),true);
+  rig.group.updateMatrixWorld(true);
+  const front=bounds('sleeve_front'),back=bounds('sleeve_back');
+  const bridge=bounds('sleeve_flap_bridge'),tail=bounds('sleeve_flap_panel');
+  const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} differs from ${b}`);
+  near(front.min.z,front.max.z);
+  near(back.min.z,back.max.z);
+  near(front.max.y,back.max.y);
+  near(bridge.max.y,front.max.y);
+  near(bridge.min.y,front.max.y);
+  assert.ok(bridge.min.z<back.min.z,'the top bridge spans the back lip');
+  near(bridge.max.z,front.max.z);
+  assert.ok(tail.max.z<back.min.z&&tail.min.y<back.max.y,'the tail folds flat behind the rear sheet');
+  rig.bag.update(1);rig.group.updateMatrixWorld(true);
+  const open=bounds('sleeve_flap');
+  near(open.min.y,front.max.y);near(open.min.z,front.max.z);
+  near(Math.atan2(open.max.y-open.min.y,open.max.z-open.min.z),Math.PI/6);
+  assert.deepEqual(bounds('sleeve_front'),front,'the front lip remains straight during opening');
 });

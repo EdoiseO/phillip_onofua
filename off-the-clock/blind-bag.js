@@ -2,8 +2,8 @@
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=39.2';
-import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, smooth, tornPouchSeat } from './pack-motion.js?v=1.2';
+import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.0';
+import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, smooth, tornPouchSeat } from './pack-motion.js?v=1.3';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.

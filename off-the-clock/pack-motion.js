@@ -41,7 +41,7 @@ export function samplePack(time,index,phone=false){
   const start=1.30+index*.15,t=time-start;
   const board=smooth(.105,.20,t),lift=smooth(.15,.34,t),align=smooth(.34,.40,t);
   const insert=smooth(.40,.625,t),seal=smooth(.64,.70,t);
-  const prepared=2.84*lift*(1-insert);
+  const prepared=3.06*lift*(1-insert);
   const filmY=.18*(1-insert);
   return {
     x:side*(phone?1.37:1.97)*spread,
@@ -55,7 +55,7 @@ export function samplePack(time,index,phone=false){
     // The film descends as the book and board drop further, entering via
     // its fully open top. Outside that window the film cannot touch either.
     bookY:prepared+filmY*lift,boardY:prepared+filmY*lift-.66*(1-board),
-    filmY,filmZ:-.28*(1-align),flap:smooth(0,.095,t)*(1-seal),
+    filmY,filmZ:-.46*(1-align),flap:smooth(0,.095,t)*(1-seal),
     shine:t<.625?-1:clamp((t-.625)/.075),
   };
 }

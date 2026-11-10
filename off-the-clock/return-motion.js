@@ -86,7 +86,7 @@ export function sampleSleeveRig(out) {
     // Closed at both endpoints. The plateaus leave a beat with the hinge
     // fully open on either side of the comic's movement, in both directions.
     bagOpen:smooth(0,.13,out)*(1-smooth(.88,1,out)),
-    bagFinish:smooth(.56,.84,out), bookFocus:smooth(.74,.85,out)
+    bookFocus:smooth(.74,.85,out)
   };
 }
 

@@ -1,29 +1,20 @@
-// A current-size polypropylene bag (6⅞ × 10½ in) and its backing board, from
-// the reviewed comic-set model. The flap folds down the back of the board.
+// A thin polypropylene sleeve around the backing board from the reviewed
+// comic-set asset. Its front lip and flap span the mouth when sealed.
 export const BOARD_Z=-.0185;
-export const FILM_WIDTH_SCALE=1.057;
-export const FILM_HEIGHT_SCALE=1.008;
-export const FILM_DEPTH_SCALE=1.16;
-export const EMPTY_FRONT_SCALE=.72;
-// Local +X swings the flap behind the board and fully out of the opening.
-export const FLAP_OPEN=Math.PI;
+export const FLAP_OPEN=Math.PI/3; // Measured from upright toward the front: 30° above horizontal.
+const HALF_WIDTH=.905,TOP=1.407,BOTTOM=-1.394,FRONT=.0155,BACK=-.024;
+const BRIDGE=FRONT-BACK+.002,TAIL=.323;
+const smooth=t=>{const x=Math.min(1,Math.max(0,t));return x*x*(3-2*x);};
 
 export function createComicSleeve(THREE,template){
   const group=new THREE.Group();group.name='bagged-and-boarded';
-  // The model is centred on the board; the site keeps the board 0.0185
-  // behind the comic's own centre.
-  const holder=new THREE.Group();holder.position.z=BOARD_Z;group.add(holder);
-  const board=template.scene.getObjectByName('backing_board').clone(true);board.name='backing-board';
-  const sleeve=template.scene.getObjectByName('sleeve').clone(true);
-  holder.add(board,sleeve);
-  // The photographed model tapers into its welds. Give the board clearance
-  // inside the taper as well as between the nominal side edges.
-  sleeve.scale.set(FILM_WIDTH_SCALE,FILM_HEIGHT_SCALE,FILM_DEPTH_SCALE);
+  const board=template.scene.getObjectByName('backing_board').clone(true);board.name='backing-board';board.position.z=BOARD_Z;
+  const sleeve=new THREE.Group();sleeve.name='sleeve';group.add(board,sleeve);
   // Reflect bright studio strips and dark cards on the film itself. No diffuse grey layer,
   // refractive blur, or detached plane carrying an artificial highlight. The
   // flap drops the dark cards: over the white board they read as an opaque band.
   const filmMaterial=darkCards=>new THREE.ShaderMaterial({
-    transparent:true, depthWrite:false, depthTest:true, side:THREE.FrontSide,
+    transparent:true, depthWrite:false, depthTest:true, side:THREE.DoubleSide,
     forceSinglePass:true,
     uniforms:{darkCards:{value:darkCards},sweep:{value:-1}},
     vertexShader:`
@@ -79,41 +70,69 @@ export function createComicSleeve(THREE,template){
       }`
   });
   const bodyFilm=filmMaterial(1),flapFilm=filmMaterial(0);
-  const flap=sleeve.getObjectByName('sleeve_flap'),front=sleeve.getObjectByName('sleeve_front'),seams=sleeve.getObjectByName('sleeve_weld_edges');
-  sleeve.traverse(o=>{
-    if(!o.isMesh)return;
-    // Clear film draws after the opaque comic and board behind it.
-    o.renderOrder=1;
-    if(o.material.name==='film'){let p=o;while(p&&p!==flap)p=p.parent;o.material=p?flapFilm:bodyFilm;}
-  });
-  let previousOpening=-1,previousEmpty=-1;
-  // Opening swings the flap up off the back; empty means the comic has left,
-  // so the front film settles toward the board that is still enclosed.
-  function update(opening,empty){
-    if(Math.abs(previousEmpty-empty)<.0001&&Math.abs(previousOpening-opening)<.0001)return;
-    previousOpening=opening;previousEmpty=empty;
-    flap.rotation.x=FLAP_OPEN*opening;
-    const settle=THREE.MathUtils.lerp(1,EMPTY_FRONT_SCALE,empty);
-    front.scale.z=settle;seams.scale.z=settle;
+  const owned=[];
+  function sheet(parent,name,width,height,material){
+    const geometry=new THREE.PlaneGeometry(width,height);
+    const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.renderOrder=1;
+    owned.push(geometry);parent.add(mesh);return mesh;
   }
-  update(0,0);
-  return {group,board,film:sleeve,flap,update,shine(value){bodyFilm.uniforms.sweep.value=value;},dispose(){bodyFilm.dispose();flapFilm.dispose();}};
+  const height=TOP-BOTTOM,centerY=(TOP+BOTTOM)/2,depth=FRONT-BACK;
+  // Keep both film faces straight through the mouth. The narrow welded
+  // perimeter is separate from the two faces and cannot roll into the path.
+  sheet(sleeve,'sleeve_front',2*HALF_WIDTH,height,bodyFilm).position.set(0,centerY,FRONT);
+  sheet(sleeve,'sleeve_back',2*HALF_WIDTH,height,bodyFilm).position.set(0,centerY,BACK);
+  for(const side of [-1,1]){
+    const weld=sheet(sleeve,'sleeve_side_weld',depth,height,flapFilm);
+    weld.rotation.y=Math.PI/2;weld.position.set(side*HALF_WIDTH,centerY,(FRONT+BACK)/2);
+  }
+  const bottom=sheet(sleeve,'sleeve_bottom_weld',2*HALF_WIDTH,depth,flapFilm);
+  bottom.rotation.x=Math.PI/2;bottom.position.set(0,BOTTOM,(FRONT+BACK)/2);
+  const flap=new THREE.Group();flap.name='sleeve_flap';
+  flap.position.set(0,TOP,FRONT);sleeve.add(flap);
+  const bridge=sheet(flap,'sleeve_flap_bridge',2*HALF_WIDTH,BRIDGE,flapFilm);
+  const tail=sheet(flap,'sleeve_flap_panel',2*HALF_WIDTH,TAIL,flapFilm);
+  const inverse=new THREE.Quaternion();
+  let previousOpening=-1;
+  function update(opening){
+    if(Math.abs(previousOpening-opening)<.00001)return;
+    previousOpening=opening;
+    // Peel the taped section away from the back first. Once straight,
+    // the two segments swing together off the front lip as a flat panel.
+    const angle=THREE.MathUtils.lerp(-Math.PI/2,FLAP_OPEN,smooth((opening-.29)/.71));
+    const tailAngle=opening<.29?THREE.MathUtils.lerp(-Math.PI,-Math.PI/2,smooth(opening/.29)):angle;
+    const y=Math.cos(angle)*BRIDGE,z=Math.sin(angle)*BRIDGE;
+    bridge.rotation.x=angle;bridge.position.set(0,y/2,z/2);
+    tail.rotation.x=tailAngle;tail.position.set(0,y+Math.cos(tailAngle)*TAIL/2,z+Math.sin(tailAngle)*TAIL/2);
+  }
+  function placeBoard(x,y,z){
+    // Express the desired position in the comic's frame, even as the empty
+    // sleeve turns aside. This keeps the board upright beside the comic.
+    inverse.copy(group.quaternion).invert();
+    board.position.set(x,y,z).sub(group.position).applyQuaternion(inverse);
+    board.quaternion.copy(inverse);
+  }
+  update(0);
+  return {group,board,film:sleeve,flap,flapPanel:tail,update,placeBoard,
+    shine(value){bodyFilm.uniforms.sweep.value=value;},
+    dispose(){bodyFilm.dispose();flapFilm.dispose();owned.forEach(g=>g.dispose());}};
 }
 
 // Both the interactive extraction and Back to the box pose this exact rig.
 // Translate the comic out of the film's depth before lowering it beside the board.
-export function poseComicSleeve(card,{pull,separate,lower,free,bagOpen,bagFinish}){
-  card.book.position.set(.75*separate,3.05*pull-2.57*lower,.36*separate);
+export function poseComicSleeve(card,{pull,separate,lower,free,bagOpen}){
+  const height=3.05*pull-2.57*lower;
+  card.book.position.set(.75*separate,height,.36*separate);
   card.book.rotation.z=-.025*separate;
   card.booklet.setFree(free);
   card.sleeve.position.set(-1.12*separate,-.26*separate,-.36*separate);
   card.sleeve.rotation.set(0,-.28*separate,.1*separate);
-  card.bag.update(bagOpen,bagFinish);
+  card.bag.placeBoard(-1.12*separate,height,BOARD_Z+.30*separate);
+  card.bag.update(bagOpen);
 }
 
 export function posePackSleeve({book,bag},p){
   book.position.y=p.bookY;
   bag.board.visible=p.boardVisible;bag.board.position.y=p.boardY;
   bag.film.visible=p.filmVisible;bag.film.position.set(0,p.filmY,p.filmZ);
-  bag.update(p.flap,0);bag.shine(p.shine);
+  bag.update(p.flap);bag.shine(p.shine);
 }
