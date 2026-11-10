@@ -7,7 +7,7 @@ export const easeInOutSine = value => (1 - Math.cos(Math.PI * Math.min(1, Math.m
 // One continuous motion: the zoom-out, the comic going back into its sleeve and
 // the camera pull-out overlap, so nothing holds still mid-return.
 export function createReturnMotion(focus, extraction, needsRestore) {
-  return { focus, extraction, needsRestore, duration: needsRestore ? 1.4 : RETURN_DURATION_MS / 1000, elapsed: 0 };
+  return { focus, extraction, needsRestore, duration: needsRestore ? 2.2 : RETURN_DURATION_MS / 1000, elapsed: 0 };
 }
 
 export function advanceReturnMotion(state, dt) {
@@ -15,13 +15,14 @@ export function advanceReturnMotion(state, dt) {
   const clamp = value => Math.min(1, Math.max(0, value));
   const ease = easeInOutSine;
   const duration = state.duration, t = clamp(state.elapsed / duration);
-  // Sleeve: board, comic and film reverse over the first 55%.
-  const restore = state.needsRestore ? ease(t / .55) : 1;
-  // Camera: starts at 25%, while the film is still closing, and glides to the end.
-  const cameraTimeline = state.needsRestore ? clamp((t - .25) / .75) : t;
+  // Sleeve: board, comic and film reverse slowly over the first 60% (1.3 s),
+  // so each stage reads before the collection comes back.
+  const restore = state.needsRestore ? ease(t / .6) : 1;
+  // Camera: starts at 45%, while the film is still closing, and glides to the end.
+  const cameraTimeline = state.needsRestore ? clamp((t - .45) / .55) : t;
   const cameraBlend = ease(cameraTimeline);
   const blend = ease(t);
-  const unzoom = state.needsRestore ? ease(t / .4) : blend;
+  const unzoom = state.needsRestore ? ease(t / .25) : blend;
   return { extraction: state.extraction * (1 - restore), focus: state.focus * (1 - cameraBlend), blend, unzoom, cameraTimeline, timeline: t, done: state.elapsed >= duration };
 }
 
@@ -53,7 +54,7 @@ export function returnBoxOffset(start, timeline) {
 // Start bringing the box up during the latter part of the sleeve restoration,
 // while the viewport and camera still wait for the film to close.
 export function returnBoxTimeline(timeline, cameraTimeline, needsRestore) {
-  return needsRestore ? Math.max(0,Math.min(1,(timeline-.15)/.6)) : cameraTimeline;
+  return needsRestore ? Math.max(0,Math.min(1,(timeline-.2)/.55)) : cameraTimeline;
 }
 
 // The saved camera is already in world space, including any partial focus.
@@ -109,7 +110,7 @@ export function scheduleReturnWatchdog(state, stage, onTimeout, schedule = setTi
     if (state.finished) return;
     onTimeout();
     releaseReturn(state, stage);
-  }, 2800);
+  }, 3600);
 }
 
 // Keep ticking a return even when the scene has momentarily settled before its

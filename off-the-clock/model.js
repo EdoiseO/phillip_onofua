@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.5';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.6';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
