@@ -177,3 +177,19 @@ body[data-reduced-motion=true] .mobile-collection,body[data-reduced-motion=true]
 @media(pointer:coarse) and (max-width:950px) and (max-height:500px){
   .sticker-studio[data-tools] .sticker-collection-dock{display:block}
 }
+
+/* Portrait phones: the Comics / Compacts switch gets its own full-width row as
+   one segmented control, and the box actions share the row beneath it, so the
+   row never overflows the screen. */
+@media(max-width:700px){
+  .story .actions,.story:has(.series-title) .actions{flex-wrap:wrap;justify-content:space-between;row-gap:10px;column-gap:14px;margin-top:12px}
+  .story .actions .compact-collection-switch{order:-1;flex:1 0 100%;gap:0;border:1px solid #344152;border-radius:8px;padding:3px}
+  .story .actions .compact-collection-switch button{flex:1;min-height:38px;border:0;border-radius:6px;font-size:12px;padding:6px 10px}
+  .story .actions .compact-collection-switch button[aria-pressed=true]{background:#8bb6ff14;color:var(--accent)}
+  .story .actions .sticker-button-note{display:none}
+  .story{grid-template-rows:16px 72px 42px auto}
+}
+
+/* The box actions only apply to the comic box, so hide them while the
+   Compacts collection is showing. */
+.experience:has(.viewer.compact-active) .story .inspect-button,.experience:has(.viewer.compact-active) .story .decorate-button{display:none}
