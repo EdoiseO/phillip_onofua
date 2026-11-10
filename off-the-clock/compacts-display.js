@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.5';
-import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.6';
+import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.9';
 import {createPaperback} from './paperback.js?v=2.4';
 
 // These display studies are created only on request, after the short box paints.

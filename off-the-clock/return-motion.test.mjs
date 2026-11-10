@@ -92,7 +92,7 @@ test('60 fps return frames stay continuous through overlap and final handoff',()
     const current={focus:frame.focus,extraction:frame.extraction,...pose,...sampleSleeveRig(frame.extraction)};
     // The framing rig applies bookFocus together with the zoom.
     current.bookFocus*=pose.zoom;
-    const limits={focus:.09,extraction:.08,zoom:.19,float:.01,pull:.2,settle:.2,free:.2,bagOpen:.23,bagFinish:.2,bookFocus:.23,turn:.14,tilt:.04,height:.14};
+    const limits={focus:.09,extraction:.08,zoom:.19,float:.01,pull:.2,settle:.2,free:.2,bagOpen:.23,bookFocus:.23,turn:.14,tilt:.04,height:.14};
     for(const [key,limit] of Object.entries(limits))assert.ok(Math.abs(current[key]-previous[key])<limit,`${key} jumps at frame ${i}`);
     previous=current;final=frame;
   }

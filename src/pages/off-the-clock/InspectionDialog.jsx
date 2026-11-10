@@ -24,8 +24,9 @@ export function InspectionDialog() {
         <button id="view-back">Back</button>
       </div>
       <p className="back-image-note" id="back-image-note" hidden></p>
-      <ol className="pull-list" id="pull-list" aria-label="What I pulled" hidden></ol>
-      <div className="inspection-stage" id="inspection-stage"></div>
+      <div className="inspection-stage" id="inspection-stage">
+        <ol className="pull-list" id="pull-list" aria-label="What I pulled" hidden></ol>
+      </div>
       <p className="sr-only" aria-live="polite" id="inspection-announcement"></p>
       <footer className="inspection-footer">
         <p id="inspection-instructions">Drag to turn the comic. Click it to open the sleeve.</p>
