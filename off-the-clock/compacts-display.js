@@ -39,11 +39,38 @@ export function openCompactDisplays({box,inline=false}){
   function setBook(i,x,y,z,rx=0,ry=0,rz=0){const b=books[i];b.group.position.set(x,y,z);b.group.rotation.set(rx,ry,rz);root.add(b.group);}
   function frameScene(){
     const mobile=mount.clientWidth<600;camera.fov=mobile?45:34;resize();
-    if(selected>=0||display==='switch'||inline){
+    if(selected>=0||display==='switch'){
       root.updateMatrixWorld(true);
       const bounds=new THREE.Box3().setFromObject(selected>=0?books[selected].group:root);
       frameCompactBounds(THREE,camera,bounds,Math.max(1,mount.clientWidth),Math.max(1,mount.clientHeight));
-    }else{camera.position.set((display==='stack'?-1:1)*(mobile?2.2:4.0),mobile?4.0:4.2,mobile?15.5:10.8);camera.lookAt(0,1.5,0);}
+    }else{
+      // Keep the original angled view, but centre the box and stand on the
+      // canvas and fit them to it, so they are framed well on any screen.
+      const direction=new THREE.Vector3((display==='stack'?-1:1)*(mobile?2.2:4.0),(mobile?4.0:4.2)-1.5,mobile?15.5:10.8).normalize();
+      root.updateMatrixWorld(true);
+      const bounds=new THREE.Box3();
+      root.traverse(object=>{
+        const material=object.material;
+        if(!object.isMesh||!object.visible||material===shadowMaterial)return;
+        if(material&&!Array.isArray(material)&&material.transparent&&material.opacity<.6&&object.geometry?.type==='PlaneGeometry')return;
+        bounds.expandByObject(object);
+      });
+      const corners=[];for(let k=0;k<8;k++)corners.push(new THREE.Vector3(k&1?bounds.max.x:bounds.min.x,k&2?bounds.max.y:bounds.min.y,k&4?bounds.max.z:bounds.min.z));
+      const target=bounds.getCenter(new THREE.Vector3()),right=new THREE.Vector3(),up=new THREE.Vector3(),point=new THREE.Vector3();
+      let distance=bounds.getSize(new THREE.Vector3()).length()*1.5;
+      const place=()=>{camera.position.copy(target).addScaledVector(direction,distance);camera.lookAt(target);camera.updateMatrixWorld(true);};
+      const extents=()=>{let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;for(const c of corners){point.copy(c).project(camera);x0=Math.min(x0,point.x);x1=Math.max(x1,point.x);y0=Math.min(y0,point.y);y1=Math.max(y1,point.y);}return {x0,x1,y0,y1};};
+      for(let pass=0;pass<4;pass++){
+        place();let e=extents();
+        // Scale the distance so the larger extent fills ~85% of the canvas.
+        distance*=Math.max(e.x1-e.x0,e.y1-e.y0)/(2*.85);place();e=extents();
+        // Shift the aim so the projected extents are centred.
+        const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
+        right.setFromMatrixColumn(camera.matrixWorld,0);up.setFromMatrixColumn(camera.matrixWorld,1);
+        target.addScaledVector(right,(e.x0+e.x1)/2*tanH*distance).addScaledVector(up,(e.y0+e.y1)/2*tanV*distance);
+      }
+      place();
+    }
   }
   function build({preserveInspection=false}={}){
     if(!preserveInspection)dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
@@ -65,9 +92,9 @@ export function openCompactDisplays({box,inline=false}){
       setBook(selected,0,0,0,inspectPitch,inspectYaw,0);
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
     }else{
-      if(!preserveInspection){title.textContent='Compact Comics';note.textContent='Choose a book to take a closer look.';mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
-      // One display: both books face-out on the stand, framed on their own.
-      if(display!=='switch'&&!inline)showBox();
+      if(!preserveInspection){title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
+      // One display: the short box with both books face-out on the stand beside it.
+      if(display!=='switch')showBox();
       if(display==='shelf'){
         cube(1.65,.12,.83,materials.wood,2.13,.75,0);cube(.08,.72,.7,materials.dark,2.23,1.14,0);cube(.10,.56,.10,materials.dark,1.60,.45,-.23);cube(.10,.56,.10,materials.dark,2.70,.45,-.23);contactShadow(2.02,.812,0,1.3,.7);
         setBook(0,1.92,1.93,0,0,Math.PI/2,0);setBook(1,2.12,1.93,0,0,Math.PI/2,0);
@@ -178,7 +205,7 @@ export function openCompactDisplays({box,inline=false}){
     const snapshots=snapshotUI();
     selected=-1;build({preserveInspection:true});
     inspectControls.hidden=true;backButton.hidden=true;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
-    title.textContent='Compact Comics';note.textContent='Choose a book to take a closer look.';
+    title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';
     dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
     const ui=startUISwap(snapshots,{inlineReturn:inline});uiCleanup=()=>{ui.dispose();uiCleanup=null;};
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone(),toScale=book.scale.clone();
@@ -213,4 +240,7 @@ export function openCompactDisplays({box,inline=false}){
   dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();pickupCleanup?.();uiCleanup?.();mount.dataset.picking='false';returnFade?.dispose();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#collection-compacts')?.focus();},{once:true});
   if(inline){dialog.dataset.inline='';document.querySelector('.viewer').append(dialog);document.querySelector('.viewer').classList.add('compact-active');document.querySelector('#collection-comics').setAttribute('aria-pressed','false');document.querySelector('#collection-compacts').setAttribute('aria-pressed','true');}
   build();if(inline)dialog.show();else dialog.showModal();frameScene();draw();
+  // Keep focus on the control that opened the collection; opening must not
+  // land on (and outline) the 3D canvas.
+  if(inline)document.querySelector('#collection-compacts')?.focus({preventScroll:true});
 }
