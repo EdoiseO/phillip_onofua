@@ -10,29 +10,36 @@ export function createComicSleeve(THREE,template){
   const group=new THREE.Group();group.name='bagged-and-boarded';
   const board=template.scene.getObjectByName('backing_board').clone(true);board.name='backing-board';board.position.z=BOARD_Z;
   const sleeve=new THREE.Group();sleeve.name='sleeve';group.add(board,sleeve);
-  // Reflect bright studio strips and dark cards on the film itself. No diffuse grey layer,
-  // refractive blur, or detached plane carrying an artificial highlight. The
-  // flap drops the dark cards: over the white board they read as an opaque band.
-  const filmMaterial=(darkCards,edgeTint=0)=>new THREE.ShaderMaterial({
+  // Put the frost, reflections and rim highlights on the film surfaces.
+  // The flap skips dark reflections so it reads clearly against the white board.
+  const filmMaterial=({darkCards=0,edgeTint=0,frost=0,topRim=0,sideRim=0,sheen=0})=>new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, depthTest:true, side:THREE.DoubleSide,
     forceSinglePass:true,
-    uniforms:{darkCards:{value:darkCards},sweep:{value:-1},edgeTint:{value:edgeTint}},
+    uniforms:{
+      darkCards:{value:darkCards},sweep:{value:-1},edgeTint:{value:edgeTint},
+      frost:{value:frost},topRim:{value:topRim},sideRim:{value:sideRim},
+      sheen:{value:sheen},flapTurn:{value:0},
+    },
     vertexShader:`
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
       varying vec2 vFilm;
+      varying vec2 vFilmUv;
       void main(){
         vec4 world=modelMatrix*vec4(position,1.0);
         vWorldPosition=world.xyz;
         vFilm=position.xy;
+        vFilmUv=uv;
         vWorldNormal=normalize(mat3(modelMatrix)*normal);
         gl_Position=projectionMatrix*viewMatrix*world;
       }`,
     fragmentShader:`
       uniform float darkCards,sweep,edgeTint;
+      uniform float frost,topRim,sideRim,sheen,flapTurn;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
       varying vec2 vFilm;
+      varying vec2 vFilmUv;
       float panel(vec2 p,vec2 center,vec2 size){
         vec2 d=abs(p-center);
         vec2 fall=vec2(1.0)-smoothstep(size,size+vec2(.12,.2),d);
@@ -63,13 +70,26 @@ export function createComicSleeve(THREE,template){
         }
         float darkAlpha=min(darkCard,1.0)*(.20+.07*fresnel)*darkCards;
         float clearAlpha=.002+fresnel*.045+edgeTint*(.3+.7*fresnel);
+        clearAlpha+=frost*(.75+.25*fresnel);
+        // Paint the rim on the film itself, roughly one pixel wide.
+        vec2 pixel=clamp(fwidth(vFilmUv),vec2(.0005),vec2(.10));
+        float rimTop=1.0-smoothstep(.55,1.45,(1.0-vFilmUv.y)/pixel.y);
+        float rimSides=1.0-smoothstep(.55,1.45,min(vFilmUv.x,1.0-vFilmUv.x)/pixel.x);
+        brightAlpha+=max(topRim*rimTop,sideRim*rimSides);
+        // The same band travels across both segments as the flap turns.
+        float band=(vFilmUv.x-mix(-.19,1.19,flapTurn))/.24;
+        brightAlpha+=sheen*exp(-band*band)*(.56+.44*fresnel);
         float total=brightAlpha+darkAlpha+clearAlpha;
         vec3 reflection=(vec3(.91,.96,1.0)*(brightAlpha+clearAlpha)+vec3(.035,.05,.075)*darkAlpha)/max(total,.0001);
         gl_FragColor=vec4(reflection,min(total,.46));
         #include <colorspace_fragment>
       }`
   });
-  const bodyFilm=filmMaterial(1),flapFilm=filmMaterial(0,.07);
+  const bodyFilm=filmMaterial({darkCards:1,frost:.046,topRim:.44});
+  const weldFilm=filmMaterial({edgeTint:.07});
+  const flapFinish={edgeTint:.07,frost:.14,sideRim:.52,sheen:.22};
+  const bridgeFilm=filmMaterial(flapFinish);
+  const tailFilm=filmMaterial({...flapFinish,topRim:.52});
   const owned=[];
   function sheet(parent,name,width,height,material){
     const geometry=new THREE.PlaneGeometry(width,height);
@@ -82,15 +102,15 @@ export function createComicSleeve(THREE,template){
   sheet(sleeve,'sleeve_front',2*HALF_WIDTH,height,bodyFilm).position.set(0,centerY,FRONT);
   sheet(sleeve,'sleeve_back',2*HALF_WIDTH,height,bodyFilm).position.set(0,centerY,BACK);
   for(const side of [-1,1]){
-    const weld=sheet(sleeve,'sleeve_side_weld',depth,height,flapFilm);
+    const weld=sheet(sleeve,'sleeve_side_weld',depth,height,weldFilm);
     weld.rotation.y=Math.PI/2;weld.position.set(side*HALF_WIDTH,centerY,(FRONT+BACK)/2);
   }
-  const bottom=sheet(sleeve,'sleeve_bottom_weld',2*HALF_WIDTH,depth,flapFilm);
+  const bottom=sheet(sleeve,'sleeve_bottom_weld',2*HALF_WIDTH,depth,weldFilm);
   bottom.rotation.x=Math.PI/2;bottom.position.set(0,BOTTOM,(FRONT+BACK)/2);
   const flap=new THREE.Group();flap.name='sleeve_flap';
   flap.position.set(0,TOP,FRONT);sleeve.add(flap);
-  const bridge=sheet(flap,'sleeve_flap_bridge',2*HALF_WIDTH,BRIDGE,flapFilm);
-  const tail=sheet(flap,'sleeve_flap_panel',2*HALF_WIDTH,TAIL,flapFilm);
+  const bridge=sheet(flap,'sleeve_flap_bridge',2*HALF_WIDTH,BRIDGE,bridgeFilm);
+  const tail=sheet(flap,'sleeve_flap_panel',2*HALF_WIDTH,TAIL,tailFilm);
   const inverse=new THREE.Quaternion();
   let previousOpening=-1;
   function update(opening){
@@ -103,6 +123,8 @@ export function createComicSleeve(THREE,template){
     const y=Math.cos(angle)*BRIDGE,z=Math.sin(angle)*BRIDGE;
     bridge.rotation.x=angle;bridge.position.set(0,y/2,z/2);
     tail.rotation.x=tailAngle;tail.position.set(0,y+Math.cos(tailAngle)*TAIL/2,z+Math.sin(tailAngle)*TAIL/2);
+    bridgeFilm.uniforms.flapTurn.value=opening;
+    tailFilm.uniforms.flapTurn.value=opening;
   }
   function placeBoard(x,y,z){
     // Express the desired position in the comic's frame, even as the empty
@@ -114,7 +136,10 @@ export function createComicSleeve(THREE,template){
   update(0);
   return {group,board,film:sleeve,flap,flapPanel:tail,update,placeBoard,
     shine(value){bodyFilm.uniforms.sweep.value=value;},
-    dispose(){bodyFilm.dispose();flapFilm.dispose();owned.forEach(g=>g.dispose());}};
+    dispose(){
+      bodyFilm.dispose();weldFilm.dispose();bridgeFilm.dispose();tailFilm.dispose();
+      owned.forEach(g=>g.dispose());
+    }};
 }
 
 // Both the interactive extraction and Back to the box pose this exact rig.
