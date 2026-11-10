@@ -1,6 +1,6 @@
 import {comics as catalogue} from './comics.js?v=39.5';
-import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.0';
-import {createBox} from './model.js?v=46.0';
+import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.1';
+import {createBox} from './model.js?v=46.1';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.7';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
@@ -33,7 +33,7 @@ export function mountOffTheClock(stage, pageRoot) {
     return box.tearGuide();
   }
   function updateGuide(){
-    if(!inspecting){guide.hidden=true;guideFrame=0;return;}
+    if(packPhase()!=='sealed'){guide.hidden=true;guideFrame=0;return;}
     const line=pointer?.tear??guideLine();
     guide.hidden=!line;
     if(line){
@@ -114,6 +114,7 @@ export function mountOffTheClock(stage, pageRoot) {
       const bag=!!comic.blindBag,hasBack=bag?!!comic.bagBack:!!comic.backCover;$('view-comic').hidden=bag;
       const phase=packPhase(),busy=phase==='opening',row=phase==='row',filed=phase==='filed';
       dialog.dataset.pack=phase??'';
+      if(bag)stage.setAttribute('aria-label',row?'Three sleeved pulls. Use the left and right arrow keys to tilt a pull, Enter to add them to the box, or Escape to return.':filed?'Torn blind bag. Drag to turn or press Escape to return.':busy?'Opening the mystery bag.':'Blind bag close-up. Drag right to left across the tear line, tap the bag, or press Enter to tear it. Press Escape to return to the box.');
       $('pull-list').hidden=!row;
       $('return-button').disabled=busy;
       $('view-front').disabled=busy||row;$('view-back').disabled=busy||row;
@@ -136,7 +137,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if(!box||inspecting||returning)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
     $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
     const bag=!!comics[index].blindBag;
-    stage.setAttribute('aria-label',bag?'Blind bag close-up. Drag or use arrow keys to rotate. Enter or Space tears the bag open and shows the three comics inside. R resets the view. Click empty space or press Escape to return to the box.':'Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
+    if(!bag)stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
     box.focus(true);render();if(bag)updateGuide();stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
   }
   function leaveInspection(event,fileRequested=false){
@@ -190,11 +191,12 @@ export function mountOffTheClock(stage, pageRoot) {
       if(phase==='row'){leaveInspection(null,true);return;}
       if(phase!=='sealed')return;
       inspectionView='front';box.inspectView('front');
+      const button=$('sleeve-button'),refocus=document.activeElement===button;
       const ready=box.openPack();render();
       if(packPhase()==='opening')announce('Tearing the bag open.');
       ready.then(shown=>{
         if(!shown||signal.aborted||!inspecting)return;
-        render();announce(`Inside: ${comic.pulls.map(pullLabel).join('; ')}.`);
+        render();if(refocus)button.focus({preventScroll:true});announce(`Inside: ${comic.pulls.map(pullLabel).join('; ')}.`);
       });
       return;
     }
@@ -225,7 +227,7 @@ export function mountOffTheClock(stage, pageRoot) {
       const phase=packPhase();
       if(phase==='opening')return;
       if(phase==='row'){
-        if(e.key==='ArrowRight'||e.key==='ArrowLeft')setPullHover((hoveredPull+(e.key==='ArrowRight'?1:2)+3)%3);
+        if(e.key==='ArrowRight'||e.key==='ArrowLeft')setPullHover((hoveredPull<0?(e.key==='ArrowRight'?0:2):(hoveredPull+(e.key==='ArrowRight'?1:2))%3));
         if(e.key==='Escape')leaveInspection();
         if(e.key==='Enter'||e.key===' ')toggleSleeve();
         return;

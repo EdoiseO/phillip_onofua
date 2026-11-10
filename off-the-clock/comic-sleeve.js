@@ -99,3 +99,21 @@ export function createComicSleeve(THREE,template){
   update(0,0);
   return {group,board,film:sleeve,update,shine(value){bodyFilm.uniforms.sweep.value=value;},dispose(){bodyFilm.dispose();flapFilm.dispose();}};
 }
+
+// Both the interactive extraction and Back to the box pose this exact rig.
+// Translate the comic out of the film's depth before lowering it beside the board.
+export function poseComicSleeve(card,{pull,separate,lower,free,bagOpen,bagFinish}){
+  card.book.position.set(.75*separate,3.05*pull-2.57*lower,.36*separate);
+  card.book.rotation.z=-.025*separate;
+  card.booklet.setFree(free);
+  card.sleeve.position.set(-1.12*separate,-.26*separate,-.36*separate);
+  card.sleeve.rotation.set(0,-.28*separate,.1*separate);
+  card.bag.update(bagOpen,bagFinish);
+}
+
+export function posePackSleeve({book,bag},p){
+  book.position.y=p.bookY;
+  bag.board.visible=p.boardVisible;bag.board.position.y=p.boardY;
+  bag.film.visible=p.filmVisible;bag.film.position.y=p.filmY;
+  bag.update(p.flap,0);bag.shine(p.shine);
+}

@@ -3,10 +3,10 @@ import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve } from './comic-sleeve.js?v=39.0';
+import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=39.1';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.0';
-import { FILE_DURATION, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.1';
+import { FILE_DURATION, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.1';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
@@ -261,6 +261,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     if(!packFiling)return;
     const {owner,resolve,watchdog,entries}=packFiling;
     clearTimeout(watchdog);
+    cards.forEach((card,i)=>{card.baseZ=slot(i,cards.length);});
     entries.forEach(({card})=>{card.group.position.set(card.baseX,1.42,card.baseZ);card.group.scale.setScalar(1);});
     owner.showKeepsake();
     packFiling=null;dirty=true;resolve();
@@ -273,9 +274,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       if(i<filing.previousSlots.length)card.baseZ=lerp(filing.previousSlots[i],slot(i,cards.length),reflow);
     });
     filing.entries.forEach(({card,start,quaternion,scale,index},k)=>{
-      const {reach,drop,lift}=sampleFile(filing.time,k);
-      const above=Math.max(H+1.48,start.y+.21);
-      card.group.position.set(lerp(start.x,card.baseX,reach),lerp(lerp(start.y,above,reach)+lift,1.42,drop),lerp(start.z,card.baseZ,reach));
+      const {liftUp,reach,drop,arc}=sampleFile(filing.time,k);
+      const above=Math.max(H+1.58,start.y+.21);
+      const y=lerp(lerp(start.y,above,liftUp)+arc,1.42,drop);
+      // Follow the same lean as the filed books, so the leading edge stays
+      // between its neighbours even while one comic is higher than another.
+      const z=card.baseZ+Math.sin(-.025)*(y-1.42);
+      card.group.position.set(lerp(start.x,card.baseX,reach),y,lerp(start.z,z,reach));
       fileRotation.setFromEuler(fileEuler.set(-.025,0,(index%3-1)*.009));
       card.group.quaternion.copy(quaternion).slerp(fileRotation,reach);
       card.group.scale.setScalar(lerp(scale,1,reach));
@@ -368,15 +373,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
       if(card.blind){bagsMoving=card.blind.tick(packFrame,reduced,active?focus:0,mobileView.matches)||bagsMoving;}
-      else{
-        const {pull,separate,lower,free,bagOpen,bagFinish}=active?sleeveRig:restingSleeve;
-        card.book.position.set(.75*separate,3.05*pull-2.57*lower,.36*separate);
-        card.book.rotation.z=-.025*separate;
-        card.booklet.setFree(free);
-        card.sleeve.position.set(-1.12*separate,-.26*separate,-.36*separate);
-        card.sleeve.rotation.set(0,-.28*separate,.1*separate);
-        card.bag.update(bagOpen,bagFinish);
-      }
+      else poseComicSleeve(card,active?sleeveRig:restingSleeve);
       if(active){
         card.group.position.x=lerp(card.group.position.x,0,focus);
         card.group.position.z=lerp(card.group.position.z,1.2,focus);

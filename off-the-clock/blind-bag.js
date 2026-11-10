@@ -2,8 +2,8 @@
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { createComicSleeve } from './comic-sleeve.js?v=39.0';
-import { PACK_DURATION, samplePack, samplePouch, sampleTear, smooth } from './pack-motion.js?v=1.0';
+import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=39.1';
+import { PACK_DURATION, samplePack, samplePouch, sampleTear, smooth } from './pack-motion.js?v=1.1';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
@@ -43,6 +43,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
   }
   if(frontTexture)setArt('front',frontTexture);
   setArt('back',backTexture);
+  const strip=bag.getObjectByName('tear_strip');
   const pouch=['bag_body','seal_bottom'].map(name=>bag.getObjectByName(name));
   const mixer=new THREE.AnimationMixer(bag);
   const clip=name=>THREE.AnimationClip.findByName(gltf.animations,name);
@@ -83,20 +84,19 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
     bag.visible=wrapperOpacity>.001;
     bag.position.y=pouchFrame.y*rowAmount*(phase==='filed'?0:1);
     bag.traverse(o=>{if(o.isMesh)o.material.opacity=wrapperOpacity;});
+    strip.visible=phase==='sealed'||phase==='opening';
     const sealed=tearTime===0;
     tear.enabled=!sealed||crinkleTime<0;crinkle.enabled=sealed&&crinkleTime>=0;
     tear.time=phase==='filed'?tearDuration:tearTime;crinkle.time=Math.max(0,crinkleTime);mixer.update(0);
     pullGroup.visible=phase==='opening'||(row&&rowAmount>.001);
-    if(phase!=='filed')entries.forEach(({group:rig,book,bag},k)=>{
+    if(phase!=='filed')entries.forEach((entry,k)=>{
+      const {group:rig}=entry;
       const p=samplePack(time,k,phone);
       rig.visible=p.visible;
       rig.position.set(p.x,p.y+3.25*(1-rowAmount),p.z);
-      rig.rotation.set(tilts[k]*.095,p.yaw-tilts[k]*.13,p.roll);
+      rig.rotation.set(tilts[k]*.065,p.yaw-tilts[k]*.105,p.roll);
       rig.scale.setScalar(p.scale*Math.max(.0001,rowAmount));
-      book.position.y=p.bookY;
-      bag.board.visible=p.boardVisible;bag.board.position.y=p.boardY;
-      bag.film.visible=p.filmVisible;bag.film.position.y=p.filmY;
-      bag.update(p.flap,0);bag.shine(p.shine);
+      posePackSleeve(entry,p);
     });
     if(sparks){
       const age=time-.30;
@@ -137,7 +137,6 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
     },
     crinkle(){if(phase==='sealed'&&tearTime===0)crinkleTime=0;},
     hover(index){hover=index;},
-    clearHover(){hover=-1;},
     takePulls(){
       if(phase!=='row')return [];
       phase='filed';filing=true;pose();return entries;

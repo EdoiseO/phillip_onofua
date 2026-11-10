@@ -2,7 +2,7 @@ export const PACK_DURATION=2.3;
 export const FILE_DURATION=1.5;
 export const TEAR_THRESHOLD=.6;
 export const PULL_SCALE=.975;
-export const PACK_STACK_Z=[0,.026,-.026];
+export const PACK_STACK_Z=[0,.025,-.025];
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 export const smooth=(from,to,value)=>{
@@ -36,7 +36,7 @@ export function samplePack(time,index,phone=false){
   const filmY=.18*(1-insert);
   return {
     x:side*(phone?1.37:1.97)*spread,
-    y:3.20*(rise+bounce)*(1-drop)+.07*(1-Math.abs(side))*spread,
+    y:3.20*(rise+bounce)*(1-drop)-.17*smooth(0,.30,time)*(1-spread)+.07*(1-Math.abs(side))*spread,
     z:mix(PACK_STACK_Z[index],rowZ[index],spread),
     roll:-side*(phone?.055:.025)*spread,
     yaw:-side*(phone?.045:.035)*spread,
@@ -56,8 +56,8 @@ export function samplePouch(time){
 }
 
 export function sampleFile(time,index){
-  const t=time-index*.20,reach=smooth(0,.62,t),drop=smooth(.62,1.10,t);
-  return {reach,drop,lift:Math.sin(Math.PI*reach)*.50};
+  const t=time-index*.20,liftUp=smooth(0,.23,t),reach=smooth(.21,.62,t),drop=smooth(.62,1.10,t);
+  return {liftUp,reach,drop,arc:Math.sin(Math.PI*reach)*.18};
 }
 
 export function makePackEntries(bag){
