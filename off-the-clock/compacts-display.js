@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.4';
-import {startCompactReturn} from './compact-return.js?v=1.0';
+import {startCompactReturn, createCompactSceneFade} from './compact-return.js?v=1.0';
 import {createPaperback} from './paperback.js?v=2.2';
 
 // These display studies are created only on request, after the short box paints.
@@ -21,7 +21,7 @@ export function openCompactDisplays({box,inline=false}){
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;const shadowCtx=shadowCanvas.getContext('2d'),gradient=shadowCtx.createRadialGradient(64,64,2,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.36)');gradient.addColorStop(1,'rgba(0,0,0,0)');shadowCtx.fillStyle=gradient;shadowCtx.fillRect(0,0,128,128);const shadowTexture=new THREE.CanvasTexture(shadowCanvas),shadowMaterial=new THREE.MeshBasicMaterial({map:shadowTexture,transparent:true,depthWrite:false});
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
-  let display=inline?'switch':'shelf',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returning=false,closed=false,boxClone=null,moving=false;
+  let display=inline?'switch':'shelf',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,returning=false,closed=false,boxClone=null,moving=false;
   const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return');
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
@@ -32,7 +32,7 @@ export function openCompactDisplays({box,inline=false}){
   }
   function showBox(){
     if(!boxClone){boxClone=box.cloneClosedBox();const current=boxClone;
-      current.traverse(object=>{if(!object.userData.compactPhotoUrl)return;loader.load(object.userData.compactPhotoUrl,map=>{if(closed){map.dispose();return;}map.colorSpace=THREE.SRGBColorSpace;object.material.color.set(0xffffff);object.material.map=map;object.material.needsUpdate=true;});});}
+      current.traverse(object=>{if(!object.userData.compactPhotoUrl)return;const material=object.material;loader.load(object.userData.compactPhotoUrl,map=>{if(closed){map.dispose();return;}map.colorSpace=THREE.SRGBColorSpace;material.color.set(0xffffff);material.map=map;material.needsUpdate=true;});});}
     boxClone.position.set(-1.9,0,0);root.add(boxClone);
   }
   function contactShadow(x,y,z,w,d){const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),shadowMaterial);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,y,z);root.add(mesh);}
@@ -118,14 +118,16 @@ export function openCompactDisplays({box,inline=false}){
     book.position.copy(fromPosition);book.quaternion.copy(fromRotation);book.scale.copy(fromScale);
     camera.position.copy(fromCamera);camera.quaternion.copy(fromCameraRotation);camera.fov=fromFov;camera.updateProjectionMatrix();
     moving=true;returning=true;mount.dataset.returning='true';
+    returnFade=createCompactSceneFade(root,book);returnFade.set(0);
     cancelReturn=startCompactReturn({
       onFrame(t){
+        returnFade.set(t);
         book.position.lerpVectors(fromPosition,toPosition,t);book.quaternion.slerpQuaternions(fromRotation,toRotation,t);book.scale.lerpVectors(fromScale,toScale,t);
         camera.position.lerpVectors(fromCamera,toCamera,t);camera.quaternion.slerpQuaternions(fromCameraRotation,toCameraRotation,t);camera.fov=fromFov+(toFov-fromFov)*t;camera.updateProjectionMatrix();
       },
       onComplete(){
         if(closed)return;
-        cancelReturn=null;returning=false;moving=false;mount.dataset.returning='false';build();focus();
+        returnFade.dispose();returnFade=null;cancelReturn=null;returning=false;moving=false;mount.dataset.returning='false';build();focus();
       }
     });
   };
@@ -136,7 +138,7 @@ export function openCompactDisplays({box,inline=false}){
   mount.addEventListener('pointerup',event=>{if(selected>=0){drag=null;return;}const r=mount.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(books.map(b=>b.group),true);let object=hits[0]?.object;while(object&&object.userData.compactIndex===undefined)object=object.parent;if(object)select(object.userData.compactIndex);},eventOptions);
   const close=()=>{dialog.close();};dialog.querySelector('#compact-close').addEventListener('click',close,eventOptions);
   dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(inline&&selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
-  dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#compact-launch').disabled=false;document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#compact-launch').focus();},{once:true});
+  dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();returnFade?.dispose();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#compact-launch').disabled=false;document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#compact-launch').focus();},{once:true});
   if(inline){dialog.dataset.inline='';document.querySelector('.viewer').append(dialog);document.querySelector('.viewer').classList.add('compact-active');document.querySelector('#collection-comics').setAttribute('aria-pressed','false');document.querySelector('#collection-compacts').setAttribute('aria-pressed','true');}
   build();if(inline)dialog.show();else dialog.showModal();frameScene();draw();
 }

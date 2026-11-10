@@ -37,3 +37,35 @@ test('closing a compact display cancels pending return callbacks',()=>{
   cancel();scheduler.frame(16);scheduler.timeout();
   assert.equal(completions,0);assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
 });
+
+test('destination fade uses temporary materials and restores shared box materials',async()=>{
+  const THREE=await import('./vendor/three.module.js');
+  const {createCompactSceneFade}=await import('./compact-return.js');
+  const root=new THREE.Group(),book=new THREE.Group(),paper=new THREE.MeshBasicMaterial({opacity:.7,transparent:true});
+  const bookMesh=new THREE.Mesh(new THREE.BoxGeometry(),paper);book.add(bookMesh);root.add(book);
+  const box=new THREE.Mesh(new THREE.BoxGeometry(),paper);root.add(box);
+  const fade=createCompactSceneFade(root,book);
+  assert.equal(bookMesh.material,paper,'the inspected book keeps its original material');
+  assert.notEqual(box.material,paper,'the destination has an independent material');
+  fade.set(0);assert.equal(box.material.opacity,0);assert.equal(paper.opacity,.7);
+  fade.set(.75);assert.ok(box.material.opacity>0&&box.material.opacity<.7);
+  fade.set(1);assert.equal(box.material.opacity,.7);
+  fade.dispose();assert.equal(box.material,paper);assert.equal(paper.opacity,.7);
+  fade.dispose();bookMesh.geometry.dispose();box.geometry.dispose();paper.dispose();
+});
+
+test('printed-cover fade preserves the original live art uniform',async()=>{
+  const THREE=await import('./vendor/three.module.js');
+  const {createCompactSceneFade}=await import('./compact-return.js');
+  const root=new THREE.Group(),book=new THREE.Group(),texture=new THREE.Texture();root.add(book);
+  const original=new THREE.ShaderMaterial({uniforms:{art:{value:texture}},fragmentShader:'void main(){vec3 ink=vec3(1.);float light=1.;float sheen=0.;float rim=0.;gl_FragColor=vec4(ink*light+vec3(.9,.96,1.0)*(sheen+rim),1.0);}',vertexShader:'void main(){gl_Position=vec4(position,1.);}'});
+  const object=new THREE.Mesh(new THREE.BoxGeometry(),original);root.add(object);
+  const fade=createCompactSceneFade(root,book),temporary=object.material;
+  assert.equal(temporary.uniforms.art,original.uniforms.art);
+  assert.match(temporary.fragmentShader,/uniform float compactFade/);
+  fade.set(0);assert.equal(temporary.uniforms.compactFade.value,0);
+  fade.set(1);assert.equal(temporary.uniforms.compactFade.value,1);
+  assert.equal(original.uniforms.compactFade,undefined);
+  fade.dispose();assert.equal(object.material,original);
+  object.geometry.dispose();original.dispose();texture.dispose();
+});
