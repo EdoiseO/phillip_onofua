@@ -2,14 +2,14 @@
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.2';
+import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.3';
 import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, tornPouchSeat } from './pack-motion.js?v=1.3';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
 export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
-export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls,visibleFilm=false}){
+export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls}){
   const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
   const group=new THREE.Group();group.name='blind-bag';
   const bag=gltf.scene.clone(true);bag.scale.setScalar(BAG_SCALE);group.add(bag);
@@ -55,7 +55,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
   const pullGroup=new THREE.Group();pullGroup.scale.setScalar(BAG_SCALE);group.add(pullGroup);
   const entries=pulls.map((pull,k)=>{
     const booklet=createComicBook(THREE,{template:comicModel,frontTexture:pullTextures[k]??null,backTexture:pullBacks[k]??null,foil:pull.finish==='foil'});
-    const bag=createComicSleeve(THREE,comicModel,{visibleFilm});
+    const bag=createComicSleeve(THREE,comicModel);
     const rig=new THREE.Group();rig.userData.pullIndex=k;
     rig.add(booklet.group,bag.group);pullGroup.add(rig);
     return {group:rig,book:booklet.group,booklet,sleeve:bag.group,bag};
