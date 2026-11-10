@@ -1,5 +1,6 @@
 import {comics} from './comics.js?v=39.2';
-import {createBox} from './model.js?v=44.0';
+import {createBox} from './model.js?v=44.1';
+import {createStageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.2';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -95,11 +96,22 @@ function enterInspection(i=index){
 }
 function leaveInspection(){
   if(!inspecting)return;clearTimeout(clickTimer);clearTimeout(pullTimer);pullsShown=false;bagTorn=false;inspecting=false;unwrapped=false;pointer=null;
+  const from=stage.getBoundingClientRect();
   dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
-  returning=!reduced;const finished=box.focus(false);
+  // Keep the canvas in the same screen-space position as it leaves the dialog,
+  // then carry it smoothly to the box. A normal-flow placeholder preserves
+  // the page layout while the stage is temporarily fixed to the viewport.
+  let stageAnimation=null,placeholder=null;
+  if(!reduced){
+    const to=stage.getBoundingClientRect();
+    placeholder=stage.cloneNode(false);placeholder.removeAttribute('id');placeholder.removeAttribute('tabindex');placeholder.setAttribute('aria-hidden','true');stage.before(placeholder);
+    stageAnimation=stage.animate(createStageReturnFrames(from,to),{duration:RETURN_DURATION_MS,fill:'both'});
+    stageAnimation.pause();stageAnimation.currentTime=0;
+  }
+  returning=!reduced;const finished=box.focus(false,progress=>{if(stageAnimation)stageAnimation.currentTime=progress*RETURN_DURATION_MS;});
   stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
   if(returning)announce('Returning to the box.');
-  finished.then(()=>{returning=false;announce('Returned to the box.');});
+  finished.then(()=>{if(stageAnimation){stageAnimation.cancel();placeholder.remove();}returning=false;announce('Returned to the box.');});
 }
 function toggleSleeve(){
   if(!inspecting)return;const comic=comics[index];unwrapped=!unwrapped;

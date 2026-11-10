@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.1';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, interpolateSleeveRig, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.2';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -176,8 +176,10 @@ export async function createBox(stage,comics){
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
   let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null;
   const lerp=THREE.MathUtils.lerp;
-  let viewportWidth=1,viewportHeight=1;
-  const resize=()=>{viewportWidth=Math.max(1,stage.clientWidth);viewportHeight=Math.max(1,stage.clientHeight);renderer.setSize(viewportWidth,viewportHeight,false);dirty=true;};
+  let viewportWidth=1,viewportHeight=1,renderWidth=0,renderHeight=0;
+  // Resizing clears WebGL's drawing buffer, so defer it until immediately
+  // before a render rather than clearing the last visible frame in the observer.
+  const resize=()=>{viewportWidth=Math.max(1,stage.clientWidth);viewportHeight=Math.max(1,stage.clientHeight);dirty=true;};
   const ro=new ResizeObserver(resize);ro.observe(stage);resize();
   const bookBounds=new THREE.Box3();
   const inspectionBounds=new THREE.Box3(),inspectionCenter=new THREE.Vector3(),inspectionCamera=new THREE.Vector3();
@@ -198,17 +200,22 @@ export async function createBox(stage,comics){
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     if(returnState){
       const position=advanceReturnMotion(returnState.motion,reduced?10:dt);
-      focusProgress=position.focus;unwrapProgress=position.extraction;
-      if(position.done){returnState.complete=true;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;}
+      focusProgress=position.focus;unwrapProgress=position.extraction;returnState.blend=position.blend;
+      returnState.onProgress?.(position.timeline);
+      const pose=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:returnState.startPose.height},position.blend);
+      inspectYaw=pose.turn;inspectPitch=pose.tilt;detailProgress=pose.zoom;floatStrength=pose.float;
+      if(position.done)returnState.complete=true;
     }else{
       focusProgress=reduced?Number(inspecting):damp(focusProgress,Number(inspecting),dt,5);
       unwrapProgress=reduced?Number(unwrapped):damp(unwrapProgress,Number(unwrapped),dt,3.9);
+      detailProgress=reduced?wantedDetail:damp(detailProgress,wantedDetail,dt,6);
+      inspectYaw=reduced?wantedInspectYaw:damp(inspectYaw,wantedInspectYaw,dt,8);
+      inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     }
-    detailProgress=reduced?wantedDetail:damp(detailProgress,wantedDetail,dt,6);
-    inspectYaw=reduced?wantedInspectYaw:damp(inspectYaw,wantedInspectYaw,dt,8);
-    inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
-    const focus=smooth(0,1,focusProgress), extraction=cards[selected].blind?0:smooth(0,1,unwrapProgress);
+    const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:(returnState?unwrapProgress:smooth(0,1,unwrapProgress));
+    const sleeveRemaining=returnState&&returnState.motion.extraction>0?clamp(unwrapProgress/returnState.motion.extraction,0,1):0;
+    const sleeveRig=returnState?interpolateSleeveRig(returnState.startRig,sleeveRemaining):null;
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
@@ -217,7 +224,7 @@ export async function createBox(stage,comics){
     // Steady the book as soon as its dedicated close-up is requested, instead
     // of carrying the Front/Back float through the whole extraction animation.
     const floatingWanted=inspecting&&!held&&!reduced&&wantedDetail===0?smooth(.82,1,focus)*(1-detailProgress)*(1-Math.sin(extraction*Math.PI)):0;
-    floatStrength=reduced?0:damp(floatStrength,floatingWanted,dt,wantedDetail?12:4);
+    if(!returnState)floatStrength=reduced?0:damp(floatStrength,floatingWanted,dt,wantedDetail?12:4);
     if(wantedDetail&&floatStrength<.001)floatStrength=0;
     if(inspecting&&!reduced)floatTime+=dt;
     // Keep the lid aside until every raised comic is back below the rim.
@@ -237,8 +244,7 @@ export async function createBox(stage,comics){
       const active=i===selected, lift=active?reveal:0;
       const target=1.42+lift*3.13;
       if(active&&returnState){
-        const progress=returnState.motion.focus>0?1-focusProgress/returnState.motion.focus:1;
-        card.y=lerp(returnState.startY,target,clamp(progress,0,1));card.v=0;
+        card.y=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:target},returnState.blend).height;card.v=0;
       }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
       card.group.visible=active||focus<.995;
       card.group.position.y=active?lerp(card.y,3.2,focus):card.y-7*focus;
@@ -251,13 +257,13 @@ export async function createBox(stage,comics){
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
       if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(active&&returnState?dt*2.5:dt,reduced)||bagsMoving;}
       else{
-      const out=active?extraction:0,pull=smooth(.12,.68,out),settle=smooth(.68,1,out);
+      const out=active?extraction:0,pull=active&&sleeveRig?sleeveRig.pull:smooth(.12,.68,out),settle=active&&sleeveRig?sleeveRig.settle:smooth(.68,1,out);
       card.book.position.set(.75*settle,3.05*pull-2.57*settle,.36*settle);
       card.book.rotation.z=-.025*settle;
-      card.booklet.setFree(smooth(.72,1,out));
+      card.booklet.setFree(active&&sleeveRig?sleeveRig.free:smooth(.72,1,out));
       card.sleeve.position.set(-1.12*settle,-.26*settle,-.36*settle);
       card.sleeve.rotation.set(0,-.28*settle,.1*settle);
-      card.bag.update(smooth(0,.2,out),smooth(.65,1,out));
+      card.bag.update(active&&sleeveRig?sleeveRig.bagOpen:smooth(0,.2,out),active&&sleeveRig?sleeveRig.bagFinish:smooth(.65,1,out));
       }
       if(active){
         card.group.position.x=lerp(card.group.position.x,0,focus);
@@ -283,7 +289,7 @@ export async function createBox(stage,comics){
     contactShadow.material.opacity=shadowVisibility*(1-.55*Math.abs(Math.sin(world.rotation.x)));
     contactShadow.visible=shadowVisibility>.001;
     ground.material.opacity=.22*shadowVisibility;ground.visible=shadowVisibility>.001;
-    if(focus<=.0001){
+    if(focus<=.0001||returnState){
       // Fit the actual lid, box and raised comic, especially on narrow screens.
       overviewBounds[2].setFromObject(cards[selected].group);
       // The closed mobile box is the hero: aim at its centre and fit closely.
@@ -308,7 +314,7 @@ export async function createBox(stage,comics){
       cards[selected].group.updateWorldMatrix(true,true);
       if(cards[selected].blind)cards[selected].blind.bounds(inspectionBounds);else inspectionBounds.setFromObject(cards[selected].group);
       inspectionBounds.getCenter(inspectionCenter);
-      const bookFocus=cards[selected].blind?0:smooth(.9,1,extraction)*detailProgress;
+      const bookFocus=cards[selected].blind?0:(sleeveRig?sleeveRig.bookFocus:smooth(.9,1,extraction))*detailProgress;
       if(bookFocus>0){
         bookBounds.setFromObject(cards[selected].book);
         inspectionBounds.min.lerp(bookBounds.min,bookFocus);inspectionBounds.max.lerp(bookBounds.max,bookFocus);
@@ -360,6 +366,7 @@ export async function createBox(stage,comics){
     }
     wasSettled=settled;
     if(dirty||!settled||floatStrength>.0001||stickersMoving){
+      if(viewportWidth!==renderWidth||viewportHeight!==renderHeight){renderer.setSize(viewportWidth,viewportHeight,false);renderWidth=viewportWidth;renderHeight=viewportHeight;}
       renderer.render(scene,camera);dirty=false;
       if(!firstRender){
         firstRender=true;
@@ -429,18 +436,19 @@ export async function createBox(stage,comics){
     decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
-    focus(value){
-      wantedDetail=0;inspecting=value;held=false;floatTime=0;floatStrength=0;
-      if(value){unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
+    focus(value,onProgress){
+      wantedDetail=0;inspecting=value;held=false;
+      if(value){floatTime=0;floatStrength=0;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
       const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
-        const state={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),startY:cards[selected].y,complete:false,resolve};
+        const startExtraction=smooth(0,1,unwrapProgress);
+        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},startRig:{pull:smooth(.12,.68,startExtraction),settle:smooth(.68,1,startExtraction),free:smooth(.72,1,startExtraction),bagOpen:smooth(0,.2,startExtraction),bagFinish:smooth(.65,1,startExtraction),bookFocus:smooth(.9,1,startExtraction)},blend:0,complete:false,resolve,onProgress};
         returnState=state;
         state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
           // Preserve a coherent final pose for the next visible frame.
-          focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;
+          focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;floatStrength=0;
           const reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
           cards[selected].y=1.42+(opened?reveal*3.13:0);cards[selected].v=0;cards[selected].blind?.reset();
           returnState=null;dirty=true;wasSettled=false;stage.dataset.motionSettled='false';
