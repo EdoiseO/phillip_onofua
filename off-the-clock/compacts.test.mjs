@@ -22,6 +22,8 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
     assert.ok(!comics.some(comic=>comic.id===book.id),'paperbacks must stay out of the short box');
   }
   assert.match(compacts.find(book=>book.id==='green-arrow-year-one').pageEdgeNote,/estimated/i);
+  assert.match(compacts.find(book=>book.id==='static-season-one').pageEdgeNote,/estimate/i);
+  assert.equal(compacts[0].pageEdge,compacts[1].pageEdge,'both use the lighter page-edge texture');
 });
 
 test('paperback photo mapping keeps a continuous grid and survives replacement',async()=>{
