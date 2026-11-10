@@ -1,5 +1,6 @@
-import {comics} from './comics.js?v=39.5';
-import {createBox} from './model.js?v=45.0';
+import {comics as catalogue} from './comics.js?v=39.5';
+import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.0';
+import {createBox} from './model.js?v=46.0';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.7';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
@@ -10,6 +11,7 @@ export function mountOffTheClock(stage, pageRoot) {
   const { signal } = lifetime;
   const listen = (target, type, callback, options = {}) =>
     target.addEventListener(type, callback, { ...options, signal });
+  const comics=[...catalogue];
   const dialog = $('inspection');
   let studio, compacts, stopReturnAnimation;
   const initialMotion = document.body.getAttribute('data-reduced-motion');
@@ -21,7 +23,31 @@ export function mountOffTheClock(stage, pageRoot) {
   listen(document,'keydown',e=>{if(!e.metaKey&&!e.ctrlKey&&!e.altKey)delete stage.dataset.pointerFocus;},{capture:true});
   const stageAnchor=document.createComment('3D scene home');stage.before(stageAnchor);
   let box,opened=false,index=0,inspecting=false,unwrapped=false,lastWheel=0,lastWheelInput=0,wheelSum=0,pointer=null,clickTimer=0,focusStarted=0,inspectionView='front';
-  let lidSide=1,lidTilt=0,pullsShown=false,pullTimer=0,bagTorn=false,returning=false;
+  let lidSide=1,lidTilt=0,returning=false,guideFrame=0,hoveredPull=-1;
+  const guide=document.createElement('div');guide.className='pack-tear-guide';guide.hidden=true;
+  guide.setAttribute('aria-hidden','true');
+  const guideLabel=document.createElement('span');guideLabel.textContent='TEAR HERE';guide.append(guideLabel);stage.append(guide);
+  const packPhase=()=>inspecting?box?.packPhase():undefined;
+  function guideLine(){
+    if(inspectionView!=='front'||packPhase()!=='sealed')return null;
+    return box.tearGuide();
+  }
+  function updateGuide(){
+    if(!inspecting){guide.hidden=true;guideFrame=0;return;}
+    const line=pointer?.tear??guideLine();
+    guide.hidden=!line;
+    if(line){
+      const [a,b]=line,r=stage.getBoundingClientRect();
+      guide.style.left=b.x-r.left+'px';guide.style.top=b.y-r.top+'px';
+      guide.style.width=Math.hypot(a.x-b.x,a.y-b.y)+'px';
+      guide.style.transform='rotate('+Math.atan2(a.y-b.y,a.x-b.x)+'rad)';
+    }
+    guideFrame=requestAnimationFrame(updateGuide);
+  }
+  function setPullHover(pull){
+    if(hoveredPull===pull)return;
+    hoveredPull=pull;box?.hoverPull(pull);
+  }
   // While the camera and comic return, ignore collection actions rather than
   // letting a new selection interrupt the movement or alter the active book.
   for(const type of ['pointerdown','pointerup','click','dblclick','wheel','input','change','keydown']){
@@ -36,15 +62,21 @@ export function mountOffTheClock(stage, pageRoot) {
   let reduced=media.matches;
   const seriesSelect=$('series-select');
   const comicRuler=$('comic-ruler');comicRuler.max=String(comics.length-1);
-  const collectionRuler=createRuler(comicRuler,{ticks:comics.length*2-1,start:'FIRST',end:'LAST',format:value=>`${value+1} of ${comics.length}. ${comics[value].title}, ${comics[value].variant}`});
+  const makeRuler=()=>createRuler(comicRuler,{ticks:comics.length*2-1,start:'FIRST',end:'LAST',format:value=>`${value+1} of ${comics.length}. ${comics[value].title}, ${comics[value].variant}`});
+  let collectionRuler=makeRuler();
   listen(comicRuler,'input',()=>select(Number(comicRuler.value)));
   for(const series of new Set(comics.map(c=>c.series))){const option=document.createElement('option');option.value=series;option.textContent=series;seriesSelect.append(option);}
   listen(seriesSelect,'change',()=>select(comics.findIndex(c=>c.series===seriesSelect.value)));
   const thumbnailImages=[];
-  const tabs=comics.map((comic,i)=>{
+  function createTab(comic,i,painted=false){
     const b=document.createElement('button');b.className='comic-tab';b.setAttribute('aria-label',`${comic.title}, ${comic.variant}`);b.setAttribute('aria-pressed','false');b.title=`${comic.title} · ${comic.variant}${comic.collectionStatus==='Incoming'?' · Incoming':''}`;b.dataset.series=comic.series;
-    const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt='';thumbnailImages.push([img,comic.cover]);b.append(img);listen(b,'click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
-  });
+    const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt='';if(painted)img.src=comic.cover;else thumbnailImages.push([img,comic.cover]);b.append(img);listen(b,'click',()=>opened&&i===index?enterInspection(i):select(i));$('comic-tabs').append(b);return b;
+  }
+  const tabs=comics.map((comic,i)=>createTab(comic,i));
+  function refreshFiledTabs(){
+    for(let i=tabs.length;i<comics.length;i++)tabs.push(createTab(comics[i],i,true));
+    collectionRuler.dispose();comicRuler.max=String(comics.length-1);collectionRuler=makeRuler();
+  }
   function announce(message){$(inspecting?'inspection-announcement':'announcement').textContent=message;}
   function pullLabel(pull){return `${pull.variant.replace(' - ',' · ')}${pull.artist?' — '+pull.artist:''}`;}
   function backImageLabel(comic){return comic.backAssetType==='outer-blind-bag-packaging-back'?'Verified outer mystery-bag packaging':comic.backAssetType==='shared-dynamite-back'?`Standard Dynamite back · photographed from my ${comic.backFrom}`:'Verified back-cover photograph';}
@@ -80,15 +112,21 @@ export function mountOffTheClock(stage, pageRoot) {
     if(inspecting){
       for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
       const bag=!!comic.blindBag,hasBack=bag?!!comic.bagBack:!!comic.backCover;$('view-comic').hidden=bag;
-      $('pull-list').hidden=!bag||!unwrapped||!pullsShown;
+      const phase=packPhase(),busy=phase==='opening',row=phase==='row',filed=phase==='filed';
+      dialog.dataset.pack=phase??'';
+      $('pull-list').hidden=!row;
+      $('return-button').disabled=busy;
+      $('view-front').disabled=busy||row;$('view-back').disabled=busy||row;
       if(bag)$('pull-list').replaceChildren(...comic.pulls.map(pull=>{const li=document.createElement('li');li.textContent=pullLabel(pull);if(pull.finish==='foil')li.dataset.finish='foil';return li;}));
-      $('back-image-note').hidden=bag?inspectionView!=='back':inspectionView!=='back'&&!!comic.backCover;$('back-image-note').textContent=inspectionView==='back'&&!unwrapped&&!bag?'The backing board is inside the sleeve. Slide out the comic to view its back.':hasBack?`${backImageLabel(comic)}${comic.backQualityNote?' · '+comic.backQualityNote:''}`:comic.blindBag?'Packaging rear not found for this bag.':comic.collectionStatus==='Incoming'?'Exact back image not yet available for this incoming issue.':'Exact back image not found for this edition.';
+      $('back-image-note').hidden=bag?(busy||row||inspectionView!=='back'):inspectionView!=='back'&&!!comic.backCover;$('back-image-note').textContent=inspectionView==='back'&&!unwrapped&&!bag?'The backing board is inside the sleeve. Slide out the comic to view its back.':hasBack?`${backImageLabel(comic)}${comic.backQualityNote?' · '+comic.backQualityNote:''}`:comic.blindBag?'Packaging rear not found for this bag.':comic.collectionStatus==='Incoming'?'Exact back image not yet available for this incoming issue.':'Exact back image not found for this edition.';
       $('inspection-title').textContent=comic.title;$('inspection-variant').textContent=comic.variant+(comic.issue==='Ashcan'?' · smaller format':'')+(comic.collectionStatus==='Incoming'?' · Incoming':comic.quantity>1?` · ${comic.quantity} copies`:'');
       $('inspection-number').textContent=`${String(index+1).padStart(2,'0')} / ${comics.length}`;
-      $('sleeve-button').innerHTML=bag?(unwrapped?'Put them back <span aria-hidden="true">↓</span>':bagTorn?'Take them out <span aria-hidden="true">↑</span>':'Tear it open <span aria-hidden="true">↯</span>'):unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
-      $('sleeve-button').setAttribute('aria-pressed',String(unwrapped));
-      $('sleeve-status').textContent=bag?(unwrapped?`OPENED · ${comic.pulls.length} PULLS`:bagTorn?'OPENED':'SEALED'):unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
-      $('inspection-instructions').textContent=bag?(unwrapped?'Drag to turn. Click the comics to put them back, or empty space to return to the box.':bagTorn?'Drag to turn. Click the bag to take the comics out again, or empty space to return to the box.':'Drag to turn. Click the bag to tear it open, or empty space to return to the box.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
+      const button=$('sleeve-button');
+      button.hidden=filed;button.disabled=busy;
+      button.innerHTML=bag?(row?'Add to my box <span aria-hidden="true">↓</span>':busy?'Opening the bag…':'Tear the bag <span aria-hidden="true">↯</span>'):unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
+      if(bag)button.removeAttribute('aria-pressed');else button.setAttribute('aria-pressed',String(unwrapped));
+      $('sleeve-status').textContent=bag?(row?'BAGGED & BOARDED':filed?'OPENED · KEEPSAKE':busy?'OPENING':'SEALED'):unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
+      $('inspection-instructions').textContent=bag?(row?'Point at a cover or use the arrow keys to tilt it. Add the pulls to your box to browse them.':filed?'Drag to turn the torn wrapper. Your pulls are in the box.':busy?'Watch the three pulls come out.':'Drag right to left along the dotted line, or tap the bag to tear it.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
     }
   }
   function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=value;box.setOpen(value);render();announce(value?`Box opened. ${comics[index].title}, ${comics[index].variant}.`:'Box closed.');}
@@ -99,10 +137,14 @@ export function mountOffTheClock(stage, pageRoot) {
     $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
     const bag=!!comics[index].blindBag;
     stage.setAttribute('aria-label',bag?'Blind bag close-up. Drag or use arrow keys to rotate. Enter or Space tears the bag open and shows the three comics inside. R resets the view. Click empty space or press Escape to return to the box.':'Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
-    box.focus(true);render();stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
+    box.focus(true);render();if(bag)updateGuide();stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
   }
-  function leaveInspection(){
-    if(!inspecting)return;clearTimeout(clickTimer);clearTimeout(pullTimer);pullsShown=false;bagTorn=false;inspecting=false;unwrapped=false;pointer=null;
+  function leaveInspection(event,fileRequested=false){
+    if(!inspecting||packPhase()==='opening')return;
+    const filing=packPhase()==='row'&&fileRequested?box.filePack():null;
+    if(pointer)cancelPointer();
+    clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;
+    setPullHover(-1);guide.hidden=true;cancelAnimationFrame(guideFrame);guideFrame=0;
     const from=stage.getBoundingClientRect();
     dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
     // Keep the canvas in the same screen-space position as it leaves the dialog,
@@ -131,27 +173,39 @@ export function mountOffTheClock(stage, pageRoot) {
       pageAnimations.forEach(animation=>{animation.currentTime=time;});
     });
     stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
-    if(returning)announce('Returning to the box.');
-    finished.then(() => {
+    if(returning)announce(filing?'Filing the three pulls.':'Returning to the box.');
+    Promise.all([finished,filing]).then(() => {
       if (signal.aborted) return;
       stopReturnAnimation?.();
       returning = false;
-      announce('Returned to the box.');
+      if(filing){refreshFiledTabs();render();}
+      announce(filing?'Three new comics are filed in the box.':'Returned to the box.');
     });
   }
   function toggleSleeve(){
-    if(!inspecting)return;const comic=comics[index];unwrapped=!unwrapped;
-    if(!unwrapped&&inspectionView!=='front'&&!comic.blindBag){inspectionView='front';box.inspectView('front');}
-    if(comic.blindBag&&unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}
-    // Name the pulls once they are out of the bag, not while it is still tearing.
-    clearTimeout(pullTimer);pullsShown=false;const firstTear=comic.blindBag&&unwrapped&&!bagTorn;if(comic.blindBag&&unwrapped)bagTorn=true;
-    if(comic.blindBag&&unwrapped)pullTimer=setTimeout(()=>{pullsShown=true;render();announce(`Inside: ${comic.pulls.map(pullLabel).join('; ')}.`);},reduced?0:firstTear?2600:1300);
+    if(!inspecting)return;
+    const comic=comics[index];
+    if(comic.blindBag){
+      const phase=packPhase();
+      if(phase==='row'){leaveInspection(null,true);return;}
+      if(phase!=='sealed')return;
+      inspectionView='front';box.inspectView('front');
+      const ready=box.openPack();render();
+      if(packPhase()==='opening')announce('Tearing the bag open.');
+      ready.then(shown=>{
+        if(!shown||signal.aborted||!inspecting)return;
+        render();announce(`Inside: ${comic.pulls.map(pullLabel).join('; ')}.`);
+      });
+      return;
+    }
+    unwrapped=!unwrapped;
+    if(!unwrapped&&inspectionView!=='front'){inspectionView='front';box.inspectView('front');}
     box.unwrap(unwrapped);render();
-    announce(comic.blindBag?(unwrapped?(firstTear?'Tearing the bag open.':'Taking the comics out.'):'Comics slid back into the bag.'):unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');
+    announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');
   }
   function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
   listen($('inspect-button'),'click',()=>enterInspection());listen($('return-button'),'click',leaveInspection);listen($('sleeve-button'),'click',toggleSleeve);
-  for(const view of ['front','comic','back'])listen($('view-'+view),'click',()=>{inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?((comics[index].blindBag?comics[index].bagBack:comics[index].backCover)?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
+  for(const view of ['front','comic','back'])listen($('view-'+view),'click',()=>{if(packPhase()==='opening'||packPhase()==='row')return;inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?((comics[index].blindBag?comics[index].bagBack:comics[index].backCover)?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
   listen(dialog,'cancel',e=>{e.preventDefault();leaveInspection();});
   listen($('previous'),'click',()=>step(-1));listen($('next'),'click',()=>step(1));
   listen($('motion-toggle'),'click',()=>{reduced=!reduced;updateMotion();});
@@ -168,6 +222,14 @@ export function mountOffTheClock(stage, pageRoot) {
     if(e.target!==stage)return;
     if(['ArrowRight','ArrowDown','ArrowLeft','ArrowUp','Enter',' ','Escape','Home','End','i','I','r','R'].includes(e.key))e.preventDefault();
     if(inspecting){
+      const phase=packPhase();
+      if(phase==='opening')return;
+      if(phase==='row'){
+        if(e.key==='ArrowRight'||e.key==='ArrowLeft')setPullHover((hoveredPull+(e.key==='ArrowRight'?1:2)+3)%3);
+        if(e.key==='Escape')leaveInspection();
+        if(e.key==='Enter'||e.key===' ')toggleSleeve();
+        return;
+      }
       if(e.key==='ArrowRight')box.rotate(.18);if(e.key==='ArrowLeft')box.rotate(-.18);
       if(e.key==='ArrowUp')box.rotate(0,-.12);if(e.key==='ArrowDown')box.rotate(0,.12);
       if(e.key==='Enter'||e.key===' ')toggleSleeve();if(e.key==='Escape')leaveInspection();if(e.key.toLowerCase()==='r'){inspectionView='front';box.reset();render();}return;
@@ -181,17 +243,37 @@ export function mountOffTheClock(stage, pageRoot) {
     if(e.key.toLowerCase()==='r'){box?.reset();lidSide=1;lidTilt=0;render();}
   });
   listen(stage,'pointerdown',e=>{
-    if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary)return;
+    if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary||packPhase()==='opening')return;
     const hit=box?.hit(e.clientX,e.clientY);
+    const line=guideLine();
+    // The hit area runs just above and below the projected tear line. A
+    // tap elsewhere on the bag still tears; a drag elsewhere rotates it.
+    const [a,b]=line??[];
+    const tear=line&&e.clientX>=Math.min(a.x,b.x)-16&&e.clientX<=Math.max(a.x,b.x)+16
+      &&Math.abs(e.clientY-(a.y+(b.y-a.y)*(e.clientX-a.x)/(b.x-a.x||1)))<24?line:null;
+    if(packPhase()==='row')setPullHover(hit?.pull??-1);
     const mobileScroll=mobileCollection.matches&&!inspecting;
     // Collection swipes belong to the page on phones. Only track enough to
     // distinguish a tap from a swipe; rotation remains available in close-ups.
     if(!mobileScroll)box?.hold(true);
-    clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,mobileScroll,moved:0,hit,lid:opened&&!inspecting&&!!hit?.lid};
+    clearTimeout(clickTimer);stage.focus({preventScroll:true});pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,type:e.pointerType,mobileScroll,moved:0,hit,tear,lid:opened&&!inspecting&&!!hit?.lid};
     if(!mobileScroll)stage.setPointerCapture(e.pointerId);
   });
   listen(stage,'pointermove',e=>{
+    if(packPhase()==='row'){
+      setPullHover(box.hit(e.clientX,e.clientY)?.pull??-1);
+      if(!pointer)return;
+      pointer.moved=Math.max(pointer.moved,Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y));
+      return;
+    }
     if(!pointer||pointer.id!==e.pointerId)return;
+    if(pointer.tear){
+      const [a,b]=pointer.tear;
+      pointer.progress=tearProgress(a,b,e.clientX-pointer.x,e.clientY-pointer.y);
+      pointer.moved=Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y);
+      box.scrubPack(pointer.progress);
+      return;
+    }
     if(pointer.mobileScroll){
       pointer.moved=Math.max(pointer.moved,Math.hypot(e.clientX-pointer.x,e.clientY-pointer.y));
       return;
@@ -203,6 +285,10 @@ export function mountOffTheClock(stage, pageRoot) {
   listen(stage,'pointerup',e=>{
     if(!pointer||pointer.id!==e.pointerId)return;
     const gesture=pointer;pointer=null;box?.hold(false);if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+    if(gesture.tear){
+      if(gesture.moved<7||gesture.progress>=TEAR_THRESHOLD)toggleSleeve();else box.cancelPackTear();
+      return;
+    }
     if(gesture.mobileScroll&&Math.max(gesture.moved,Math.hypot(e.clientX-gesture.x,e.clientY-gesture.y))>=7)return;
     if(gesture.lid){if(gesture.moved<7)setOpen(false);else announce(`Lid resting to the ${lidSide<0?'left':'right'}.`);return;}
     if(!inspecting&&!gesture.mobileScroll&&gesture.type==='touch'&&Math.abs(e.clientY-gesture.y)>55&&Math.abs(e.clientY-gesture.y)>Math.abs(e.clientX-gesture.x)){step(e.clientY<gesture.y?1:-1);return;}
@@ -213,7 +299,7 @@ export function mountOffTheClock(stage, pageRoot) {
       // Only a tap that starts and ends off the model dismisses the close-up.
       // Rotation drags and taps on the comic, sleeve, or board stay in inspection.
       if(!gesture.hit&&!hit)leaveInspection();
-      else if(hit?.comic===index)clickTimer=setTimeout(toggleSleeve,220);
+      else if(hit?.comic===index&&packPhase()!=='row'&&packPhase()!=='filed')clickTimer=setTimeout(toggleSleeve,220);
       return;
     }
     if(!hit)return;
@@ -222,9 +308,9 @@ export function mountOffTheClock(stage, pageRoot) {
     if(hit.comic!==undefined){if(hit.comic===index)enterInspection(hit.comic);else select(hit.comic);}
   });
   listen(stage,'dblclick',e=>e.preventDefault());
-  function cancelPointer(){const previous=pointer;pointer=null;clearTimeout(clickTimer);box?.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
+  function cancelPointer(){const previous=pointer;pointer=null;clearTimeout(clickTimer);box?.hold(false);if(previous?.tear)box?.cancelPackTear();if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
   listen(stage,'pointercancel',cancelPointer);
-  listen(stage,'pointerleave',()=>{if(pointer?.mobileScroll)cancelPointer();});
+  listen(stage,'pointerleave',()=>{if(pointer?.mobileScroll)cancelPointer();if(!pointer)setPullHover(-1);});
   listen(mobileCollection,'change',()=>{cancelPointer();render();});
   listen(stage,'lostpointercapture',()=>{if(pointer)cancelPointer();});
   listen(window,'blur',cancelPointer);
@@ -315,7 +401,7 @@ export function mountOffTheClock(stage, pageRoot) {
     compacts?.dispose();
     studio?.dispose();
     cancelPointer();
-    clearTimeout(pullTimer);
+    cancelAnimationFrame(guideFrame);guide.remove();
     stopReturnAnimation?.();
     if (dialog.open) dialog.close();
     stageAnchor.after(stage);

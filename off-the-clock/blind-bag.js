@@ -2,13 +2,15 @@
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
+import { createComicSleeve } from './comic-sleeve.js?v=39.0';
+import { PACK_DURATION, samplePack, samplePouch, sampleTear, smooth } from './pack-motion.js?v=1.0';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
 const BAG_SCALE=.9;
 export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
-export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls}){
+export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls,sparkles=false}){
   const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
   const group=new THREE.Group();group.name='blind-bag';
   const bag=gltf.scene.clone(true);bag.scale.setScalar(BAG_SCALE);group.add(bag);
@@ -20,6 +22,8 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
     o.castShadow=true;o.receiveShadow=true;o.material=o.material.clone();
     const name=o.material.name;
     o.userData.baseColor=o.material.color.clone();
+    // Dither the disappearing wrapper, keeping depth writes on while it sinks.
+    o.material.alphaHash=true;
     if(name==='art_front')artMeshes.front.push(o);
     if(name==='art_back')artMeshes.back.push(o);
     if(name.startsWith('fin_'))fins.push(o);
@@ -46,59 +50,152 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
   for(const action of [tear,crinkle]){action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;}
   const tearDuration=tear.getClip().duration,crinkleDuration=crinkle.getClip().duration;
 
-  // The pulls wait inside, stacked front to back, until the mouth is open.
-  const pullGroup=new THREE.Group();pullGroup.scale.setScalar(BAG_SCALE);pullGroup.visible=false;group.add(pullGroup);
-  const booklets=pulls.map((pull,k)=>{
+  // A pull and its own sleeve share one rig, including while filing. Build
+  // all geometry without asking the artwork loader to do any additional work.
+  const pullGroup=new THREE.Group();pullGroup.scale.setScalar(BAG_SCALE);group.add(pullGroup);
+  const entries=pulls.map((pull,k)=>{
     const booklet=createComicBook(THREE,{template:comicModel,frontTexture:pullTextures[k]??null,backTexture:pullBacks[k]??null,foil:pull.finish==='foil'});
-    pullGroup.add(booklet.group);return booklet;
+    const bag=createComicSleeve(THREE,comicModel);
+    const rig=new THREE.Group();rig.userData.pullIndex=k;
+    rig.add(booklet.group,bag.group);pullGroup.add(rig);
+    return {group:rig,book:booklet.group,booklet,sleeve:bag.group,bag};
   });
-  const books=booklets.map(booklet=>booklet.group);
+  const tearEnds=[new THREE.Vector3(.94,1.456,.058),new THREE.Vector3(-.94,1.456,.058)];
+  const projected=tearEnds.map(v=>v.clone()), partBounds=new THREE.Box3(), pullBounds=new THREE.Box3();
+  let sparks;
+  if(sparkles){
+    const n=34,positions=new Float32Array(n*3),colors=new Float32Array(n*3);
+    const color=new THREE.Color(),geometry=new THREE.BufferGeometry();
+    for(let i=0;i<n;i++){color.set([0xffe0a0,0xf6f7fb,0xa2d9ff][i%3]);color.toArray(colors,i*3);}
+    geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+    geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
+    const material=new THREE.PointsMaterial({size:.045,vertexColors:true,transparent:true,depthWrite:false});
+    sparks=new THREE.Points(geometry,material);sparks.frustumCulled=false;group.add(sparks);
+  }
 
-  let open=false,tearTime=0,reveal=0,crinkleTime=-1,moving=false;
-  function pose(){
+  let phase='sealed',time=0,tearTime=0,tearFrom=0,crinkleTime=-1,spring=null,hover=-1;
+  let watchdog,resolveOpen,show=0,phone=false,wrapperOpacity=1,filing=false;
+  const tilts=entries.map(()=>0);
+  function pose(reduced=false){
+    const pouchFrame=samplePouch(time),row=phase==='row';
+    const rowAmount=row?smooth(.48,.94,show):1;
+    wrapperOpacity=phase==='filed'?(filing?1-show:1):pouchFrame.opacity*(row?rowAmount:1)+(row?1-rowAmount:0);
+    bag.visible=wrapperOpacity>.001;
+    bag.position.y=pouchFrame.y*rowAmount*(phase==='filed'?0:1);
+    bag.traverse(o=>{if(o.isMesh)o.material.opacity=wrapperOpacity;});
     const sealed=tearTime===0;
     tear.enabled=!sealed||crinkleTime<0;crinkle.enabled=sealed&&crinkleTime>=0;
-    tear.time=tearTime;crinkle.time=Math.max(0,crinkleTime);mixer.update(0);
-    pullGroup.visible=reveal>0;
-    // Rise together as one stack, then fan out like a hand of cards.
-    const rise=smooth(0,.55,reveal),fan=smooth(.45,1,reveal);
-    books.forEach((book,k)=>{
-      const side=k-(books.length-1)/2;
-      // Spread far enough that each cover reads, with the middle pull on top.
-      book.position.set(side*1.55*fan,3.05*rise+.12*fan*(1-Math.abs(side)),(1-k)*.024*(1-fan)+(.05+.06*(1-Math.abs(side)))*fan);
-      book.rotation.set(0,-side*.1*fan,-side*.09*fan);
+    tear.time=phase==='filed'?tearDuration:tearTime;crinkle.time=Math.max(0,crinkleTime);mixer.update(0);
+    pullGroup.visible=phase==='opening'||(row&&rowAmount>.001);
+    if(phase!=='filed')entries.forEach(({group:rig,book,bag},k)=>{
+      const p=samplePack(time,k,phone);
+      rig.visible=p.visible;
+      rig.position.set(p.x,p.y+3.25*(1-rowAmount),p.z);
+      rig.rotation.set(tilts[k]*.095,p.yaw-tilts[k]*.13,p.roll);
+      rig.scale.setScalar(p.scale*Math.max(.0001,rowAmount));
+      book.position.y=p.bookY;
+      bag.board.visible=p.boardVisible;bag.board.position.y=p.boardY;
+      bag.film.visible=p.filmVisible;bag.film.position.y=p.filmY;
+      bag.update(p.flap,0);bag.shine(p.shine);
     });
+    if(sparks){
+      const age=time-.30;
+      sparks.visible=phase==='opening'&&!reduced&&age>0&&age<.68;
+      if(sparks.visible){
+        const attr=sparks.geometry.attributes.position;
+        for(let i=0;i<attr.count;i++){
+          const angle=i*2.39996,energy=.6+(i%7)*.13;
+          attr.setXYZ(i,Math.cos(angle)*energy*age*2.15,1.20+age*(1.8+energy*1.4)-3.2*age*age,.13+Math.sin(angle)*energy*age*.7);
+        }
+        attr.needsUpdate=true;
+        sparks.material.opacity=smooth(0,.035,age)*(1-smooth(.12,.68,age));
+      }
+    }
+  }
+  function finishOpening(){
+    if(phase!=='opening')return;
+    clearTimeout(watchdog);phase='row';time=PACK_DURATION;tearTime=tearDuration;pose();
+    const resolve=resolveOpen;resolveOpen=undefined;resolve?.(true);
   }
   pose();
   return {
-    group,pullCount:books.length,
-    get opened(){return open;},
-    get moving(){return moving;},
-    setOpen(value){open=value;moving=true;},
-    crinkle(){if(tearTime===0&&!open){crinkleTime=0;moving=true;}},
-    reset(){open=false;tearTime=0;reveal=0;crinkleTime=-1;moving=false;pose();},
-    // The tear only runs forward. Putting the pulls back slides them into the torn bag.
-    tick(dt,reduced){
-      if(crinkleTime>=0){crinkleTime=reduced?-1:crinkleTime+dt;if(crinkleTime>crinkleDuration)crinkleTime=-1;}
-      if(open&&tearTime<tearDuration)tearTime=reduced?tearDuration:Math.min(tearDuration,tearTime+dt);
-      const wanted=open&&tearTime>=tearDuration*.74?1:0;
-      reveal=reduced?wanted:wanted>reveal?Math.min(wanted,reveal+dt/1.3):Math.max(wanted,reveal-dt/.9);
-      moving=crinkleTime>=0||(open&&tearTime<tearDuration)||reveal!==wanted;
-      pose();return moving;
+    group,
+    get phase(){return phase;},
+    scrub(value){
+      if(phase!=='sealed')return;
+      spring=null;crinkleTime=-1;tearTime=.91*Math.max(0,Math.min(1,value));pose();
     },
-    // Frame the pouch and the comics, not the strip falling out of shot.
+    cancelTear(){if(phase==='sealed'&&tearTime>0)spring={start:tearTime,time:0};},
+    open(reduced){
+      if(phase!=='sealed')return Promise.resolve(false);
+      phase='opening';time=0;tearFrom=tearTime/tearDuration;crinkleTime=-1;spring=null;
+      return new Promise(resolve=>{
+        resolveOpen=resolve;
+        if(reduced)finishOpening();
+        else watchdog=setTimeout(finishOpening,PACK_DURATION*1000+800);
+      });
+    },
+    crinkle(){if(phase==='sealed'&&tearTime===0)crinkleTime=0;},
+    hover(index){hover=index;},
+    clearHover(){hover=-1;},
+    takePulls(){
+      if(phase!=='row')return [];
+      phase='filed';filing=true;pose();return entries;
+    },
+    showKeepsake(){filing=false;pose();},
+    tick(dt,reduced,presentation,isPhone){
+      if(phase==='sealed'&&crinkleTime<0&&!spring)return false;
+      show=presentation;phone=isPhone;
+      if(spring){
+        spring.time+=dt;tearTime=spring.start*(1-smooth(0,.26,spring.time));
+        if(tearTime===0)spring=null;
+      }
+      if(crinkleTime>=0){crinkleTime=reduced?-1:crinkleTime+dt;if(crinkleTime>crinkleDuration)crinkleTime=-1;}
+      if(phase==='opening'){
+        time+=dt;tearTime=tearDuration*sampleTear(time,tearFrom);
+        if(reduced||time>=PACK_DURATION)finishOpening();
+      }
+      let tilting=false;
+      if(phase==='row')tilts.forEach((value,k)=>{
+        const wanted=!reduced&&hover===k?1:0;
+        tilts[k]=THREE.MathUtils.damp(value,wanted,dt,12);
+        if(Math.abs(tilts[k]-wanted)<.001)tilts[k]=wanted;
+        tilting||=value!==tilts[k];
+      });
+      pose(reduced);
+      return phase==='opening'||spring!==null||crinkleTime>=0||tilting;
+    },
+    tearGuide(camera){
+      if(phase!=='sealed')return null;
+      bag.updateWorldMatrix(true,false);
+      return projected.map((v,i)=>v.copy(tearEnds[i]).applyMatrix4(bag.matrixWorld).project(camera));
+    },
+    // Do not frame the detached strip or particles. Ease the sinking pouch
+    // out of the fit so its last visible pixels cannot jerk the camera.
     bounds(target){
-      target.makeEmpty();for(const part of pouch)target.expandByObject(part);
-      if(pullGroup.visible)target.expandByObject(pullGroup);
+      target.makeEmpty();pullBounds.makeEmpty();
+      for(const part of pouch)target.expandByObject(part);
+      if(pullGroup.visible)for(const {group:rig,book} of entries)if(rig.visible)pullBounds.expandByObject(book);
+      if(!pullBounds.isEmpty()){
+        if(wrapperOpacity>.001){
+          partBounds.copy(target).union(pullBounds);
+          target.min.copy(pullBounds.min).lerp(partBounds.min,wrapperOpacity);
+          target.max.copy(pullBounds.max).lerp(partBounds.max,wrapperOpacity);
+        }else target.copy(pullBounds);
+      }
       return target;
     },
-    /** Applies photographs that loaded after the bag was shown. Any argument may be left out. */
     setTextures({frontTexture,backTexture,pullTextures,pullBacks}={}){
       if(frontTexture!==undefined)setArt('front',frontTexture);
       if(backTexture!==undefined)setArt('back',backTexture);
-      pullTextures?.forEach((t,k)=>{if(t)booklets[k]?.setCover(true,t);});
-      pullBacks?.forEach((t,k)=>{if(t)booklets[k]?.setCover(false,t);});
+      pullTextures?.forEach((t,k)=>{if(t)entries[k]?.booklet.setCover(true,t);});
+      pullBacks?.forEach((t,k)=>{if(t)entries[k]?.booklet.setCover(false,t);});
     },
-    dispose(){mixer.stopAllAction();ownTextures.forEach(t=>t.dispose());booklets.forEach(b=>b.dispose());}
+    dispose(){
+      clearTimeout(watchdog);resolveOpen?.(false);mixer.stopAllAction();
+      ownTextures.forEach(t=>t.dispose());bag.traverse(o=>{if(o.isMesh)o.material.dispose();});
+      if(phase!=='filed')entries.forEach(e=>{e.booklet.dispose();e.bag.dispose();});
+      if(sparks){sparks.geometry.dispose();sparks.material.dispose();}
+    }
   };
 }

@@ -5,7 +5,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
 import { createComicSleeve } from './comic-sleeve.js?v=39.0';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=40.0';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.0';
+import { FILE_DURATION, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.0';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
@@ -186,12 +187,14 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   // is visible yet: covers, backs and pulls stream in once it is on screen.
   const [comicModel,bagModel]=await modelsReady;
   signal?.throwIfAborted();
+  const sparkles=new URLSearchParams(location.search).get('sparkles')==='1';
+  const slot=(i,count)=>1.43-i*(2.86/Math.max(1,count-1));
   const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     if(comics[i].blindBag){
-      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comics[i].pulls});
+      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls,sparkles});
       g.add(blind.group);
-      g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
+      g.position.set((i%3-1)*.014,1.42,slot(i,comics.length));
       g.rotation.set(-.025,0,(i%3-1)*.009);
       return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
     }
@@ -201,7 +204,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     // The model is a standard 6⅝ × 10¼ in comic; smaller formats scale from it.
     book.scale.set(widthIn/6.625,heightIn/10.25,comics[i].thicknessScale??1);
     g.add(book,sleeve);
-    g.position.set((i%3-1)*.014,1.42,1.43-i*(2.86/Math.max(1,comics.length-1)));
+    g.position.set((i%3-1)*.014,1.42,slot(i,comics.length));
     g.rotation.set(-.025,0,(i%3-1)*.009);
     return {group:g,book,booklet,sleeve,bag,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
   });
@@ -252,7 +255,33 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
   const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
   const overviewBounds=Array.from({length:3},()=>new THREE.Box3()),overviewCorners=Array.from({length:24},()=>new THREE.Vector3()),relative=new THREE.Vector3();
-  let firstRender=false,warmupHandle=0;
+  let firstRender=false,warmupHandle=0,packFiling=null;
+  const fileRotation=new THREE.Quaternion(),fileEuler=new THREE.Euler();
+  function settleFiling(){
+    if(!packFiling)return;
+    const {owner,resolve,watchdog,entries}=packFiling;
+    clearTimeout(watchdog);
+    entries.forEach(({card})=>{card.group.position.set(card.baseX,1.42,card.baseZ);card.group.scale.setScalar(1);});
+    owner.showKeepsake();
+    packFiling=null;dirty=true;resolve();
+  }
+  function moveFiledPulls(elapsed){
+    const filing=packFiling;if(!filing)return;
+    filing.time=reduced?FILE_DURATION:Math.min(FILE_DURATION,filing.time+elapsed);
+    const reflow=packSmooth(0,.60,filing.time);
+    cards.forEach((card,i)=>{
+      if(i<filing.previousSlots.length)card.baseZ=lerp(filing.previousSlots[i],slot(i,cards.length),reflow);
+    });
+    filing.entries.forEach(({card,start,quaternion,scale,index},k)=>{
+      const {reach,drop,lift}=sampleFile(filing.time,k);
+      const above=Math.max(H+1.48,start.y+.21);
+      card.group.position.set(lerp(start.x,card.baseX,reach),lerp(lerp(start.y,above,reach)+lift,1.42,drop),lerp(start.z,card.baseZ,reach));
+      fileRotation.setFromEuler(fileEuler.set(-.025,0,(index%3-1)*.009));
+      card.group.quaternion.copy(quaternion).slerp(fileRotation,reach);
+      card.group.scale.setScalar(lerp(scale,1,reach));
+    });
+    if(filing.time===FILE_DURATION)settleFiling();
+  }
   const artworkGate=createArtworkGate(stage),firstPaint=artworkGate.ready;
   const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;artworkGate.visibility(visible);if(visible)dirty=true;});io.observe(stage);
   cleanups.push(() => {
@@ -261,6 +290,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       releaseReturn(returnState, stage);
       returnState = null;
     }
+    if(packFiling){clearTimeout(packFiling.watchdog);packFiling.resolve();packFiling=null;}
     artworkGate.dispose();
     cancelAnimationFrame(frame);
     ro.disconnect();
@@ -271,7 +301,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     frame=requestAnimationFrame(update);const elapsed=Math.max(0,(now-last)/1000),dt=Math.min(elapsed,.035);last=now;
     if(document.hidden||!visible)return;
     const stickersMoving=stickerSystem.tick(dt,reduced);
-    if(shouldSkipSceneFrame(Boolean(returnState),dirty,wasSettled,floatStrength,stickersMoving))return;
+    if(shouldSkipSceneFrame(Boolean(returnState||packFiling),dirty,wasSettled,floatStrength,stickersMoving))return;
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     if(returnState){
       // Advance the return on real time (capped for long stalls) so slow GPUs
@@ -318,8 +348,11 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     // A small closed-pose offset reads as a loose lid and blends away as it lifts.
     const loose=1-smooth(0,.25,lidProgress);lid.position.x+=.012*loose;lid.position.z-=.008*loose;
     stage.dataset.lidSide=wantedLidSide<0?'left':'right';
+    const packFrame=Math.min(elapsed,.10);
+    moveFiledPulls(packFrame);
     let bagsMoving=false;
     cards.forEach((card,i)=>{
+      if(packFiling&&i>=packFiling.previousSlots.length)return;
       const active=i===selected, lift=active?reveal:0;
       const target=1.42+lift*3.13;
       if(active&&returnState){
@@ -334,7 +367,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       card.group.rotation.x=-.025*(1-amount)+amount*.025;
       card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
-      if(card.blind){card.blind.setOpen(active&&inspecting&&unwrapped);bagsMoving=card.blind.tick(active&&returnState?dt*2.5:dt,reduced)||bagsMoving;}
+      if(card.blind){bagsMoving=card.blind.tick(packFrame,reduced,active?focus:0,mobileView.matches)||bagsMoving;}
       else{
         const {pull,separate,lower,free,bagOpen,bagFinish}=active?sleeveRig:restingSleeve;
         card.book.position.set(.75*separate,3.05*pull-2.57*lower,.36*separate);
@@ -422,6 +455,9 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       const extentY=Math.max(Math.abs(inspectionBounds.min.y-inspectionCenter.y),Math.abs(inspectionBounds.max.y-inspectionCenter.y));
       const distance=Math.max(extentX*1.12/tanH,extentY*1.12/tanV)+inspectionBounds.max.z-inspectionCenter.z+.08;
       inspectionCamera.copy(inspectionCenter);inspectionCamera.z+=distance;
+      if(packFiling&&returnState){
+        inspectionCenter.copy(returnState.startTarget);inspectionCamera.copy(returnState.startCamera);
+      }
       if(stableUnzoom){
         inspectionCenter.copy(returnState.startTarget).lerp(returnState.wideTarget,returnState.unzoom);
         inspectionCamera.copy(returnState.startCamera).lerp(returnState.wideCamera,returnState.unzoom);
@@ -463,10 +499,10 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     }
     stage.dataset.idleMotion=inspecting&&!reduced&&floatStrength>.001?'floating':'still';
     stage.dataset.halo=halo.visible?'on':'off';
-    const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving;
+    const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving&&!packFiling;
     stage.dataset.motionSettled=String(settled && (!returnState || returnState.complete));
     if(finishReturnIfReady(returnState,stage,settled,dt)){
-      clearTimeout(returnState.watchdog);returnState=null;cards[selected].blind?.reset();
+      clearTimeout(returnState.watchdog);returnState=null;
       // Render the final pose even if this is the last animated frame.
       dirty=true;
     }
@@ -566,7 +602,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       wantedDetail=0;inspecting=value;held=false;
       if(value){floatTime=0;floatStrength=0;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;scheduleReturnWarmup();return Promise.resolve();}
       const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
-      if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
+      if(reduced){focusProgress=0;unwrapProgress=0;return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
         const startExtraction=smooth(0,1,unwrapProgress);
@@ -576,15 +612,66 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
           // Preserve a coherent final pose for the next visible frame.
           focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;floatStrength=0;
           const reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-          cards[selected].y=1.42+(opened?reveal*3.13:0);cards[selected].v=0;cards[selected].blind?.reset();
+          cards[selected].y=1.42+(opened?reveal*3.13:0);cards[selected].v=0;
           returnState=null;dirty=true;wasSettled=false;stage.dataset.motionSettled='false';
         });
+      });
+    },
+    packPhase(){return cards[selected].blind?.phase;},
+    scrubPack(value){cards[selected].blind?.scrub(value);dirty=true;},
+    cancelPackTear(){cards[selected].blind?.cancelTear();dirty=true;},
+    openPack(){dirty=true;return cards[selected].blind?.open(reduced);},
+    hoverPull(index){cards[selected].blind?.hover(index);dirty=true;},
+    tearGuide(){
+      if(!inspecting||focusProgress<.92||Math.cos(inspectYaw)<.50)return null;
+      camera.updateMatrixWorld();
+      const line=cards[selected].blind?.tearGuide(camera);
+      const r=stage.getBoundingClientRect();
+      return line?.map(v=>({x:r.left+(v.x+1)*r.width/2,y:r.top+(1-v.y)*r.height/2}))??null;
+    },
+    filePack(){
+      const owner=cards[selected].blind,metadata=makePackEntries(comics[selected]);
+      const pulls=owner.takePulls();
+      if(!pulls.length)return Promise.resolve([]);
+      const previousSlots=cards.map(c=>c.baseZ);
+      const entries=pulls.map((card,k)=>{
+        const index=cards.length;
+        world.attach(card.group);
+        delete card.group.userData.pullIndex;
+        card.group.userData.comicIndex=index;
+        Object.assign(card,{baseX:(index%3-1)*.014,baseZ:slot(index,previousSlots.length+pulls.length),y:1.42,v:0});
+        cards.push(card);
+        backsStarted.add(index); // The pack already streams these exact textures.
+        return {card,index,start:card.group.position.clone(),quaternion:card.group.quaternion.clone(),scale:card.group.scale.x};
+      });
+      comics.push(...metadata);
+      dirty=true;
+      return new Promise(resolve=>{
+        packFiling={owner,entries,previousSlots,time:0,resolve:()=>resolve(metadata),watchdog:setTimeout(settleFiling,2400)};
+        if(reduced)moveFiledPulls(FILE_DURATION);
       });
     },
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
-    hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
+    hit(x,y){
+      const r=stage.getBoundingClientRect();
+      raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);
+      const roots=inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)];
+      for(const hit of raycaster.intersectObjects(roots,true)){
+        let visible=true;
+        for(let o=hit.object;o&&o!==world;o=o.parent)if(!o.visible){visible=false;break;}
+        if(!visible)continue;
+        let pull;
+        for(let o=hit.object;o&&o!==world;o=o.parent){
+          if(o.userData.pullIndex!==undefined)pull=o.userData.pullIndex;
+          if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex,pull};
+          if(o.userData.lid)return {lid:true};
+          if(o.userData.box)return {box:true};
+        }
+      }
+      return null;
+    },
     dispose,
   };
 }
