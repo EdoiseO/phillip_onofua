@@ -11,6 +11,8 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
     assert.deepEqual(book.physicalSizeInches,[5.5,8.5]);
     assert.match(book.thicknessBasis,/approximate/i);
     assert.equal(book.backImageNote,'Photographed from my copy');
+    assert.equal(book.spineImageNote,'Photographed from my copy');
+    assert.equal(book.frontImageNote,book.id==='green-arrow-year-one'?'Publisher cover image; matches my copy':'Photographed from my copy');
     assert.ok(existsSync(new URL(book.pageEdge,import.meta.url)),book.pageEdge);
     for(const side of ['front','back','spine']){
       assert.ok(existsSync(new URL(book[side],import.meta.url)),book[side]);
@@ -20,6 +22,8 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
     assert.ok(!comics.some(comic=>comic.id===book.id),'paperbacks must stay out of the short box');
   }
   assert.match(compacts.find(book=>book.id==='green-arrow-year-one').pageEdgeNote,/estimated/i);
+  assert.match(compacts.find(book=>book.id==='static-season-one').pageEdgeNote,/estimate/i);
+  assert.equal(compacts[0].pageEdge,compacts[1].pageEdge,'both use the lighter page-edge texture');
 });
 
 test('paperback photo mapping keeps a continuous grid and survives replacement',async()=>{
@@ -29,6 +33,11 @@ test('paperback photo mapping keeps a continuous grid and survives replacement',
   globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
   try{
     const book=createPaperback(THREE,compacts[0]),face=book.group.getObjectByName('paperback-front'),uv=face.geometry.attributes.uv;
+    for(const side of ['front','back','spine']){
+      const material=book.group.getObjectByName(`paperback-${side}`).material;
+      assert.equal(material.polygonOffset,true,'printed face has a depth bias over the thin cover shell');
+      assert.ok(material.polygonOffsetFactor<0&&material.polygonOffsetUnits<0);
+    }
     assert.ok(uv.count>4);
     book.setCover('front',new THREE.Texture());
     const first=Array.from(uv.array),middle=(16*17+8)*2;
@@ -42,22 +51,30 @@ test('paperback photo mapping keeps a continuous grid and survives replacement',
 });
 
 
-test('paperback has a connected cover and a recessed, three-edged page block',async()=>{
+test('paperback has a thin connected cover and flush textured page edges',async()=>{
   const THREE=await import('./vendor/three.module.js');
   const {createPaperback}=await import('./paperback.js');
   const previous=globalThis.document;
   globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
   try{
-    const book=createPaperback(THREE,compacts[0]);
+    for(const data of compacts){
+    const book=createPaperback(THREE,data);
     const wrap=book.group.getObjectByName('paperback-cover-wrap'),pages=book.group.getObjectByName('paperback-pages');
     assert.ok(wrap&&pages,'cover shell and page block exist');
     wrap.geometry.computeBoundingBox();pages.geometry.computeBoundingBox();
     const cover=wrap.geometry.boundingBox,block=pages.geometry.boundingBox;
-    assert.ok(cover.max.x>block.max.x&&cover.max.y>block.max.y&&cover.min.y<block.min.y,'cover overhangs pages');
+    const near=(a,b)=>Math.abs(a-b)<1e-6;
+    assert.ok(near(cover.max.x,block.max.x)&&near(cover.max.y,block.max.y)&&near(cover.min.y,block.min.y),'three exposed edges are flush');
     assert.ok(cover.max.z>block.max.z&&cover.min.z<block.min.z,'cover has front and back thickness');
+    assert.ok(near(cover.max.z-block.max.z,.01*2.7/10.25),'cover is 0.01 inches thick');
+    assert.equal(wrap.geometry.parameters.options.bevelEnabled,false);
+    assert.equal(pages.geometry.parameters.options.bevelEnabled,false);
+    assert.equal(wrap.material.color.getHex(),0xe9e5dc,'cover cut edge is off-white');
     assert.equal(book.group.getObjectByName('paperback-page-lines'),undefined,'page lines come from the photo');
     const edgeTexture=new THREE.Texture();book.setPageEdge(edgeTexture);
     assert.equal(pages.material[1].map,edgeTexture);
+    assert.equal(pages.material[1].emissiveMap,edgeTexture,'shaded edges retain their page texture');
+    assert.ok(pages.material[1].emissiveIntensity>0,'page edges have a modest light contribution');
     assert.equal(edgeTexture.wrapS,THREE.MirroredRepeatWrapping);
     const positions=pages.geometry.attributes.position,uv=pages.geometry.attributes.uv,side=pages.geometry.groups.find(g=>g.materialIndex===1);
     const seen=new Set();
@@ -70,5 +87,55 @@ test('paperback has a connected cover and a recessed, three-edged page block',as
     }
     assert.deepEqual(seen,new Set(['fore','top','bottom']),'all exposed edges use the same photo material');
     book.dispose();
+    }
   }finally{globalThis.document=previous;}
+});
+
+test('stand paperbacks clear one another at rest and throughout both pickup and return paths',async()=>{
+  const THREE=await import('./vendor/three.module.js');
+  const {createPaperback}=await import('./paperback.js');
+  const {COMPACT_STAND_POSES,compactPickupSample,interpolateCompactBook,standReturnArc}=await import('./compact-return.js');
+  const previous=globalThis.document;
+  globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
+  const books=compacts.map(data=>createPaperback(THREE,data));
+  try{
+    // Enclose each real model's geometry in its local oriented box. Separating
+    // axes cover face normals and every pair of edge directions.
+    const boxes=books.map(book=>new THREE.Box3().setFromObject(book.group));
+    function oriented(book,index){
+      book.group.updateMatrixWorld(true);
+      const center=boxes[index].getCenter(new THREE.Vector3()).applyMatrix4(book.group.matrixWorld);
+      const half=boxes[index].getSize(new THREE.Vector3()).multiplyScalar(.5);
+      const rotation=new THREE.Matrix4().extractRotation(book.group.matrixWorld);
+      const axes=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)].map(axis=>axis.applyMatrix4(rotation));
+      return {center,half,axes};
+    }
+    function separation(a,b){
+      const direction=b.center.clone().sub(a.center),axes=[...a.axes,...b.axes];
+      for(const x of a.axes)for(const y of b.axes){const axis=x.clone().cross(y);if(axis.lengthSq()>1e-10)axes.push(axis.normalize());}
+      return Math.max(...axes.map(axis=>{
+        const radius=box=>box.axes.reduce((sum,v,i)=>sum+Math.abs(v.dot(axis))*box.half.getComponent(i),0);
+        return Math.abs(direction.dot(axis))-radius(a)-radius(b);
+      }));
+    }
+    function reset(){books.forEach((book,i)=>{const [x,y,z,rx,ry,rz]=COMPACT_STAND_POSES[i];book.group.position.set(x,y,z);book.group.rotation.set(rx,ry,rz);book.group.updateMatrixWorld(true);});}
+    function gap(){return separation(oriented(books[0],0),oriented(books[1],1));}
+    reset();assert.ok(gap()>.02,`books at rest need clearance, measured ${gap()}`);
+    const closePosition=new THREE.Vector3(),closeRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.06,-.5,0));
+    const returnRotations=[];
+    for(const yaw of [-Math.PI,-2.5,-2,-1.5,-1,-.5,0,.5,1,Math.PI/2,2,2.5,Math.PI])for(const pitch of [-.7,0,.7])returnRotations.push(new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,yaw,0)));
+    for(const selected of [0,1])for(const direction of ['pickup','return'])for(const startRotation of direction==='pickup'?[closeRotation]:[closeRotation,...returnRotations]){
+      for(let frame=0;frame<=1000;frame++){
+        reset();const book=books[selected].group,standPosition=book.position.clone(),standRotation=book.quaternion.clone(),progress=frame/1000;
+        if(direction==='pickup'){
+          const {travel,lift}=compactPickupSample(progress);
+          interpolateCompactBook(book,standPosition,closePosition,standRotation,closeRotation,travel,{lift,standArc:selected===0?-1:0});
+        }else{
+          interpolateCompactBook(book,closePosition,standPosition,startRotation,standRotation,progress,{standArc:standReturnArc(selected,startRotation,closeRotation)});
+        }
+        const clearance=gap();
+        assert.ok(clearance>0,`${direction} book ${selected}, frame ${frame}: oriented boxes intersect by ${-clearance}`);
+      }
+    }
+  }finally{books.forEach(book=>book.dispose());globalThis.document=previous;}
 });

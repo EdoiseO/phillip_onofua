@@ -1238,13 +1238,15 @@ export const compacts = [
     physicalSizeInches: [5.5, 8.5], thicknessInches: 0.46,
     thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
     source: 'https://www.penguinrandomhouse.com/books/773606/static-season-one-dc-compact-comics-edition-by-vita-ayala/',
-    front: './assets/compacts/static-season-one-front.jpg', back: './assets/compacts/static-season-one-back.jpg', spine: './assets/compacts/static-season-one-spine.jpg',
-    pageEdge: './assets/compacts/static-season-one-page-edge.jpg',
-    pageEdgeNote: 'Page edge photographed from my copy.',
+    front: './assets/compacts/static-season-one-front.jpg?v=2', back: './assets/compacts/static-season-one-back.jpg?v=2', spine: './assets/compacts/static-season-one-spine.jpg?v=2',
+    pageEdge: './assets/compacts/green-arrow-year-one-page-edge-estimate.jpg',
+    pageEdgeNote: 'Light page-edge texture used as an estimate.',
     frontQuad: [[0,0],[1,0],[1,1],[0,1]],
     backQuad: [[0,0],[1,0],[1,1],[0,1]],
     spineQuad: [[0,0],[1,0],[1,1],[0,1]],
-    backImageNote: 'Photographed from my copy'
+    frontImageNote: 'Photographed from my copy',
+    backImageNote: 'Photographed from my copy',
+    spineImageNote: 'Photographed from my copy'
   },
   {
     id: 'green-arrow-year-one', format: 'compact-paperback', title: 'Green Arrow: Year One',
@@ -1252,12 +1254,14 @@ export const compacts = [
     physicalSizeInches: [5.5, 8.5], thicknessInches: 0.42,
     thicknessBasis: 'Approximate: measured from the straightened spine photograph (spine width over its 8.5 in height); retailer listings vary.',
     source: 'https://www.penguinrandomhouse.com/books/811893/green-arrow-year-one-dc-compact-comics-edition-by-andy-diggle/9781799508083/',
-    front: './assets/compacts/green-arrow-year-one-front.jpg', back: './assets/compacts/green-arrow-year-one-back.jpg', spine: './assets/compacts/green-arrow-year-one-spine.jpg',
+    front: './assets/compacts/green-arrow-year-one-front.jpg?v=2', back: './assets/compacts/green-arrow-year-one-back.jpg?v=2', spine: './assets/compacts/green-arrow-year-one-spine.jpg?v=2',
     pageEdge: './assets/compacts/green-arrow-year-one-page-edge-estimate.jpg',
     pageEdgeNote: 'Estimated page edge: a lightened version of the Static photograph; this book was not photographed edge-on.',
     frontQuad: [[0,0],[1,0],[1,1],[0,1]],
     backQuad: [[0,0],[1,0],[1,1],[0,1]],
     spineQuad: [[0,0],[1,0],[1,1],[0,1]],
-    backImageNote: 'Photographed from my copy'
+    frontImageNote: 'Publisher cover image; matches my copy',
+    backImageNote: 'Photographed from my copy',
+    spineImageNote: 'Photographed from my copy'
   }
 ];
