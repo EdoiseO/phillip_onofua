@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, interpolateSleeveRig, returnBoxOffset, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.3';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.4';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -184,6 +184,7 @@ export async function createBox(stage,comics){
   const bookBounds=new THREE.Box3();
   const inspectionBounds=new THREE.Box3(),inspectionCenter=new THREE.Vector3(),inspectionCamera=new THREE.Vector3();
   const sleeveBounds=new THREE.Box3(),sleeveOffset=new THREE.Vector3(),inverseCardRotation=new THREE.Quaternion();
+  const unzoomBounds=new THREE.Box3(),unzoomDelta=new THREE.Vector3(),unzoomMatrix=new THREE.Matrix3();
   const overviewCamera=homeCamera.clone(),overviewTarget=homeTarget.clone();
   const overviewDirection=homeCamera.clone().sub(homeTarget).normalize();
   const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
@@ -200,10 +201,10 @@ export async function createBox(stage,comics){
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     if(returnState){
       const position=advanceReturnMotion(returnState.motion,reduced?10:dt);
-      focusProgress=position.focus;unwrapProgress=position.extraction;returnState.blend=position.blend;
-      returnState.onProgress?.(position.timeline);
+      focusProgress=position.focus;unwrapProgress=position.extraction;returnState.blend=position.blend;returnState.unzoom=position.unzoom;returnState.cameraTimeline=position.cameraTimeline;
+      returnState.onProgress?.(position.timeline,position.cameraTimeline);
       const pose=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:returnState.startPose.height},position.blend);
-      inspectYaw=pose.turn;inspectPitch=pose.tilt;detailProgress=pose.zoom;floatStrength=pose.float;
+      inspectYaw=pose.turn;inspectPitch=pose.tilt;detailProgress=lerp(returnState.startPose.zoom,wantedDetail,position.unzoom);floatStrength=pose.float;
       if(position.done)returnState.complete=true;
     }else{
       focusProgress=reduced?Number(inspecting):damp(focusProgress,Number(inspecting),dt,5);
@@ -214,8 +215,7 @@ export async function createBox(stage,comics){
     }
     lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
     const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:(returnState?unwrapProgress:smooth(0,1,unwrapProgress));
-    const sleeveRemaining=returnState&&returnState.motion.extraction>0?clamp(unwrapProgress/returnState.motion.extraction,0,1):0;
-    const sleeveRig=returnState?interpolateSleeveRig(returnState.startRig,sleeveRemaining):null;
+    const sleeveRig=returnState?sampleSleeveRig(extraction):null;
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
@@ -232,7 +232,7 @@ export async function createBox(stage,comics){
     advanceLidMotion(lidMotion,reduced?Number(opened):lidWanted,dt,reduced);lidProgress=lidMotion.progress;
     boxDetails.setLidShadow(1-smooth(0,.12,lidProgress));
     const lidT=lidProgress,reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-    const timeline=returnState?clamp(returnState.motion.elapsed/returnState.motion.duration,0,1):0;
+    const timeline=returnState?returnBoxTimeline(clamp(returnState.motion.elapsed/returnState.motion.duration,0,1),returnState.cameraTimeline,returnState.motion.needsRestore):0;
     const boxOffset=returnState?returnBoxOffset(returnState.startBoxOffset,timeline):-7*focus;
     const boxVisible=focus<.995||(returnState&&timeline>.22);
     body.position.y=boxOffset;body.visible=boxVisible;
@@ -318,6 +318,23 @@ export async function createBox(stage,comics){
       if(cards[selected].blind)cards[selected].blind.bounds(inspectionBounds);else inspectionBounds.setFromObject(cards[selected].group);
       inspectionBounds.getCenter(inspectionCenter);
       const bookFocus=cards[selected].blind?0:(sleeveRig?sleeveRig.bookFocus:smooth(.9,1,extraction))*detailProgress;
+      // During a zoomed slide-out return, capture a stable wide view once. The
+      // extracted comic rises before descending, so include that peak pose in
+      // the fit instead of chasing the changing bounds and zooming in and out.
+      const stableUnzoom=returnState?.motion.needsRestore&&returnState.startPose.zoom>.001&&cards[selected].book;
+      if(stableUnzoom&&!returnState.wideCamera){
+        const card=cards[selected];
+        unzoomBounds.copy(inspectionBounds);
+        if(extraction>.68){
+          bookBounds.setFromObject(card.book);
+          unzoomDelta.set(0,3.05,0).sub(card.book.position).applyMatrix3(unzoomMatrix.setFromMatrix4(card.group.matrixWorld));
+          unzoomBounds.union(bookBounds.translate(unzoomDelta));
+        }
+        returnState.wideTarget=unzoomBounds.getCenter(new THREE.Vector3());
+        const size=unzoomBounds.getSize(new THREE.Vector3()),tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
+        const distance=Math.max(size.x*.56/tanH,size.y*.56/tanV)+unzoomBounds.max.z-returnState.wideTarget.z+.08;
+        returnState.wideCamera=returnState.wideTarget.clone();returnState.wideCamera.z+=distance;
+      }
       if(bookFocus>0){
         bookBounds.setFromObject(cards[selected].book);
         inspectionBounds.min.lerp(bookBounds.min,bookFocus);inspectionBounds.max.lerp(bookBounds.max,bookFocus);
@@ -329,6 +346,10 @@ export async function createBox(stage,comics){
       const extentY=Math.max(Math.abs(inspectionBounds.min.y-inspectionCenter.y),Math.abs(inspectionBounds.max.y-inspectionCenter.y));
       const distance=Math.max(extentX*1.12/tanH,extentY*1.12/tanV)+inspectionBounds.max.z-inspectionCenter.z+.08;
       inspectionCamera.copy(inspectionCenter);inspectionCamera.z+=distance;
+      if(stableUnzoom){
+        inspectionCenter.copy(returnState.startTarget).lerp(returnState.wideTarget,returnState.unzoom);
+        inspectionCamera.copy(returnState.startCamera).lerp(returnState.wideCamera,returnState.unzoom);
+      }
       camera.position.copy(overviewCamera).lerp(inspectionCamera,focus);
       cameraTarget.copy(overviewTarget).lerp(inspectionCenter,focus);
       // Set the bag and its board aside in the comic close-up. Offset in screen
@@ -447,7 +468,7 @@ export async function createBox(stage,comics){
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
         const startExtraction=smooth(0,1,unwrapProgress);
-        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startBoxOffset:body.position.y,startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},startRig:{pull:smooth(.12,.68,startExtraction),settle:smooth(.68,1,startExtraction),free:smooth(.72,1,startExtraction),bagOpen:smooth(0,.2,startExtraction),bagFinish:smooth(.65,1,startExtraction),bookFocus:smooth(.9,1,startExtraction)},blend:0,complete:false,resolve,onProgress};
+        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startBoxOffset:body.position.y,startCamera:camera.position.clone(),startTarget:cameraTarget.clone(),startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},blend:0,cameraTimeline:0,complete:false,resolve,onProgress};
         returnState=state;
         state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
           // Preserve a coherent final pose for the next visible frame.

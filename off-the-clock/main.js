@@ -1,6 +1,6 @@
 import {comics} from './comics.js?v=39.2';
-import {createBox} from './model.js?v=44.2';
-import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.3';
+import {createBox} from './model.js?v=44.3';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.4';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 
@@ -112,9 +112,9 @@ function leaveInspection(){
       animation.pause();animation.currentTime=0;return animation;
     });
   }
-  returning=!reduced;const finished=box.focus(false,progress=>{
+  returning=!reduced;const finished=box.focus(false,(progress,cameraProgress)=>{
     const time=progress*RETURN_DURATION_MS;
-    if(stageAnimation)stageAnimation.currentTime=time;
+    if(stageAnimation)stageAnimation.currentTime=cameraProgress*RETURN_DURATION_MS;
     pageAnimations.forEach(animation=>{animation.currentTime=time;});
   });
   stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
