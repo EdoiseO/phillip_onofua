@@ -1,6 +1,6 @@
 import {comics as catalogue} from './comics.js?v=39.5';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.3';
-import {createBox} from './model.js?v=46.4';
+import {createBox} from './model.js?v=46.5';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.9';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';

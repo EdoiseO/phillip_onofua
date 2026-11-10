@@ -13,10 +13,10 @@ export function createComicSleeve(THREE,template){
   // Reflect bright studio strips and dark cards on the film itself. No diffuse grey layer,
   // refractive blur, or detached plane carrying an artificial highlight. The
   // flap drops the dark cards: over the white board they read as an opaque band.
-  const filmMaterial=darkCards=>new THREE.ShaderMaterial({
+  const filmMaterial=(darkCards,edgeTint=0)=>new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, depthTest:true, side:THREE.DoubleSide,
     forceSinglePass:true,
-    uniforms:{darkCards:{value:darkCards},sweep:{value:-1}},
+    uniforms:{darkCards:{value:darkCards},sweep:{value:-1},edgeTint:{value:edgeTint}},
     vertexShader:`
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
@@ -29,7 +29,7 @@ export function createComicSleeve(THREE,template){
         gl_Position=projectionMatrix*viewMatrix*world;
       }`,
     fragmentShader:`
-      uniform float darkCards,sweep;
+      uniform float darkCards,sweep,edgeTint;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
       varying vec2 vFilm;
@@ -62,14 +62,14 @@ export function createComicSleeve(THREE,template){
           brightAlpha+=.25*sin(sweep*3.14159265)*exp(-pow((stripe-sweep)/.095,2.0));
         }
         float darkAlpha=min(darkCard,1.0)*(.20+.07*fresnel)*darkCards;
-        float clearAlpha=.002+fresnel*.045;
+        float clearAlpha=.002+fresnel*.045+edgeTint*(.3+.7*fresnel);
         float total=brightAlpha+darkAlpha+clearAlpha;
         vec3 reflection=(vec3(.91,.96,1.0)*(brightAlpha+clearAlpha)+vec3(.035,.05,.075)*darkAlpha)/max(total,.0001);
         gl_FragColor=vec4(reflection,min(total,.46));
         #include <colorspace_fragment>
       }`
   });
-  const bodyFilm=filmMaterial(1),flapFilm=filmMaterial(0);
+  const bodyFilm=filmMaterial(1),flapFilm=filmMaterial(0,.07);
   const owned=[];
   function sheet(parent,name,width,height,material){
     const geometry=new THREE.PlaneGeometry(width,height);
