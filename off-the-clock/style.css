@@ -43,8 +43,9 @@ body.is-inspecting{overflow:hidden}.inspection{position:fixed;inset:0;margin:0;m
 @media(min-width:701px) and (max-width:760px){.off-clock-page .page{padding-inline:24px}}
 .skip-link{position:fixed;top:12px;left:20px;z-index:10;padding:12px 16px;background:var(--text);color:var(--bg);transform:translateY(-180%)}.skip-link:focus{transform:none}
 
-/* A quiet gesture cue makes the box itself the primary interaction. */
-.open-cue{display:flex;justify-content:center;align-items:center;gap:11px;margin:8px 0 30px;color:#c6d8ef;font-size:13px;line-height:1.5;letter-spacing:.01em;pointer-events:none}
+/* The box and paperback displays share the same gesture cue. */
+.open-cue,.compact-note{display:flex;justify-content:center;align-items:center;gap:11px;color:#c6d8ef;font-size:13px;line-height:1.5;letter-spacing:.01em;pointer-events:none}
+.open-cue{margin:8px 0 30px}
 .viewer[data-ready=false] .open-cue{visibility:hidden}
 .viewer[data-open=true] .open-cue{margin-bottom:10px;animation:lid-cue-enter 260ms ease-out 700ms both}
 .tap-icon{width:28px;height:28px;flex:none;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
@@ -63,3 +64,6 @@ body[data-reduced-motion=true] .viewer .open-cue{animation:none}
 
 .compact-launch{border:0;background:none;color:var(--accent);font-size:12px;padding:10px 0;min-height:44px;text-align:left}
 .compact-launch:hover{text-decoration:underline}
+
+/* Keep the React root out of the page's flex and grid layout. */
+#off-clock-root{display:contents}

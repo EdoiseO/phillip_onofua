@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {startCompactReturn} from './compact-return.js';
+import {shouldReturnFromCompactTap, startCompactReturn} from './compact-return.js';
+
+test('compact inspection returns only for a settled tap entirely off the book', () => {
+  const tap = {startedOnBook: false, endedOnBook: false, distance: 6.99, elapsed: 451};
+  assert.equal(shouldReturnFromCompactTap(tap), true);
+  assert.equal(shouldReturnFromCompactTap({...tap, startedOnBook: true}), false);
+  assert.equal(shouldReturnFromCompactTap({...tap, endedOnBook: true}), false);
+  assert.equal(shouldReturnFromCompactTap({...tap, distance: 7}), false);
+  assert.equal(shouldReturnFromCompactTap({...tap, elapsed: 450}), false);
+});
 
 function simulatedScheduler(){
   let id=0;const frames=new Map(),timers=new Map();

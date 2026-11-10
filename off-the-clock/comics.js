@@ -1243,10 +1243,7 @@ export const compacts = [
     pageEdgeNote: 'Light page-edge texture used as an estimate.',
     frontQuad: [[0,0],[1,0],[1,1],[0,1]],
     backQuad: [[0,0],[1,0],[1,1],[0,1]],
-    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
-    frontImageNote: 'Photographed from my copy',
-    backImageNote: 'Photographed from my copy',
-    spineImageNote: 'Photographed from my copy'
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]]
   },
   {
     id: 'green-arrow-year-one', format: 'compact-paperback', title: 'Green Arrow: Year One',
@@ -1259,9 +1256,6 @@ export const compacts = [
     pageEdgeNote: 'Estimated page edge: a lightened version of the Static photograph; this book was not photographed edge-on.',
     frontQuad: [[0,0],[1,0],[1,1],[0,1]],
     backQuad: [[0,0],[1,0],[1,1],[0,1]],
-    spineQuad: [[0,0],[1,0],[1,1],[0,1]],
-    frontImageNote: 'Publisher cover image; matches my copy',
-    backImageNote: 'Photographed from my copy',
-    spineImageNote: 'Photographed from my copy'
+    spineQuad: [[0,0],[1,0],[1,1],[0,1]]
   }
 ];

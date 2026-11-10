@@ -28,5 +28,14 @@ export function createRuler(input,{ticks=49,format=value=>String(value),start,en
   const mobile=matchMedia(mobileControlsQuery);
   const orient=()=>input.setAttribute('aria-orientation',mobile.matches?'vertical':'horizontal');
   mobile.addEventListener('change',orient);orient();
-  input.addEventListener('input',update);update();return {update};
+  input.addEventListener('input',update);
+  update();
+  return {
+    update,
+    dispose() {
+      mobile.removeEventListener('change',orient);
+      input.removeEventListener('input',update);
+      root.replaceWith(input);
+    },
+  };
 }

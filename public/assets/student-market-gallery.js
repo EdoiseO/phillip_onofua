@@ -4,7 +4,7 @@
       label: "Marketplace and listings",
       images: [
         {
-          src: "assets/student-market-browse-desktop.png",
+          src: "/assets/student-market-browse-desktop.png",
           width: 1440,
           height: 1000,
           title: "Bounded marketplace catalogue",
@@ -12,7 +12,7 @@
           caption: "The visible catalogue is produced by bounded server queries over database-controlled listing state."
         },
         {
-          src: "assets/student-market-miles-morales-listing-desktop.png",
+          src: "/assets/student-market-miles-morales-listing-desktop.png",
           width: 1470,
           height: 726,
           title: "Miles Morales listing detail",
@@ -25,7 +25,7 @@
       label: "Messaging and media",
       images: [
         {
-          src: "assets/student-market-messages-desktop.png",
+          src: "/assets/student-market-messages-desktop.png",
           width: 1440,
           height: 1000,
           title: "Listing-linked inbox",
@@ -33,7 +33,7 @@
           caption: "The inbox is capped at 100 conversations and refreshes through recipient-safe notification signals."
         },
         {
-          src: "assets/student-market-conversation-desktop.png",
+          src: "/assets/student-market-conversation-desktop.png",
           width: 1470,
           height: 670,
           title: "Bounded conversation history",
@@ -46,7 +46,7 @@
       label: "Profiles and accounts",
       images: [
         {
-          src: "assets/student-market-public-profile-desktop.png",
+          src: "/assets/student-market-public-profile-desktop.png",
           width: 1084,
           height: 983,
           title: "Public seller profile",
@@ -54,7 +54,7 @@
           caption: "Public profile data is projected from the shared account model while private account fields remain outside the route."
         },
         {
-          src: "assets/student-market-profile-settings-desktop.png",
+          src: "/assets/student-market-profile-settings-desktop.png",
           width: 1084,
           height: 1391,
           title: "Authenticated profile settings",
@@ -67,7 +67,7 @@
       label: "Admin and moderation",
       images: [
         {
-          src: "assets/student-market-admin-desktop.png",
+          src: "/assets/student-market-admin-desktop.png",
           width: 1440,
           height: 1000,
           title: "Role-gated admin overview",
@@ -75,7 +75,7 @@
           caption: "The admin shell separates ordinary marketplace activity from role-gated operational workflows."
         },
         {
-          src: "assets/student-market-reports-registry-desktop.png",
+          src: "/assets/student-market-reports-registry-desktop.png",
           width: 1470,
           height: 771,
           title: "Bounded reports registry",
@@ -83,7 +83,7 @@
           caption: "The registry normalizes status, subject, reason, search, and pagination inputs before querying the newest bounded records."
         },
         {
-          src: "assets/student-market-report-review-current-desktop.png",
+          src: "/assets/student-market-report-review-current-desktop.png",
           width: 1470,
           height: 1823,
           title: "Evidence-backed report review",
@@ -91,7 +91,7 @@
           caption: "The review route assembles evidence, related reports, private note history, subject context, and decision controls without exposing privileged data to ordinary users."
         },
         {
-          src: "assets/student-market-admin-listings-desktop.png",
+          src: "/assets/student-market-admin-listings-desktop.png",
           width: 1084,
           height: 1140,
           title: "Listing review registry",
@@ -99,7 +99,7 @@
           caption: "Submitted listings are filtered by explicit review state before a moderator opens the decision workflow."
         },
         {
-          src: "assets/student-market-listing-review-desktop.png",
+          src: "/assets/student-market-listing-review-desktop.png",
           width: 1084,
           height: 1977,
           title: "Listing approval decision",
@@ -107,7 +107,7 @@
           caption: "A reviewer sees the submitted record, seller context, required rejection feedback, and immutable decision history in one bounded workflow."
         },
         {
-          src: "assets/student-market-enforcement-desktop.png",
+          src: "/assets/student-market-enforcement-desktop.png",
           width: 1084,
           height: 788,
           title: "Account enforcement registry",
@@ -121,7 +121,7 @@
       layout: "mobile",
       images: [
         {
-          src: "assets/student-market-browse-mobile.png",
+          src: "/assets/student-market-browse-mobile.png",
           width: 390,
           height: 844,
           title: "Mobile marketplace",
@@ -129,7 +129,7 @@
           caption: "The mobile catalogue uses the same server query and listing model with a touch-first navigation shell."
         },
         {
-          src: "assets/student-market-messages-mobile.png",
+          src: "/assets/student-market-messages-mobile.png",
           width: 390,
           height: 844,
           title: "Mobile listing-linked messaging",
@@ -137,7 +137,7 @@
           caption: "Conversation context, bounded history, and lifecycle-aware controls remain visible in the narrower composition."
         },
         {
-          src: "assets/student-market-ben10-conversation-mobile.jpg",
+          src: "/assets/student-market-ben10-conversation-mobile.jpg",
           width: 585,
           height: 1266,
           title: "Mobile media-rich conversation",
@@ -145,7 +145,7 @@
           caption: "The compact conversation keeps listing context, participants, attachments, reactions, message history, and the composer within one touch-first thread."
         },
         {
-          src: "assets/student-market-profile-mobile.png",
+          src: "/assets/student-market-profile-mobile.png",
           width: 390,
           height: 844,
           title: "Mobile student identity",
@@ -158,7 +158,7 @@
       label: "Relational data model",
       images: [
         {
-          src: "assets/student-market-data-model-overview.jpg",
+          src: "/assets/student-market-data-model-overview.jpg",
           width: 1140,
           height: 786,
           title: "Connected marketplace records",
@@ -166,7 +166,7 @@
           caption: "Listings, conversations, messages, notifications, profiles, reports, and audit operations share explicit relational links instead of isolated feature storage."
         },
         {
-          src: "assets/student-market-data-model-full.png",
+          src: "/assets/student-market-data-model-full.png",
           width: 2736,
           height: 1276,
           title: "Full relational schema",
@@ -174,7 +174,7 @@
           caption: "The full model shows the connected operational surface across marketplace, messaging, moderation, media, notifications, and user lifecycle data."
         },
         {
-          src: "assets/student-market-data-model-integrity.png",
+          src: "/assets/student-market-data-model-integrity.png",
           width: 2482,
           height: 1195,
           title: "Integrity and account lifecycle focus",

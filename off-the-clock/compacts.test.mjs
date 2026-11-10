@@ -10,9 +10,6 @@ test('compact paperbacks have sourced dimensions and local photos for all three 
     for(const key of ['id','title','series','publisher','year','pageCount','thicknessInches','thicknessBasis','source','pageEdge','pageEdgeNote'])assert.ok(book[key],`${book.id}: ${key}`);
     assert.deepEqual(book.physicalSizeInches,[5.5,8.5]);
     assert.match(book.thicknessBasis,/approximate/i);
-    assert.equal(book.backImageNote,'Photographed from my copy');
-    assert.equal(book.spineImageNote,'Photographed from my copy');
-    assert.equal(book.frontImageNote,book.id==='green-arrow-year-one'?'Publisher cover image; matches my copy':'Photographed from my copy');
     assert.ok(existsSync(new URL(book.pageEdge,import.meta.url)),book.pageEdge);
     for(const side of ['front','back','spine']){
       assert.ok(existsSync(new URL(book[side],import.meta.url)),book[side]);

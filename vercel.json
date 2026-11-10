@@ -26,5 +26,14 @@
         }
       ]
     }
-  ]
+  ],
+  "redirects": [
+    {
+      "source": "/off-the-clock",
+      "destination": "/off-the-clock/",
+      "permanent": true
+    }
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }

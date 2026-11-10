@@ -39,7 +39,7 @@ export function validSticker(value){
 export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,invalidate}){
   const width=W+T,depth=D+T,perimeter=2*(width+depth);
   const loader=new THREE.TextureLoader();
-  let textures=null,loading=null,draft=null,items=[],history=[],saved=true;
+  let textures=null,loading=null,draft=null,items=[],history=[],saved=true,disposed=false;
   const raycaster=new THREE.Raycaster(),inverse=new THREE.Matrix4(),localRay=new THREE.Ray(),hitPoint=new THREE.Vector3();
   let stored=[];
   try{const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');if(Array.isArray(parsed))stored=parsed.filter(validSticker).slice(0,24);}catch{saved=false;}
@@ -57,7 +57,10 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
         const context=canvas.getContext('2d');context.drawImage(map.image,0,0);pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
       }
       return [art.id,{map,pixels,ratio:map.image.height/map.image.width}];
-    })).then(entries=>{textures=new Map(entries);}).catch(error=>{loading=null;throw error;});
+    })).then(entries=>{
+      if (disposed) entries.forEach(([, { map }]) => map.dispose());
+      else textures=new Map(entries);
+    }).catch(error=>{loading=null;throw error;});
     await loading;
   }
   function constrain(data){
@@ -163,7 +166,7 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     return [width/2,width/2+depth,width*1.5+depth,width*1.5+2*depth,-width/2].some(edge=>Math.abs(data.u-edge)<extent);
   }
   return {
-    async ready(){await prepare();if(stored.length){items=stored.map((s,i)=>make(s,false,i));stored=[];invalidate();}},
+    async ready(){if(disposed)return;await prepare();if(!disposed&&stored.length){items=stored.map((s,i)=>make(s,false,i));stored=[];invalidate();}},
     setDraft,clearDraft,pick,hitDraft,
     showDraft(value){if(draft&&draft.mesh.visible!==value){draft.mesh.visible=value;invalidate();}},
     draft(){return draft?{...draft.data}:null;},
@@ -176,6 +179,6 @@ export async function createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,i
     reset(){if(!items.length)return;remember();clearDraft();items.forEach(removeMesh);items=[];save();invalidate();},
     tick(dt,reduced){let moving=false;for(const item of items){if(item.press>0){item.press=reduced?0:item.press*Math.exp(-dt*8);if(item.press<.001)item.press=0;shape(item);moving=true;}}return moving;},
     hasSaved:stored.length>0,
-    dispose(){clearDraft();items.forEach(removeMesh);if(textures)for(const tex of textures.values()){tex.map.dispose();}}
+    dispose(){if(disposed)return;disposed=true;clearDraft();items.forEach(removeMesh);if(textures)for(const tex of textures.values()){tex.map.dispose();}}
   };
 }

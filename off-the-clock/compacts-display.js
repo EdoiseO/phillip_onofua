@@ -1,11 +1,16 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.4';
-import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc} from './compact-return.js?v=1.4';
+import {compacts} from './comics.js?v=39.5';
+import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.6';
 import {createPaperback} from './paperback.js?v=2.4';
 
 // These display studies are created only on request, after the short box paints.
-export function openCompactDisplays({box,inline=false}){
-  const dialog=document.querySelector('#compact-dialog'), mount=document.querySelector('#compact-canvas');
+export function openCompactDisplays({box,inline=false,pageRoot=document}){
+  const dialog=pageRoot.querySelector('#compact-dialog'), mount=dialog.querySelector('#compact-canvas');
+  const viewer=pageRoot.querySelector('.viewer');
+  const comicsButton=pageRoot.querySelector('#collection-comics');
+  const compactsButton=pageRoot.querySelector('#collection-compacts');
+  const dialogHome=document.createComment('Compacts dialog home');
+  dialog.before(dialogHome);
   mount.dataset.returning='false';mount.dataset.picking='false';
   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;renderer.setClearColor(0x0b0e13,0);renderer.domElement.setAttribute('aria-hidden','true');mount.append(renderer.domElement);
   const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(34,1,.1,80);
@@ -22,7 +27,10 @@ export function openCompactDisplays({box,inline=false}){
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
   let display='switch',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
-  const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
+  let inspectionStarted = 0;
+  const title=dialog.querySelector('#compact-title'),note=dialog.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
+  const noteLabel = note.querySelector('#compact-note-label');
+  const shelfCue = () => `${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Click'} a book to take a closer look`;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
   const ro=new ResizeObserver(()=>{if(!moving&&!returning)frameScene();});ro.observe(mount);
@@ -87,12 +95,12 @@ export function openCompactDisplays({box,inline=false}){
     if(!preserveInspection){inspectControls.hidden=selected<0;backButton.hidden=selected<0;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});}
     if(selected>=0){
       title.textContent=compacts[selected].title;
-      note.textContent=`${compacts[selected][`${angle}ImageNote`]} · Drag to turn`;
+      noteLabel.textContent='Drag to turn';
       views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===angle)));
       setBook(selected,0,0,0,inspectPitch,inspectYaw,0);
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
     }else{
-      if(!preserveInspection){title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
+      if(!preserveInspection){title.textContent='Compact Comics';noteLabel.textContent=shelfCue();mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
       // Shelf, stand and stack layouts are kept for reference; the page uses
       // the Compacts shelf (display 'switch'): both books spine-out, no box.
       if(display!=='switch')showBox();
@@ -148,6 +156,7 @@ export function openCompactDisplays({box,inline=false}){
   const draw=()=>{if(closed)return;renderer.render(activeScene,camera);frame=requestAnimationFrame(draw);};
   const select=i=>{
     if(moving||selected>=0)return;
+    inspectionStarted = performance.now();
     const finishInstant=()=>{selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;build();views[0].focus();};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){finishInstant();return;}
     moving=true;mount.dataset.picking='true';
@@ -158,7 +167,7 @@ export function openCompactDisplays({box,inline=false}){
     selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;
     dialog.classList.toggle('compact-inspecting',inline);if(inline)dialog.setAttribute('aria-modal','true');
     inspectControls.hidden=false;backButton.hidden=false;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=true);options.forEach(b=>b.hidden=true);
-    title.textContent=compacts[i].title;note.textContent=`${compacts[i].frontImageNote} · Drag to turn`;
+    title.textContent=compacts[i].title;noteLabel.textContent='Drag to turn';
     views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view==='front')));
     const ui=startUISwap(snapshots);uiCleanup=()=>{ui.dispose();uiCleanup=null;};
     let background=null;
@@ -193,6 +202,7 @@ export function openCompactDisplays({box,inline=false}){
   bookButtons.forEach(button=>button.addEventListener('click',()=>select(Number(button.dataset.book)),eventOptions));
   const returnDisplay=()=>{
     if(moving||selected<0)return;
+    drag = null;
     const returningIndex=selected, book=books[returningIndex].group;
     const focus=()=>{(inline?bookButtons[returningIndex]:options.find(x=>x.dataset.display===display)).focus();};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){
@@ -206,7 +216,7 @@ export function openCompactDisplays({box,inline=false}){
     const snapshots=snapshotUI();
     selected=-1;build({preserveInspection:true});
     inspectControls.hidden=true;backButton.hidden=true;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
-    title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';
+    title.textContent='Compact Comics';noteLabel.textContent=shelfCue();
     dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
     const ui=startUISwap(snapshots,{inlineReturn:inline});uiCleanup=()=>{ui.dispose();uiCleanup=null;};
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone(),toScale=book.scale.clone();
@@ -232,16 +242,112 @@ export function openCompactDisplays({box,inline=false}){
     });
   };
   backButton.addEventListener('click',returnDisplay,eventOptions);
-  mount.addEventListener('pointerdown',event=>{if(moving||selected<0)return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};mount.setPointerCapture(event.pointerId);},eventOptions);
-  mount.addEventListener('pointermove',event=>{if(moving||selected<0||!drag||drag.id!==event.pointerId)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;drag.x=event.clientX;drag.y=event.clientY;inspectYaw+=dx*.012;inspectPitch=THREE.MathUtils.clamp(inspectPitch+dy*.01,-.7,.7);books[selected].group.rotation.set(inspectPitch,inspectYaw,0);frameScene();},eventOptions);
-  mount.addEventListener('pointercancel',()=>{drag=null;},eventOptions);
-  mount.addEventListener('pointerup',event=>{if(selected>=0){drag=null;return;}const r=mount.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(books.map(b=>b.group),true);let object=hits[0]?.object;while(object&&object.userData.compactIndex===undefined)object=object.parent;if(object)select(object.userData.compactIndex);},eventOptions);
+  function raycastBooks(event, groups) {
+    const bounds = mount.getBoundingClientRect();
+    pointer.set((event.clientX-bounds.left)/bounds.width*2-1, -(event.clientY-bounds.top)/bounds.height*2+1);
+    ray.setFromCamera(pointer, camera);
+    return ray.intersectObjects(groups, true);
+  }
+  function hitsSelectedBook(event) {
+    // The crease lines have a broad raycast tolerance that reaches past the cover.
+    return raycastBooks(event, [books[selected].group]).some(({object}) => object.isMesh);
+  }
+  mount.addEventListener('pointerdown', event => {
+    if (moving || returning || selected < 0 || drag || !event.isPrimary || event.button !== 0) return;
+    drag = {
+      id: event.pointerId, x: event.clientX, y: event.clientY, distance: 0,
+      startedOnBook: hitsSelectedBook(event),
+    };
+    mount.setPointerCapture(event.pointerId);
+  }, eventOptions);
+  mount.addEventListener('pointermove', event => {
+    if (moving || returning || selected < 0 || drag?.id !== event.pointerId) return;
+    const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    drag.distance += Math.abs(dx) + Math.abs(dy);
+    drag.x = event.clientX;
+    drag.y = event.clientY;
+    inspectYaw += dx * .012;
+    inspectPitch = THREE.MathUtils.clamp(inspectPitch + dy * .01, -.7, .7);
+    books[selected].group.rotation.set(inspectPitch, inspectYaw, 0);
+    frameScene();
+  }, eventOptions);
+  function cancelDrag(event) {
+    if (drag?.id === event.pointerId) drag = null;
+  }
+  mount.addEventListener('pointercancel', cancelDrag, eventOptions);
+  mount.addEventListener('lostpointercapture', cancelDrag, eventOptions);
+  mount.addEventListener('pointerup', event => {
+    if (moving || returning) return;
+    if (selected >= 0) {
+      if (drag?.id !== event.pointerId) return;
+      const {startedOnBook, x, y, distance} = drag;
+      drag = null;
+      const endedOnBook = hitsSelectedBook(event);
+      if (shouldReturnFromCompactTap({
+        startedOnBook, endedOnBook,
+        distance: distance + Math.abs(event.clientX - x) + Math.abs(event.clientY - y),
+        elapsed: performance.now() - inspectionStarted,
+      })) returnDisplay();
+      return;
+    }
+    let object = raycastBooks(event, books.map(book => book.group))[0]?.object;
+    while (object && object.userData.compactIndex === undefined) object = object.parent;
+    if (object) select(object.userData.compactIndex);
+  }, eventOptions);
   const close=()=>{dialog.close();};dialog.querySelector('#compact-close').addEventListener('click',close,eventOptions);
   dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(inline&&selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
-  dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();pickupCleanup?.();uiCleanup?.();mount.dataset.picking='false';returnFade?.dispose();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#collection-compacts')?.focus();},{once:true});
-  if(inline){dialog.dataset.inline='';document.querySelector('.viewer').append(dialog);document.querySelector('.viewer').classList.add('compact-active');document.querySelector('#collection-comics').setAttribute('aria-pressed','false');document.querySelector('#collection-compacts').setAttribute('aria-pressed','true');}
+  function dispose({ restoreFocus = false } = {}) {
+    if (closed) return;
+    closed = true;
+    listeners.abort();
+    if (dialog.open) dialog.close();
+    cancelReturn?.();
+    pickupCleanup?.();
+    uiCleanup?.();
+    returnFade?.dispose();
+    mount.dataset.picking = 'false';
+    mount.dataset.returning = 'false';
+    cancelAnimationFrame(frame);
+    cancelAnimationFrame(moveFrame);
+    ro.disconnect();
+    clean();
+    if (boxClone) {
+      boxClone.traverse(object => {
+        if (object.userData.compactPreviewOwned) {
+          object.geometry.dispose();
+          object.material.map?.dispose();
+          object.material.dispose();
+        }
+        if (object.userData.compactPreviewOwnedMaterial) object.material.dispose();
+      });
+      boxClone = null;
+    }
+    books.forEach(book => book.dispose());
+    textures.forEach(texture => texture.dispose());
+    shadowTexture.dispose();
+    shadowMaterial.dispose();
+    Object.values(materials).forEach(material => material.dispose());
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+    compactsButton.disabled = false;
+    if (inline) {
+      viewer.classList.remove('compact-active');
+      dialogHome.after(dialog);
+      delete dialog.dataset.inline;
+      dialog.classList.remove('compact-inspecting');
+      dialog.removeAttribute('aria-modal');
+      comicsButton.setAttribute('aria-pressed', 'true');
+      compactsButton.setAttribute('aria-pressed', 'false');
+    }
+    dialogHome.remove();
+    if (restoreFocus) (inline ? comicsButton : compactsButton).focus();
+  }
+  dialog.addEventListener('close', () => dispose({ restoreFocus: true }), eventOptions);
+  if(inline){dialog.dataset.inline='';viewer.append(dialog);viewer.classList.add('compact-active');comicsButton.setAttribute('aria-pressed','false');compactsButton.setAttribute('aria-pressed','true');}
   build();if(inline)dialog.show();else dialog.showModal();frameScene();draw();
   // Keep focus on the control that opened the collection; opening must not
   // land on (and outline) the 3D canvas.
-  if(inline)document.querySelector('#collection-compacts')?.focus({preventScroll:true});
+  if(inline)compactsButton.focus({preventScroll:true});
+  return { dispose };
 }

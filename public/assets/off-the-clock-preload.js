@@ -1,7 +1,7 @@
 // Warms the browser cache for the Off the clock comic box while the homepage
 // sits idle, so opening it from the nav skips most of its downloads.
-// Only the files the box needs before it can appear are fetched here (about
-// 7.5 MB); comic covers still stream in on that page. Visitors with Data Saver
+// Only the files the box needs before it can appear are fetched here.
+// Comic covers still stream in on that page. Visitors with Data Saver
 // or a slow connection are left alone, and nothing runs until the page is idle.
 (() => {
   const base = "/off-the-clock/";
@@ -37,11 +37,17 @@
     for (const [path, as] of files) {
       const link = document.createElement("link");
       link.rel = "prefetch";
-      link.href = base + path;
+      link.href = path.startsWith("/") ? path : base + path;
       if (as !== "document") link.as = as;
       if (as === "font" || as === "fetch") link.crossOrigin = "anonymous";
       document.head.append(link);
     }
+  }
+
+  // Vite supplies the versioned controller and hashed hydration bundle.
+  const entry = document.querySelector('meta[name="off-the-clock-prefetch"]');
+  if (entry) {
+    for (const path of entry.content.split(" ")) files.push([path, "script"]);
   }
 
   // Someone heading for the page gets it straight away.
