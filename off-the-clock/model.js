@@ -5,7 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
 import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.1';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.5';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.6';
 import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.3';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
@@ -187,14 +187,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   // is visible yet: covers, backs and pulls stream in once it is on screen.
   const [comicModel,bagModel]=await modelsReady;
   signal?.throwIfAborted();
-  const sparkles=new URLSearchParams(location.search).get('sparkles')==='1';
   const slot=(i,count)=>collectionSlot(i,count).z;
   const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     const {x,y,z,roll}=collectionSlot(i,comics.length);
     g.position.set(x,y,z);g.rotation.set(SLOT_LEAN,0,roll);
     if(comics[i].blindBag){
-      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls,sparkles});
+      const blind=createBlindBag(THREE,bagModel,{comicModel,pulls:comic.pulls});
       g.add(blind.group);
       return {group:g,blind,baseZ:g.position.z,baseX:g.position.x,y:SLOT_HEIGHT,v:0};
     }

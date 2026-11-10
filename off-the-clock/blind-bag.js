@@ -3,13 +3,13 @@
 import { loadModel } from './models.js?v=38.0';
 import { createComicBook } from './comic-book.js?v=40.0';
 import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.1';
-import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, smooth, tornPouchSeat } from './pack-motion.js?v=1.3';
+import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, tornPouchSeat } from './pack-motion.js?v=1.3';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.
 export const loadBlindBag=()=>loadModel('./assets/models/blind-bag.glb');
 
-export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls,sparkles=false}){
+export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backTexture=null,pullTextures=[],pullBacks=[],pulls}){
   const smooth=(a,b,v)=>THREE.MathUtils.smoothstep(v,a,b);
   const group=new THREE.Group();group.name='blind-bag';
   const bag=gltf.scene.clone(true);bag.scale.setScalar(BAG_SCALE);group.add(bag);
@@ -62,21 +62,11 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
   });
   const tearEnds=[new THREE.Vector3(.94,1.456,.058),new THREE.Vector3(-.94,1.456,.058)];
   const projected=tearEnds.map(v=>v.clone()), partBounds=new THREE.Box3(), pullBounds=new THREE.Box3();
-  let sparks;
-  if(sparkles){
-    const n=34,positions=new Float32Array(n*3),colors=new Float32Array(n*3);
-    const color=new THREE.Color(),geometry=new THREE.BufferGeometry();
-    for(let i=0;i<n;i++){color.set([0xffe0a0,0xf6f7fb,0xa2d9ff][i%3]);color.toArray(colors,i*3);}
-    geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
-    geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
-    const material=new THREE.PointsMaterial({size:.074,vertexColors:true,transparent:true,depthWrite:false});
-    sparks=new THREE.Points(geometry,material);sparks.frustumCulled=false;group.add(sparks);
-  }
 
   let phase='sealed',time=0,tearTime=0,tearFrom=0,crinkleTime=-1,spring=null,hover=-1;
   let watchdog,resolveOpen,show=0,phone=false,wrapperOpacity=1,filing=false,seated=0;
   const tilts=entries.map(()=>0);
-  function pose(reduced=false){
+  function pose(){
     const pouchFrame=samplePouch(time),row=phase==='row';
     const rowAmount=row?smooth(.48,.94,show):1;
     wrapperOpacity=phase==='filed'?(filing?1-show:1):pouchFrame.opacity*(row?rowAmount:1)+(row?1-rowAmount:0);
@@ -101,19 +91,6 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
       rig.scale.setScalar(p.scale*Math.max(.0001,rowAmount));
       posePackSleeve(entry,p);
     });
-    if(sparks){
-      const age=time-.30;
-      sparks.visible=phase==='opening'&&!reduced&&age>0&&age<.68;
-      if(sparks.visible){
-        const attr=sparks.geometry.attributes.position;
-        for(let i=0;i<attr.count;i++){
-          const angle=i*2.39996,energy=.6+(i%7)*.13;
-          attr.setXYZ(i,Math.cos(angle)*energy*age*4.4,1.20+age*(1.8+energy*1.4)-3.2*age*age,.42+Math.sin(angle)*energy*age*.48);
-        }
-        attr.needsUpdate=true;
-        sparks.material.opacity=smooth(0,.035,age)*(1-smooth(.12,.68,age));
-      }
-    }
   }
   function finishOpening(){
     if(phase!=='opening')return;
@@ -164,7 +141,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
         if(Math.abs(tilts[k]-wanted)<.001)tilts[k]=wanted;
         tilting||=value!==tilts[k];
       });
-      pose(reduced);
+      pose();
       return phase==='opening'||spring!==null||crinkleTime>=0||tilting;
     },
     tearGuide(camera){
@@ -172,7 +149,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
       bag.updateWorldMatrix(true,false);
       return projected.map((v,i)=>v.copy(tearEnds[i]).applyMatrix4(bag.matrixWorld).project(camera));
     },
-    // Do not frame the detached strip or particles. Ease the sinking pouch
+    // Do not frame the detached strip. Ease the sinking pouch
     // out of the fit so its last visible pixels cannot jerk the camera.
     bounds(target){
       target.makeEmpty();pullBounds.makeEmpty();
@@ -197,7 +174,6 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
       clearTimeout(watchdog);resolveOpen?.(false);mixer.stopAllAction();
       ownTextures.forEach(t=>t.dispose());bag.traverse(o=>{if(o.isMesh)o.material.dispose();});
       if(phase!=='filed')entries.forEach(e=>{e.booklet.dispose();e.bag.dispose();});
-      if(sparks){sparks.geometry.dispose();sparks.material.dispose();}
     }
   };
 }
