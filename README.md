@@ -4,7 +4,7 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 [View the live portfolio](https://philliponofua.vercel.app) · [Download my résumé](https://philliponofua.vercel.app/assets/phillip-onofua-resume.pdf)
 
-![Phillip Onofua’s dark developer portfolio and featured work](assets/portfolio-preview.jpg)
+![Phillip Onofua’s dark developer portfolio and featured work](public/assets/portfolio-preview.jpg)
 
 ## Overview
 
@@ -105,7 +105,7 @@ Open [http://localhost:8000](http://localhost:8000).
 ├── receipt-splitter.html              # Work-in-progress product plan
 ├── privacy.html                       # Privacy policy
 ├── terms.html                         # Terms of use
-├── assets/
+├── public/assets/
 │   ├── styles.css                     # Base presentation styles
 │   ├── overrides.css                  # Shared case-study and supporting-page styles
 │   ├── home.css                       # Self-contained responsive homepage styles
@@ -126,11 +126,25 @@ Open [http://localhost:8000](http://localhost:8000).
 
 Vercel deploys the production site from the `main` branch.
 
+Vite builds the site into `dist/`. The HTML pages keep their own entry points
+and `public/` keeps shared assets at their original URLs. Off the clock ships
+as a separate static page with its vendored Three.js scene.
+
+```sh
+npm ci
+npm run build
+npm run preview
+```
+
+Use `npm run dev` while editing the Vite pages. Use the built preview to check
+the deployed output and its security headers.
+
 ### Browser security
 
 `vercel.json` applies a Content Security Policy, MIME-sniffing and framing protection, a referrer policy, and restrictions on unused browser permissions to every route. Vercel supplies HSTS. Scripts, styles, fonts, media, and connections are same-origin; image textures may also use data/blob URLs. The sole inline script is the hash-approved Three.js import map. If that map changes, update its SHA-256 in the policy. No `unsafe-inline` or `unsafe-eval` exception is required. Browser styling uses CSSOM properties rather than inline style blocks.
 
-Run `node --test security-headers.test.mjs off-the-clock/stickers.test.mjs` to check the import-map hash, HTML scripts, headers, and sticker boundaries. A plain Python static server does not apply Vercel headers, so verify the response headers and browser console on a deployment too.
+Run `npm test` to check the headers, HTML scripts, and Off the clock scene.
+After a build, the security test also checks the HTML in `dist/`.
 
 The October 22, 2026 advisory check found no GitHub advisory matches for the vendored Three.js `0.186.0` (r186). [CVE-2020-28496](https://github.com/advisories/GHSA-fq6p-x6j3-cmmq) affects versions below `0.125.0`; [CVE-2022-0177](https://github.com/advisories/GHSA-7vvq-7r29-5vg3) is withdrawn and listed versions below `0.137.0`. This is a point-in-time advisory check, not a guarantee against undisclosed vulnerabilities. The vendored files are not covered by npm audit; recheck advisories when updating them.
 
