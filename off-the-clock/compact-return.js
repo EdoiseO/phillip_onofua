@@ -7,18 +7,24 @@ export function startCompactReturn({onFrame,onComplete,request=requestAnimationF
   let previous=now(),frame=0,timer=0,finished=false;
   const finish=()=>{
     if(finished)return;
-    finished=true;clearTimer(timer);cancel(frame);onComplete();
+    finished=true;clearTimer(timer);cancel(frame);onFrame(1,1);onComplete();
   };
   const tick=time=>{
     if(finished)return;
     const dt=Math.min(.035,Math.max(0,(time-previous)/1000));previous=time;
     const state=advanceReturnMotion(motion,dt);
-    onFrame(1-state.focus);
+    onFrame(1-state.focus,Math.min(1,motion.elapsed/motion.duration));
     if(state.done)finish();else frame=request(tick);
   };
   timer=setTimer(finish,2000);
   frame=request(tick);
   return ()=>{if(!finished){finished=true;clearTimer(timer);cancel(frame);}};
+}
+
+// The departing UI clears before the destination starts appearing.
+export function compactUiOpacity(progress){
+  const u=Math.max(0,Math.min(1,progress));
+  return {outgoing:Math.max(0,1-u/.45),incoming:u===1?1:Math.max(0,Math.min(1,(u-.55)/.45))};
 }
 
 // Shared by normal scene builds and pickup target calculation, so the final
@@ -44,6 +50,24 @@ export function startCompactPickup({onFrame,onComplete,request=requestAnimationF
   const tick=time=>{if(finished)return;const u=Math.max(0,Math.min(1,(time-start)/850));if(u>=1)finish();else{onFrame(compactPickupSample(u),u);frame=request(tick);}};
   timer=setTimer(finish,2000);frame=request(tick);
   return ()=>{if(!finished){finished=true;clearTimer(timer);cancel(frame);}};
+}
+
+// Render the moving book over opaque destination props while retaining depth
+// testing between its own cover, pages and spine. Restore all hooks on teardown.
+export function prioritizeCompactBook(book){
+  const saved=[];let lastFrame=-1,active=false;
+  book.traverse(object=>{if(object.isMesh||object.isLine)saved.push({object,renderOrder:object.renderOrder,onBeforeRender:object.onBeforeRender});});
+  const set=enabled=>{
+    if(enabled===active)return;active=enabled;
+    saved.forEach(({object,renderOrder,onBeforeRender})=>{
+      object.renderOrder=enabled?1000:renderOrder;
+      object.onBeforeRender=enabled?function(renderer,...args){
+        if(renderer.info.render.frame!==lastFrame){lastFrame=renderer.info.render.frame;renderer.clearDepth();}
+        onBeforeRender.call(this,renderer,...args);
+      }:onBeforeRender;
+    });
+  };
+  return {set,dispose(){set(false);}};
 }
 
 // Blend props into the dialog background without making opaque box walls
@@ -81,13 +105,14 @@ export function createCompactSceneFade(root,excluded){
     if(skipped.has(object)||!object.material)return;
     const original=object.material;
     object.material=Array.isArray(original)?original.map(m=>cloneMaterial(m).clone):cloneMaterial(original).clone;
-    originals.push({object,original});
+    originals.push({object,original,visible:object.visible});
   });
   let restored=false;
   return {
     set(value){
       if(restored)return;
       const x=Math.max(0,Math.min(1,(value-.5)/.45)),amount=x*x*(3-2*x);
+      originals.forEach(({object,visible})=>{object.visible=visible&&amount>0;});
       for(const [original,{clone,visibility}] of clones){
         visibility.value=amount;
         // Independent box stand-in photos can arrive during the transition.
@@ -97,7 +122,7 @@ export function createCompactSceneFade(root,excluded){
     },
     dispose(){
       if(restored)return;restored=true;
-      originals.forEach(({object,original})=>{object.material=original;});
+      originals.forEach(({object,original,visible})=>{object.material=original;object.visible=visible;});
       clones.forEach(({clone})=>clone.dispose());
     }
   };

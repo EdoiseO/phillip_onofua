@@ -56,6 +56,7 @@ test('destination colour blend keeps box opaque and preserves intentional transp
   assert.match(shader.fragmentShader,/#include <colorspace_fragment>\s*gl_FragColor.rgb=mix/);
   for(const value of [0,.75,1]){
     fade.set(value);
+    assert.equal(box.visible,value!==0);
     assert.equal(box.material.transparent,false);assert.equal(box.material.depthWrite,true);assert.equal(box.material.opacity,1);
     assert.equal(decal.material.transparent,true);assert.equal(decal.material.depthWrite,false);assert.equal(decal.material.opacity,.7);
     if(value===0)assert.equal(shader.uniforms.compactVisibility.value,0);
@@ -63,7 +64,7 @@ test('destination colour blend keeps box opaque and preserves intentional transp
     if(value===1)assert.equal(shader.uniforms.compactVisibility.value,1);
   }
   const lateMap=new THREE.Texture();wall.map=lateMap;fade.set(.75);assert.equal(box.material.map,lateMap,'late box photos update the temporary material');
-  fade.dispose();assert.equal(box.material,wall);assert.equal(decal.material,detail);
+  fade.dispose();assert.equal(box.material,wall);assert.equal(decal.material,detail);assert.equal(box.visible,true);
   fade.dispose();bookMesh.geometry.dispose();box.geometry.dispose();decal.geometry.dispose();wall.dispose();detail.dispose();lateMap.dispose();
 });
 
@@ -126,4 +127,30 @@ test('pickup target and rebuilt close-up use the same camera for desktop and pho
     assert.equal(target.fov,rebuilt.fov);assert.equal(target.aspect,rebuilt.aspect);
   }
   book.geometry.dispose();
+});
+
+
+test('UI swap never overlaps and is driven by elapsed progress',async()=>{
+  const {compactUiOpacity}=await import('./compact-return.js');
+  assert.deepEqual(compactUiOpacity(0),{outgoing:1,incoming:0});
+  assert.deepEqual(compactUiOpacity(.45),{outgoing:0,incoming:0});
+  assert.deepEqual(compactUiOpacity(.55),{outgoing:0,incoming:0});
+  assert.deepEqual(compactUiOpacity(1),{outgoing:0,incoming:1});
+  for(let i=0;i<=100;i++){const {outgoing,incoming}=compactUiOpacity(i/100);assert.ok(outgoing===0||incoming===0,`UI overlaps at ${i}%`);}
+});
+
+test('return watchdog renders final UI progress before completion',()=>{
+  const scheduler=simulatedScheduler();let last,done=false;
+  startCompactReturn({...scheduler,onFrame:(position,progress)=>last={position,progress},onComplete(){done=true;assert.deepEqual(last,{position:1,progress:1});}});
+  scheduler.timeout();assert.equal(done,true);
+});
+
+test('moving book retains its own depth while rendering over props and restores hooks',async()=>{
+  const THREE=await import('./vendor/three.module.js');const {prioritizeCompactBook}=await import('./compact-return.js');
+  const book=new THREE.Group(),a=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial()),b=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
+  let originalCalls=0,clears=0;a.renderOrder=3;a.onBeforeRender=()=>originalCalls++;book.add(a,b);const original=a.onBeforeRender;
+  const restore=prioritizeCompactBook(book),renderer={info:{render:{frame:1}},clearDepth(){clears++;}};
+  restore.set(true);assert.equal(a.renderOrder,1000);a.onBeforeRender(renderer);b.onBeforeRender(renderer);assert.equal(clears,1);assert.equal(originalCalls,1);
+  renderer.info.render.frame++;a.onBeforeRender(renderer);assert.equal(clears,2);restore.set(false);assert.equal(a.renderOrder,3);assert.equal(a.onBeforeRender,original);restore.dispose();
+  a.geometry.dispose();a.material.dispose();b.geometry.dispose();b.material.dispose();
 });
