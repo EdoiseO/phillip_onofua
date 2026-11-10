@@ -8,8 +8,8 @@ import { createComicBook } from './comic-book.js?v=40.0';
 import { loadBlindBag, createBlindBag } from './blind-bag.js?v=40.0';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
-import { createStickerSystem } from './stickers.js?v=30.0';
-import { mobileControlsQuery } from './ruler-control.js?v=19.0';
+import { createStickerSystem } from './stickers.js?v=30.1';
+import { mobileControlsQuery } from './ruler-control.js?v=19.1';
 import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.6';
 
 const clamp = THREE.MathUtils.clamp;
@@ -61,23 +61,60 @@ function bowedWallGeometry(width,height,depth,side){
   source.dispose();geometry.computeBoundingSphere();return geometry;
 }
 
-export async function createBox(stage,comics){
+export async function createBox(stage, comics, { signal } = {}) {
+  const cleanups = [];
+  let disposed = false;
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    signal?.removeEventListener('abort', dispose);
+    for (const cleanup of cleanups.reverse()) cleanup();
+  }
+  signal?.throwIfAborted();
+  signal?.addEventListener('abort', dispose, { once: true });
+  try {
+    return await buildBox(stage, comics, { signal, cleanups, dispose, isDisposed: () => disposed });
+  } catch (error) {
+    dispose();
+    throw error;
+  }
+}
+
+async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }) {
   // The models download alongside the cardboard maps below.
   const modelsReady=Promise.all([
     loadModel('./assets/models/comic-set.glb'),
     comics.some(c=>c.blindBag)?loadBlindBag():null,
   ]);
+  // The model request can fail while cardboard is still loading.
+  modelsReady.catch(() => {});
   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
+  cleanups.push(() => {
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+  });
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0x0b0e13,0);
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-hidden','true');stage.appendChild(renderer.domElement);
   const scene=new THREE.Scene();
+  cleanups.push(() => {
+    scene.traverse(object => {
+      object.geometry?.dispose();
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      for (const material of materials) {
+        material?.map?.dispose();
+        material?.dispose();
+      }
+    });
+  });
   const env=new RoomEnvironment();
   // Long studio strips give the sleeve its moving, photographic reflections.
   const softbox=new THREE.Mesh(new THREE.PlaneGeometry(2,9),new THREE.MeshBasicMaterial({color:0xffffff}));
   softbox.position.set(-3,3,6);softbox.lookAt(0,2,0);env.add(softbox);
   const pmrem=new THREE.PMREMGenerator(renderer), envTexture=pmrem.fromScene(env,.035).texture;
+  cleanups.push(() => envTexture.dispose());
   scene.environment=envTexture;scene.environmentIntensity=.6;pmrem.dispose();env.dispose();
   const camera=new THREE.PerspectiveCamera(33,1,.1,60);
   const homeCamera=new THREE.Vector3(6.1,5.6,10.5), homeTarget=new THREE.Vector3(0,2.65,0), cameraTarget=homeTarget.clone();
@@ -88,8 +125,21 @@ export async function createBox(stage,comics){
   const rim=new THREE.DirectionalLight(0xb6d3ff,1.05);rim.position.set(4,5,-4);scene.add(rim);
   const world=new THREE.Group();scene.add(world);
   const board=new THREE.MeshStandardMaterial(createCardboardTextures(THREE));
-  const cardboardLoader=new THREE.TextureLoader();
-  const cardboardMaps=await Promise.all(['color','normal','roughness'].map(kind=>cardboardLoader.loadAsync(`./assets/materials/cardboard-${kind}.jpg`)));
+  const cardboardLoader=new THREE.TextureLoader(), cardboardTextures = new Set();
+  cleanups.push(() => {
+    board.map?.dispose();
+    board.bumpMap?.dispose();
+    board.roughnessMap?.dispose();
+    board.dispose();
+    cardboardTextures.forEach(texture => texture.dispose());
+  });
+  const cardboardMaps = await Promise.all(['color','normal','roughness'].map(async kind => {
+    const texture = await cardboardLoader.loadAsync(`./assets/materials/cardboard-${kind}.jpg`);
+    if (isDisposed()) texture.dispose();
+    else cardboardTextures.add(texture);
+    return texture;
+  }));
+  signal?.throwIfAborted();
   cardboardMaps.forEach((t,i)=>{t.colorSpace=i===0?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=renderer.capabilities.getMaxAnisotropy();});
   const inside=new THREE.MeshStandardMaterial({map:cardboardMaps[0],normalMap:cardboardMaps[1],roughnessMap:cardboardMaps[2],normalScale:new THREE.Vector2(.48,.48),color:0xe0c9af,roughness:1,metalness:0});
   // RoundedBoxGeometry uses +X, -X, +Y, -Y, +Z, -Z material groups.
@@ -130,10 +180,12 @@ export async function createBox(stage,comics){
   const bodyLocalBounds=new THREE.Box3().setFromObject(body),lidLocalBounds=new THREE.Box3().setFromObject(lid);
   lid.position.y=lidClosedY;
   const textureLoader=new THREE.TextureLoader(),loadedArt=new Set();
-  const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();if(disposed){t.dispose();return null;}loadedArt.add(t);return t;});
+  cleanups.push(() => loadedArt.forEach(texture => texture.dispose()));
+  const loadColor=url=>textureLoader.loadAsync(url).then(t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();if(isDisposed()){t.dispose();return null;}loadedArt.add(t);return t;});
   // Only the models hold up the first frame. The box opens closed, so no comic
   // is visible yet: covers, backs and pulls stream in once it is on screen.
   const [comicModel,bagModel]=await modelsReady;
+  signal?.throwIfAborted();
   const cards=comics.map((comic,i)=>{
     const g=new THREE.Group();world.add(g);g.userData.comicIndex=i;
     if(comics[i].blindBag){
@@ -153,6 +205,10 @@ export async function createBox(stage,comics){
     g.rotation.set(-.025,0,(i%3-1)*.009);
     return {group:g,book,booklet,sleeve,bag,baseZ:g.position.z,baseX:g.position.x,y:1.42,v:0};
   });
+  cleanups.push(() => cards.forEach(card => {
+    card.blind?.dispose();
+    card.booklet?.dispose();
+  }));
   const shadowMap=canvasTexture(256,256,(c,w,h)=>{const gradient=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);gradient.addColorStop(0,'rgba(0,0,0,.8)');gradient.addColorStop(.4,'rgba(0,0,0,.45)');gradient.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=gradient;c.fillRect(0,0,w,h);});
   // Shadow helpers belong to the scene, not the rotating box. In particular,
   // the transparent contact plane must never cast a solid rectangular shadow.
@@ -171,7 +227,11 @@ export async function createBox(stage,comics){
   const lidMotion={progress:0,velocity:0};
   let opened=false,selected=0,openProgress=0,yaw=0,pitch=0,desiredYaw=0,desiredPitch=0,reduced=false,frame=0,last=performance.now(),visible=true,dirty=true,decorating=false;
   const stickerSystem=await createStickerSystem({THREE,body,lid,stage,camera,W,H,D,T,invalidate:()=>{dirty=true;}});
+  if (isDisposed()) stickerSystem.dispose();
+  signal?.throwIfAborted();
+  cleanups.push(() => stickerSystem.dispose());
   if(stickerSystem.hasSaved)await stickerSystem.ready().catch(error=>console.warn('Saved stickers could not load',error));
+  signal?.throwIfAborted();
   const decorationTarget=new THREE.Vector3(0,1.55,0);
   let inspecting=false,focusProgress=0,unwrapped=false,unwrapProgress=0,inspectYaw=.08,inspectPitch=-.025,wantedInspectYaw=.08,wantedInspectPitch=-.025,detailProgress=0,wantedDetail=0;
   let floatTime=0,floatStrength=0,held=false,wasSettled=false,returnState=null;
@@ -190,9 +250,21 @@ export async function createBox(stage,comics){
   const overviewRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),overviewDirection).normalize();
   const overviewUp=new THREE.Vector3().crossVectors(overviewDirection,overviewRight).normalize();
   const overviewBounds=Array.from({length:3},()=>new THREE.Box3()),overviewCorners=Array.from({length:24},()=>new THREE.Vector3()),relative=new THREE.Vector3();
-  let disposed=false,firstRender=false;
+  let firstRender=false,warmupHandle=0;
   const artworkGate=createArtworkGate(stage),firstPaint=artworkGate.ready;
   const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;artworkGate.visibility(visible);if(visible)dirty=true;});io.observe(stage);
+  cleanups.push(() => {
+    if (returnState) {
+      clearTimeout(returnState.watchdog);
+      releaseReturn(returnState, stage);
+      returnState = null;
+    }
+    artworkGate.dispose();
+    cancelAnimationFrame(frame);
+    ro.disconnect();
+    io.disconnect();
+    if (warmupHandle) (globalThis.cancelIdleCallback || clearTimeout)(warmupHandle);
+  });
   function update(now){
     frame=requestAnimationFrame(update);const elapsed=Math.max(0,(now-last)/1000),dt=Math.min(elapsed,.035);last=now;
     if(document.hidden||!visible)return;
@@ -417,9 +489,9 @@ export async function createBox(stage,comics){
     if(!art.has(url))art.set(url,loadColor(url).catch(error=>{console.warn('Artwork unavailable',url,error);return null;}));
     return art.get(url);
   };
-  const applyArt=fn=>value=>{if(!disposed){fn(value);dirty=true;}};
+  const applyArt=fn=>value=>{if(!isDisposed()){fn(value);dirty=true;}};
   function loadBack(i){
-    if(disposed||backsStarted.has(i))return;
+    if(isDisposed()||backsStarted.has(i))return;
     if(!painted){pendingBacks.add(i);return;}
     backsStarted.add(i);
     const comic=comics[i],card=cards[i];
@@ -429,7 +501,7 @@ export async function createBox(stage,comics){
     }else if(comic.backCover)fetchArt(comic.backCover).then(applyArt(t=>{if(t)card.booklet.setCover(false,t);}));
   }
   firstPaint.then(shown=>{
-    if(!shown||disposed)return;
+    if(!shown||isDisposed())return;
     painted=true;
     const fronts=comics.map((comic,i)=>fetchArt(comic.cover).then(applyArt(t=>{
       if(!t)return;
@@ -442,13 +514,12 @@ export async function createBox(stage,comics){
   // The box, lid and other comics are hidden during a close-up. Prepare their
   // shaders and textures while the visitor is inspecting, so the first frame
   // that shows them again during "Back to the box" does not stall.
-  let warmupHandle=0;
   function scheduleReturnWarmup(){
     const idle=globalThis.requestIdleCallback||(callback=>setTimeout(callback,600));
     const cancel=globalThis.cancelIdleCallback||clearTimeout;
     if(warmupHandle)cancel(warmupHandle);
     warmupHandle=idle(()=>{
-      warmupHandle=0;if(disposed||!inspecting)return;
+      warmupHandle=0;if(isDisposed()||!inspecting)return;
       const hidden=[body,lid,...cards.map(card=>card.group)].filter(object=>!object.visible);
       hidden.forEach(object=>{object.visible=true;});
       try{
@@ -512,6 +583,6 @@ export async function createBox(stage,comics){
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){if(returnState){clearTimeout(returnState.watchdog);releaseReturn(returnState,stage);returnState=null;}disposed=true;artworkGate.dispose();stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
+    dispose,
   };
 }

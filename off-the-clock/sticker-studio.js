@@ -1,8 +1,11 @@
-import {stickerPack} from './stickers.js?v=30.0';
-import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
+import {stickerPack} from './stickers.js?v=30.1';
+import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
-export function createStickerStudio({stage,box,beforeOpen,afterClose}){
-  const $=id=>document.getElementById(id),dialog=$('sticker-studio'),anchor=document.createComment('Sticker studio return point');
+export function createStickerStudio({stage,box,beforeOpen,afterClose,pageRoot=document}){
+  const $=id=>pageRoot.querySelector(`#${id}`),dialog=$('sticker-studio'),anchor=document.createComment('Sticker studio return point');
+  const lifetime = new AbortController();
+  const listen = (target, type, callback, options = {}) =>
+    target.addEventListener(type, callback, { ...options, signal: lifetime.signal });
   const system=box.stickers;
   let active=false,ready=false,selected=stickerPack[0],gesture=null,drag=null,lastPlacement={surface:'wall',u:.87,v:1.05},loadId=0;
   const options={size:1,angle:-8,finish:'gloss'};
@@ -38,16 +41,16 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     dialog.dataset.ruler=control;
     for(const name of ['size','angle'])$(`sticker-ruler-${name}`).setAttribute('aria-pressed',String(control===name));
   }
-  for(const control of ['size','angle'])$(`sticker-ruler-${control}`).addEventListener('click',()=>rulerControl(control));
-  mobileControls.addEventListener('change',moveMobileControls);moveMobileControls();rulerControl('size');
+  for(const control of ['size','angle'])listen($(`sticker-ruler-${control}`),'click',()=>rulerControl(control));
+  listen(mobileControls,'change',moveMobileControls);moveMobileControls();rulerControl('size');
   function toolsTab(value,focus=false){
     dialog.dataset.tools=value;
     for(const tab of ['pack','adjust']){const button=$(`sticker-tab-${tab}`);button.setAttribute('aria-selected',String(tab===value));button.tabIndex=tab===value?0:-1;}
     if(focus)$(`sticker-tab-${value}`).focus({preventScroll:true});
   }
   for(const tab of ['pack','adjust']){
-    $(`sticker-tab-${tab}`).addEventListener('click',()=>toolsTab(tab));
-    $(`sticker-tab-${tab}`).addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();toolsTab(e.key==='Home'?'pack':e.key==='End'?'adjust':tab==='pack'?'adjust':'pack',true);}});
+    listen($(`sticker-tab-${tab}`),'click',()=>toolsTab(tab));
+    listen($(`sticker-tab-${tab}`),'keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();toolsTab(e.key==='Home'?'pack':e.key==='End'?'adjust':tab==='pack'?'adjust':'pack',true);}});
   }
   toolsTab('pack');
   const ghost=document.createElement('div');ghost.className='sticker-drag-ghost';ghost.hidden=true;ghost.setAttribute('aria-hidden','true');
@@ -57,16 +60,16 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     const img=document.createElement('img');img.src=art.src;img.alt='';img.width=96;img.height=96;img.loading='lazy';img.draggable=false;
     const label=document.createElement('span');label.textContent=art.name;button.append(img,label);
     let suppressClickUntil=0;
-    button.addEventListener('click',e=>{if(e.detail&&performance.now()<suppressClickUntil){e.preventDefault();return;}choose(art);});
-    button.addEventListener('dragstart',e=>e.preventDefault());button.addEventListener('contextmenu',e=>e.preventDefault());
-    button.addEventListener('pointerdown',e=>{
+    listen(button,'click',e=>{if(e.detail&&performance.now()<suppressClickUntil){e.preventDefault();return;}choose(art);});
+    listen(button,'dragstart',e=>e.preventDefault());listen(button,'contextmenu',e=>e.preventDefault());
+    listen(button,'pointerdown',e=>{
       if(!active||!ready||drag||gesture||e.button>0||!e.isPrimary||system.count()>=24)return;
       beginDrag(e,button,art,'pack',()=>{suppressClickUntil=performance.now()+600;});
     });
-    button.addEventListener('pointermove',e=>{if(drag?.owner===button)moveDrag(e);});
-    button.addEventListener('pointerup',e=>{if(drag?.owner===button)finishDrag(e);});
-    button.addEventListener('pointercancel',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
-    button.addEventListener('lostpointercapture',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
+    listen(button,'pointermove',e=>{if(drag?.owner===button)moveDrag(e);});
+    listen(button,'pointerup',e=>{if(drag?.owner===button)finishDrag(e);});
+    listen(button,'pointercancel',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
+    listen(button,'lostpointercapture',e=>{if(drag?.owner===button&&drag.id===e.pointerId)cancelDrag();});
     $('sticker-pack').append(button);return button;
   });
   let collection='originals';
@@ -76,7 +79,7 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     buttons.forEach((button,i)=>{button.hidden=stickerPack[i].collection!==value;});
     $('sticker-pack').setAttribute('aria-label',value==='code'?'Choose a code sticker':'Choose an original sticker');
   }
-  for(const name of ['originals','code'])$(`sticker-collection-${name}`).addEventListener('click',()=>showCollection(name));
+  for(const name of ['originals','code'])listen($(`sticker-collection-${name}`),'click',()=>showCollection(name));
   showCollection(collection);
   function focusPack(){
     const chosen=buttons[stickerPack.indexOf(selected)];
@@ -186,45 +189,52 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     $('sticker-place').disabled=true;say('Unpacking the sticker pack…');refresh();
     const current=++loadId;
     try{await system.ready();if(!active||current!==loadId)return;ready=true;refresh();say('Pick a sticker to preview it on the box. Adjust size and angle, move it, then choose Stick here.');}
-    catch(error){console.error('Unable to prepare the sticker pack',error);say('The stickers could not load. Close and reopen the pack to try again.');}
+    catch(error){if(lifetime.signal.aborted)return;console.error('Unable to prepare the sticker pack',error);say('The stickers could not load. Close and reopen the pack to try again.');}
     if(active)focusPack();
   }
+  function exit(){
+    if(!active)return false;
+    active=false;++loadId;releaseDrag();releaseTurn();system.clearDraft();box.decorate(false);box.hold(false);stage.classList.remove('can-move-sticker');
+    dialog.close();document.body.classList.remove('is-decorating');anchor.replaceWith(stage);
+    return true;
+  }
   function close(){
-    if(!active)return;active=false;++loadId;releaseDrag();releaseTurn();system.clearDraft();box.decorate(false);box.hold(false);stage.classList.remove('can-move-sticker');
-    dialog.close();document.body.classList.remove('is-decorating');anchor.replaceWith(stage);afterClose();$('decorate-button').focus({preventScroll:true});
+    if(!exit())return;
+    afterClose();
+    $('decorate-button').focus({preventScroll:true});
   }
   function place(){
     if(drag||!system.place())return;
     stage.classList.remove('can-move-sticker');say(`${selected.name} stuck${lastPlacement.surface==='lid'?' on the lid':''}. Choose another sticker or undo the last change.`);refresh();if(system.count()<24)focusSelection();else $('sticker-undo').focus({preventScroll:true});
   }
-  $('decorate-button').addEventListener('click',open);$('sticker-close').addEventListener('click',close);dialog.addEventListener('cancel',e=>{e.preventDefault();if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();});
-  $('sticker-cancel').addEventListener('click',cancelPreview);$('sticker-place').addEventListener('click',place);
-  $('sticker-undo').addEventListener('click',()=>{system.undo();say('Last change undone.');refresh();});
-  $('sticker-clear').addEventListener('click',()=>{system.reset();say('Box cleared. Undo brings the stickers back.');refresh();});
-  $('sticker-size').addEventListener('input',e=>{options.size=Number(e.target.value);adjust();});
-  $('sticker-angle').addEventListener('input',e=>{options.angle=Number(e.target.value);adjust();});
-  for(const finish of ['gloss','holo'])$(`sticker-${finish}`).addEventListener('click',()=>{options.finish=finish;adjust();});
-  for(const face of ['front','right','back','left','lid'])$(`sticker-face-${face}`).addEventListener('click',()=>{
+  listen($('decorate-button'),'click',open);listen($('sticker-close'),'click',close);listen(dialog,'cancel',e=>{e.preventDefault();if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();});
+  listen($('sticker-cancel'),'click',cancelPreview);listen($('sticker-place'),'click',place);
+  listen($('sticker-undo'),'click',()=>{system.undo();say('Last change undone.');refresh();});
+  listen($('sticker-clear'),'click',()=>{system.reset();say('Box cleared. Undo brings the stickers back.');refresh();});
+  listen($('sticker-size'),'input',e=>{options.size=Number(e.target.value);adjust();});
+  listen($('sticker-angle'),'input',e=>{options.angle=Number(e.target.value);adjust();});
+  for(const finish of ['gloss','holo'])listen($(`sticker-${finish}`),'click',()=>{options.finish=finish;adjust();});
+  for(const face of ['front','right','back','left','lid'])listen($(`sticker-face-${face}`),'click',()=>{
     box.decorationFace(face);selectFace(face);
     const poses={front:{surface:'wall',u:0,v:1.1},right:{surface:'wall',u:3.22,v:1.1},back:{surface:'wall',u:6.45,v:1.1},left:{surface:'wall',u:9.67,v:1.1},lid:{surface:'lid',u:0,v:0}};
     lastPlacement=poses[face];if(system.draft())preview();
     say(`${face==='lid'?'Lid':face+' side'} in view. ${system.draft()?'Adjust the preview, then Stick here.':'Pick a sticker to try here.'}`);
   });
   // A drag on the cutout moves the preview; a drag on bare box turns the box.
-  stage.addEventListener('pointerdown',e=>{
+  listen(stage,'pointerdown',e=>{
     if(!active)return;e.stopImmediatePropagation();if(drag||gesture||e.button>0||!e.isPrimary||e.target.closest('button'))return;
     stage.focus({preventScroll:true});
     if(system.hitDraft(e.clientX,e.clientY)){beginDrag(e,stage,selected,'preview');return;}
     box.hold(true);gesture={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,moved:false};stage.setPointerCapture(e.pointerId);
-  },true);
-  stage.addEventListener('pointermove',e=>{
+  },{capture:true});
+  listen(stage,'pointermove',e=>{
     if(!active)return;e.stopImmediatePropagation();
     if(drag?.owner===stage){moveDrag(e);return;}
     if(!gesture){if(!drag&&e.pointerType==='mouse')stage.classList.toggle('can-move-sticker',system.hitDraft(e.clientX,e.clientY));return;}
     if(gesture.id!==e.pointerId)return;
     if(!gesture.moved&&Math.hypot(e.clientX-gesture.startX,e.clientY-gesture.startY)<6)return;
     gesture.moved=true;selectFace();box.rotate((e.clientX-gesture.x)*.009,(e.clientY-gesture.y)*.006);gesture.x=e.clientX;gesture.y=e.clientY;
-  },true);
+  },{capture:true});
   function releaseTurn(){const previous=gesture;gesture=null;box.hold(false);if(previous&&stage.hasPointerCapture(previous.id))stage.releasePointerCapture(previous.id);}
   function end(e){
     if(!active)return;e.stopImmediatePropagation();
@@ -233,18 +243,33 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose}){
     const tap=!gesture.moved&&e.type==='pointerup';releaseTurn();
     if(tap&&system.draft()&&position(e.clientX,e.clientY))say('Preview moved. Adjust size and angle, then Stick here.');
   }
-  stage.addEventListener('pointerup',end,true);stage.addEventListener('pointercancel',end,true);
-  stage.addEventListener('lostpointercapture',e=>{if(drag?.owner===stage&&drag.id===e.pointerId)cancelDrag();if(gesture?.id===e.pointerId)releaseTurn();},true);
-  window.addEventListener('blur',()=>{if(active){cancelDrag();releaseTurn();}});
-  stage.addEventListener('dblclick',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},true);
-  stage.addEventListener('wheel',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
-  stage.addEventListener('keydown',e=>{
+  listen(stage,'pointerup',end,{capture:true});listen(stage,'pointercancel',end,{capture:true});
+  listen(stage,'lostpointercapture',e=>{if(drag?.owner===stage&&drag.id===e.pointerId)cancelDrag();if(gesture?.id===e.pointerId)releaseTurn();},{capture:true});
+  listen(window,'blur',()=>{if(active){cancelDrag();releaseTurn();}});
+  listen(stage,'dblclick',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},{capture:true});
+  listen(stage,'wheel',e=>{if(active){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
+  listen(stage,'keydown',e=>{
     if(!active||e.target!==stage)return;e.stopImmediatePropagation();
     if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' ','Escape'].includes(e.key))e.preventDefault();
     if(e.key==='Escape'){if(drag)cancelDrag();else if(system.draft())cancelPreview();else close();return;}if(e.key==='Enter'||e.key===' '){place();return;}
     const dx=e.key==='ArrowLeft'?-.08:e.key==='ArrowRight'?.08:0,dy=e.key==='ArrowUp'?.08:e.key==='ArrowDown'?-.08:0;
     if(!dx&&!dy)return;
     if(!system.draft()){selectFace();box.rotate(dx,-dy);}else{lastPlacement.u+=dx;lastPlacement.v+=dy;preview();}
-  },true);
-  return {open,close,get active(){return active;}};
+  },{capture:true});
+  return {
+    open,close,get active(){return active;},
+    dispose(){
+      if(lifetime.signal.aborted)return;
+      exit();
+      lifetime.abort();
+      sizeRuler.dispose();
+      angleRuler.dispose();
+      for(const face of ['front','right','back','left','lid'])faceControls.append($(`sticker-face-${face}`));
+      adjustmentAnchor.replaceWith(adjustmentFields);
+      faceAnchor.replaceWith(faceControls);
+      collectionAnchor.replaceWith(collectionHeading);
+      ghost.remove();
+      buttons.forEach(button=>button.remove());
+    },
+  };
 }

@@ -1,4 +1,4 @@
-import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.0';
+import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.6';
 
 // Run a continuous return, with a watchdog so an interrupted animation cannot
 // leave the display controls locked. Cancellation is reserved for teardown.
