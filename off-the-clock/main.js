@@ -1,4 +1,4 @@
-import {comics} from './comics.js?v=39.2';
+import {comics} from './comics.js?v=39.3';
 import {createBox} from './model.js?v=43.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
@@ -204,7 +204,7 @@ try{
         const style=document.createElement('link');style.rel='stylesheet';style.href='./compacts.css?v=2.0';style.dataset.compacts='';
         await new Promise((resolve,reject)=>{style.onload=resolve;style.onerror=()=>{style.remove();reject(new Error('Could not load paperback styles'));};document.head.append(style);});
       }
-      const {openCompactDisplays}=await import('./compacts-display.js?v=2.2');
+      const {openCompactDisplays}=await import('./compacts-display.js?v=2.3');
       openCompactDisplays({box,inline});
     }catch(error){console.error('Unable to prepare paperback displays',error);announce('The paperback displays could not be opened. Please try again.');}
     finally{if(!$('compact-dialog').open){button.disabled=false;switchButton.disabled=false;}}

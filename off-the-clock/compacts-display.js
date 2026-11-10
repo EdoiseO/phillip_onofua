@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.2';
+import {compacts} from './comics.js?v=39.3';
 import {createPaperback} from './paperback.js?v=2.2';
 
 // These display studies are created only on request, after the short box paints.
@@ -42,7 +42,11 @@ export function openCompactDisplays({box,inline=false}){
       const bounds=new THREE.Box3().setFromObject(selected>=0?books[selected].group:root);
       const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
       const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
-      const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*1.14;
+      // Reserve space around an inspected book on desktop: a 1.38 margin
+      // fits its bounds to approximately 70% of the stage height. Keep the
+      // existing phone and shelf framing.
+      const margin=selected>=0&&!mobile?1.38:1.14;
+      const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*margin;
       camera.position.set(center.x,center.y,bounds.max.z+distance);camera.lookAt(center);
     }else{camera.position.set((display==='stack'?-1:1)*(mobile?2.2:4.0),mobile?4.0:4.2,mobile?15.5:10.8);camera.lookAt(0,1.5,0);}
   }
@@ -57,7 +61,8 @@ export function openCompactDisplays({box,inline=false}){
     }else activeScene=scene;
     activeScene.add(root);inspectControls.hidden=selected<0;backButton.hidden=selected<0;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
     if(selected>=0){
-      title.textContent=compacts[selected].title;note.textContent=angle==='back'?compacts[selected].backImageNote:'Drag to turn · Front, back and spine';
+      title.textContent=compacts[selected].title;
+      note.textContent=`${compacts[selected][`${angle}ImageNote`]} · Drag to turn`;
       views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===angle)));
       setBook(selected,0,0,0,inspectPitch,inspectYaw,0);
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
