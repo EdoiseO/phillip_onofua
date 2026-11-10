@@ -1,4 +1,4 @@
-import {comics} from './comics.js?v=39.4';
+import {comics} from './comics.js?v=39.5';
 import {createBox} from './model.js?v=44.7';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.6';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
@@ -232,7 +232,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if (document.head.querySelector('link[data-compacts]')) return;
     const style = document.createElement('link');
     style.rel = 'stylesheet';
-    style.href = './compacts.css?v=2.11';
+    style.href = './compacts.css?v=2.12';
     style.dataset.compacts = '';
     await new Promise((resolve, reject) => {
       const cancel = () => { style.remove(); reject(signal.reason); };
@@ -283,7 +283,7 @@ export function mountOffTheClock(stage, pageRoot) {
           if (!await box.firstPaint || signal.aborted) return;
           await loadCompactsStyle();
           if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.18');
+          const { openCompactDisplays } = await import('./compacts-display.js?v=2.19');
           if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
         } catch (error) {
           if (signal.aborted) return;

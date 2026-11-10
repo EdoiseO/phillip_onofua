@@ -40,7 +40,11 @@ export function CompactsDialog() {
         aria-label="Paperback display. Select a book to inspect it."
       ></div>
       <p className="compact-note" id="compact-note">
-        Click a book to take a closer look.
+        <svg className="tap-icon" viewBox="0 0 28 28" aria-hidden="true">
+          <circle className="tap-ring" cx="10" cy="9" r="7"></circle>
+          <path d="M8 17V9a2 2 0 0 1 4 0v5l2-1 2 1 2-1 3 2v5l-3 5h-8l-5-6a2 2 0 0 1 3-2Z"></path>
+        </svg>
+        <span id="compact-note-label">Click a book to take a closer look</span>
       </p>
       <div className="compact-book-controls" role="group" aria-label="Choose a paperback">
         <button type="button" data-book="0">

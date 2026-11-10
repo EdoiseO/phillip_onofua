@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.4';
+import {compacts} from './comics.js?v=39.5';
 import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc} from './compact-return.js?v=1.5';
 import {createPaperback} from './paperback.js?v=2.4';
 
@@ -28,6 +28,8 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
   let display='switch',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
   const title=dialog.querySelector('#compact-title'),note=dialog.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
+  const noteLabel = note.querySelector('#compact-note-label');
+  const shelfCue = () => `${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Click'} a book to take a closer look`;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
   const ro=new ResizeObserver(()=>{if(!moving&&!returning)frameScene();});ro.observe(mount);
@@ -92,12 +94,12 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
     if(!preserveInspection){inspectControls.hidden=selected<0;backButton.hidden=selected<0;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});}
     if(selected>=0){
       title.textContent=compacts[selected].title;
-      note.textContent=`${compacts[selected][`${angle}ImageNote`]} · Drag to turn`;
+      noteLabel.textContent='Drag to turn';
       views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===angle)));
       setBook(selected,0,0,0,inspectPitch,inspectYaw,0);
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
     }else{
-      if(!preserveInspection){title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
+      if(!preserveInspection){title.textContent='Compact Comics';noteLabel.textContent=shelfCue();mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
       // Shelf, stand and stack layouts are kept for reference; the page uses
       // the Compacts shelf (display 'switch'): both books spine-out, no box.
       if(display!=='switch')showBox();
@@ -163,7 +165,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
     selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;
     dialog.classList.toggle('compact-inspecting',inline);if(inline)dialog.setAttribute('aria-modal','true');
     inspectControls.hidden=false;backButton.hidden=false;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=true);options.forEach(b=>b.hidden=true);
-    title.textContent=compacts[i].title;note.textContent=`${compacts[i].frontImageNote} · Drag to turn`;
+    title.textContent=compacts[i].title;noteLabel.textContent='Drag to turn';
     views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view==='front')));
     const ui=startUISwap(snapshots);uiCleanup=()=>{ui.dispose();uiCleanup=null;};
     let background=null;
@@ -211,7 +213,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document}){
     const snapshots=snapshotUI();
     selected=-1;build({preserveInspection:true});
     inspectControls.hidden=true;backButton.hidden=true;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
-    title.textContent='Compact Comics';note.textContent=(matchMedia('(pointer:coarse)').matches?'Tap':'Click')+' a book to take a closer look.';
+    title.textContent='Compact Comics';noteLabel.textContent=shelfCue();
     dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
     const ui=startUISwap(snapshots,{inlineReturn:inline});uiCleanup=()=>{ui.dispose();uiCleanup=null;};
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone(),toScale=book.scale.clone();
