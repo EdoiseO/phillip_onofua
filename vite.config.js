@@ -3,6 +3,7 @@ import { relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { offTheClockController } from './src/off-the-clock-controller.js';
 import vercel from './vercel.json' with { type: 'json' };
 
 const root = import.meta.dirname;
@@ -37,6 +38,25 @@ const staticReactPages = {
 // those modules and assets at the paths warmed by the homepage.
 const comicCollection = {
   name: 'portfolio-comic-collection',
+  transformIndexHtml: {
+    order: 'post',
+    handler(html, { filename, bundle }) {
+      const collectionPage = resolve(root, 'off-the-clock/index.html');
+      if (filename === collectionPage) {
+        return [{ tag: 'link', attrs: { rel: 'modulepreload', href: offTheClockController } }];
+      }
+      if (filename !== resolve(root, 'index.html') || !bundle) return;
+
+      const entry = Object.values(bundle).find(
+        asset => asset.type === 'chunk' && asset.isEntry && asset.facadeModuleId === collectionPage,
+      );
+      if (!entry) throw new Error('Off the clock entry is missing from the Vite build');
+      return [{
+        tag: 'meta',
+        attrs: { name: 'off-the-clock-prefetch', content: `${offTheClockController} /${entry.fileName}` },
+      }];
+    },
+  },
   async writeBundle({ dir }) {
     await cp(resolve(root, 'off-the-clock'), resolve(dir, 'off-the-clock'), {
       recursive: true,

@@ -12,7 +12,13 @@
   <link rel="stylesheet" href="./sticker-studio.css?v=26.0" vite-ignore>
   <link rel="stylesheet" href="./mobile-controls.css?v=36.3" vite-ignore>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
-  <link rel="modulepreload" href="./main.js?v=53.0" vite-ignore>
+  <link rel="modulepreload" href="./vendor/three.module.js" vite-ignore>
+  <link rel="modulepreload" href="./vendor/three.core.js" vite-ignore>
+  <link rel="preload" as="fetch" href="./assets/models/comic-set.glb" crossorigin vite-ignore>
+  <link rel="preload" as="fetch" href="./assets/models/blind-bag.glb" crossorigin vite-ignore>
+  <link rel="preload" as="image" href="./assets/materials/cardboard-color.jpg" crossorigin vite-ignore>
+  <link rel="preload" as="image" href="./assets/materials/cardboard-normal.jpg" crossorigin vite-ignore>
+  <link rel="preload" as="image" href="./assets/materials/cardboard-roughness.jpg" crossorigin vite-ignore>
 </head>
 <body class="off-clock-page">
   <div id="off-clock-root"><!--react-page--></div>
