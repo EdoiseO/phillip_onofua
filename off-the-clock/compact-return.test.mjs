@@ -38,34 +38,47 @@ test('closing a compact display cancels pending return callbacks',()=>{
   assert.equal(completions,0);assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
 });
 
-test('destination fade uses temporary materials and restores shared box materials',async()=>{
+test('destination colour blend keeps box opaque and preserves intentional transparent details',async()=>{
   const THREE=await import('./vendor/three.module.js');
   const {createCompactSceneFade}=await import('./compact-return.js');
-  const root=new THREE.Group(),book=new THREE.Group(),paper=new THREE.MeshBasicMaterial({opacity:.7,transparent:true});
-  const bookMesh=new THREE.Mesh(new THREE.BoxGeometry(),paper);book.add(bookMesh);root.add(book);
-  const box=new THREE.Mesh(new THREE.BoxGeometry(),paper);root.add(box);
+  const root=new THREE.Group(),book=new THREE.Group(),wall=new THREE.MeshBasicMaterial(),detail=new THREE.MeshBasicMaterial({opacity:.7,transparent:true,depthWrite:false});
+  wall.customProgramCacheKey=()=> 'wall-with-special-print';wall.onBeforeCompile=shader=>{shader.fragmentShader='// special print\n'+shader.fragmentShader;};
+  const bookMesh=new THREE.Mesh(new THREE.BoxGeometry(),wall);book.add(bookMesh);root.add(book);
+  const box=new THREE.Mesh(new THREE.BoxGeometry(),wall),decal=new THREE.Mesh(new THREE.BoxGeometry(),detail);root.add(box,decal);
   const fade=createCompactSceneFade(root,book);
-  assert.equal(bookMesh.material,paper,'the inspected book keeps its original material');
-  assert.notEqual(box.material,paper,'the destination has an independent material');
-  fade.set(0);assert.equal(box.material.opacity,0);assert.equal(paper.opacity,.7);
-  fade.set(.75);assert.ok(box.material.opacity>0&&box.material.opacity<.7);
-  fade.set(1);assert.equal(box.material.opacity,.7);
-  fade.dispose();assert.equal(box.material,paper);assert.equal(paper.opacity,.7);
-  fade.dispose();bookMesh.geometry.dispose();box.geometry.dispose();paper.dispose();
+  assert.equal(bookMesh.material,wall,'the inspected book keeps its original material');
+  assert.notEqual(box.material,wall,'the destination has an independent material');
+  const shader={uniforms:{},fragmentShader:'void main(){\n#include <colorspace_fragment>\n}'};
+  box.material.onBeforeCompile(shader,{});
+  assert.match(shader.fragmentShader,/special print/,'existing material shader hooks are preserved');
+  assert.equal(box.material.customProgramCacheKey(),'compact-colour-blend-v1:wall-with-special-print');
+  assert.notEqual(box.material.customProgramCacheKey(),wall.customProgramCacheKey());
+  assert.match(shader.fragmentShader,/#include <colorspace_fragment>\s*gl_FragColor.rgb=mix/);
+  for(const value of [0,.75,1]){
+    fade.set(value);
+    assert.equal(box.material.transparent,false);assert.equal(box.material.depthWrite,true);assert.equal(box.material.opacity,1);
+    assert.equal(decal.material.transparent,true);assert.equal(decal.material.depthWrite,false);assert.equal(decal.material.opacity,.7);
+    if(value===0)assert.equal(shader.uniforms.compactVisibility.value,0);
+    if(value===.75)assert.ok(shader.uniforms.compactVisibility.value>0&&shader.uniforms.compactVisibility.value<1);
+    if(value===1)assert.equal(shader.uniforms.compactVisibility.value,1);
+  }
+  const lateMap=new THREE.Texture();wall.map=lateMap;fade.set(.75);assert.equal(box.material.map,lateMap,'late box photos update the temporary material');
+  fade.dispose();assert.equal(box.material,wall);assert.equal(decal.material,detail);
+  fade.dispose();bookMesh.geometry.dispose();box.geometry.dispose();decal.geometry.dispose();wall.dispose();detail.dispose();lateMap.dispose();
 });
 
 test('printed-cover fade preserves the original live art uniform',async()=>{
   const THREE=await import('./vendor/three.module.js');
   const {createCompactSceneFade}=await import('./compact-return.js');
   const root=new THREE.Group(),book=new THREE.Group(),texture=new THREE.Texture();root.add(book);
-  const original=new THREE.ShaderMaterial({uniforms:{art:{value:texture}},fragmentShader:'void main(){vec3 ink=vec3(1.);float light=1.;float sheen=0.;float rim=0.;gl_FragColor=vec4(ink*light+vec3(.9,.96,1.0)*(sheen+rim),1.0);}',vertexShader:'void main(){gl_Position=vec4(position,1.);}'});
+  const original=new THREE.ShaderMaterial({uniforms:{art:{value:texture}},fragmentShader:'void main(){gl_FragColor=vec4(1.);\n#include <colorspace_fragment>\n}',vertexShader:'void main(){gl_Position=vec4(position,1.);}'});
   const object=new THREE.Mesh(new THREE.BoxGeometry(),original);root.add(object);
   const fade=createCompactSceneFade(root,book),temporary=object.material;
   assert.equal(temporary.uniforms.art,original.uniforms.art);
-  assert.match(temporary.fragmentShader,/uniform float compactFade/);
-  fade.set(0);assert.equal(temporary.uniforms.compactFade.value,0);
-  fade.set(1);assert.equal(temporary.uniforms.compactFade.value,1);
-  assert.equal(original.uniforms.compactFade,undefined);
+  assert.match(temporary.fragmentShader,/#include <colorspace_fragment>\s*gl_FragColor.rgb=mix/);
+  fade.set(0);assert.equal(temporary.uniforms.compactVisibility.value,0);assert.equal(temporary.transparent,false);assert.equal(temporary.depthWrite,true);
+  fade.set(1);assert.equal(temporary.uniforms.compactVisibility.value,1);
+  assert.equal(original.uniforms.compactVisibility,undefined);
   fade.dispose();assert.equal(object.material,original);
   object.geometry.dispose();original.dispose();texture.dispose();
 });
@@ -79,6 +92,13 @@ test('compact pickup moves continuously and reaches its destination before unloc
   assert.ok(samples.some(s=>s.lift>0&&s.travel===0),'lift begins before the book travels');
   for(let i=1;i<samples.length;i++)for(const key of ['eased','travel','lift'])assert.ok(Math.abs(samples[i][key]-samples[i-1][key])<.1,`${key} must not jump at frame ${i}`);
   assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
+});
+
+test('compact pickup eases gently across the full trip',async()=>{
+  const {compactPickupSample}=await import('./compact-return.js');
+  assert.equal(compactPickupSample(.25).eased,.125);
+  assert.equal(compactPickupSample(.5).eased,.5);
+  assert.equal(compactPickupSample(.75).eased,.875);
 });
 
 test('compact pickup watchdog reaches destination and releases input exactly once',async()=>{

@@ -31,11 +31,11 @@ export function frameCompactBounds(THREE,camera,bounds,width,height){
   camera.position.set(center.x,center.y,bounds.max.z+distance);camera.lookAt(center);camera.updateProjectionMatrix();
 }
 
-// A single cubic easing drives the book, camera and presentation. The small
+// A single quadratic easing drives the book, camera and presentation. The small
 // lift starts before horizontal travel, while both settle exactly at the end.
 export function compactPickupSample(progress){
   const u=Math.max(0,Math.min(1,progress));
-  const eased=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+  const eased=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
   return {eased,travel:Math.max(0,(eased-.12)/.88),lift:Math.sin(Math.PI*eased)};
 }
 export function startCompactPickup({onFrame,onComplete,request=requestAnimationFrame,cancel=cancelAnimationFrame,setTimer=setTimeout,clearTimer=clearTimeout,now=()=>performance.now()}){
@@ -46,26 +46,36 @@ export function startCompactPickup({onFrame,onComplete,request=requestAnimationF
   return ()=>{if(!finished){finished=true;clearTimer(timer);cancel(frame);}};
 }
 
-// Fade only the destination scene, never the inspected book. Materials are
-// cloned temporarily because the preview box shares materials with the real
-// comic box; mutating them would fade the user's box too.
+// Blend props into the dialog background without making opaque box walls
+// transparent. Otherwise the walls, artwork and comics inside become visible
+// through one another during pickup and return. Materials are temporary: the
+// preview box shares some of them with the live comic box.
 export function createCompactSceneFade(root,excluded){
   const skipped=new Set(), originals=[], clones=new Map();
   excluded.traverse(object=>skipped.add(object));
   function cloneMaterial(original){
     if(clones.has(original))return clones.get(original);
-    const clone=original.clone(),baseOpacity=original.opacity;
-    clone.transparent=true;clone.depthWrite=false;clone.opacity=0;
+    const clone=original.clone(),visibility={value:1};
+    // Mix after the renderer's output colour conversion so this colour
+    // matches the CSS background even under tone mapping and scene lights.
+    const blend='\ngl_FragColor.rgb=mix(vec3(11.0/255.0,14.0/255.0,19.0/255.0),gl_FragColor.rgb,compactVisibility);';
     if(original.isShaderMaterial){
-      // The printed-cover shader emits alpha directly rather than using the
-      // standard opacity uniform; retain its live artwork uniform by reference.
-      clone.uniforms={...original.uniforms,compactFade:{value:0}};
-      clone.fragmentShader='uniform float compactFade;\n'+clone.fragmentShader.replace(
-        'gl_FragColor=vec4(ink*light+vec3(.9,.96,1.0)*(sheen+rim),1.0);',
-        'gl_FragColor=vec4(ink*light+vec3(.9,.96,1.0)*(sheen+rim),compactFade);'
-      );
+      // Keep artwork uniforms live when its texture finishes loading.
+      clone.uniforms={...original.uniforms,compactVisibility:visibility};
+      clone.fragmentShader='uniform float compactVisibility;\n'+clone.fragmentShader.replace('#include <colorspace_fragment>','#include <colorspace_fragment>'+blend);
+    }else{
+      clone.onBeforeCompile=(shader,renderer)=>{
+        original.onBeforeCompile.call(clone,shader,renderer);
+        shader.uniforms.compactVisibility=visibility;
+        shader.fragmentShader='uniform float compactVisibility;\n'+shader.fragmentShader.replace('#include <colorspace_fragment>','#include <colorspace_fragment>'+blend);
+      };
     }
-    clones.set(original,{clone,baseOpacity});return clones.get(original);
+    // Different original hooks (such as holographic stickers) need distinct
+    // shader programs; they must not collide with an unmodified live material.
+    clone.customProgramCacheKey=()=>`compact-colour-blend-v1:${original.customProgramCacheKey()}`;
+    // Keep intrinsic transparency (clear acrylic, decals and soft shadows),
+    // but never turn an opaque wall into a translucent one.
+    clones.set(original,{clone,visibility});return clones.get(original);
   }
   root.traverse(object=>{
     if(skipped.has(object)||!object.material)return;
@@ -77,10 +87,9 @@ export function createCompactSceneFade(root,excluded){
   return {
     set(value){
       if(restored)return;
-      const x=Math.max(0,Math.min(1,(value-.5)/.45)),alpha=x*x*(3-2*x);
-      for(const [original,{clone,baseOpacity}] of clones){
-        clone.opacity=baseOpacity*alpha;
-        if(clone.uniforms?.compactFade)clone.uniforms.compactFade.value=baseOpacity*alpha;
+      const x=Math.max(0,Math.min(1,(value-.5)/.45)),amount=x*x*(3-2*x);
+      for(const [original,{clone,visibility}] of clones){
+        visibility.value=amount;
         // Independent box stand-in photos can arrive during the transition.
         if('map' in original&&clone.map!==original.map){clone.map=original.map;clone.needsUpdate=true;}
         if(original.color&&clone.color)clone.color.copy(original.color);
