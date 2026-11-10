@@ -1,6 +1,6 @@
 import {comics} from './comics.js?v=39.4';
-import {createBox} from './model.js?v=44.4';
-import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.4';
+import {createBox} from './model.js?v=44.5';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.5';
 import {createStickerStudio} from './sticker-studio.js?v=30.0';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.0';
 

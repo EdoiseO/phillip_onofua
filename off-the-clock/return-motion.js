@@ -1,29 +1,35 @@
-export const RETURN_DURATION_MS = 960;
+export const RETURN_DURATION_MS = 1050;
 export const easeInOutCubic = value => value < .5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2;
+// Gentler than cubic: its peak speed is about half as high, so a long camera
+// move reads as a glide rather than a crawl-then-swing.
+export const easeInOutSine = value => (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, value)))) / 2;
 
-// A slide-out gets time to reverse its stages before the collection returns.
+// One continuous motion: the zoom-out, the comic going back into its sleeve and
+// the camera pull-out overlap, so nothing holds still mid-return.
 export function createReturnMotion(focus, extraction, needsRestore) {
-  return { focus, extraction, needsRestore, duration: needsRestore ? 1.16 : RETURN_DURATION_MS / 1000, elapsed: 0 };
+  return { focus, extraction, needsRestore, duration: needsRestore ? 1.4 : RETURN_DURATION_MS / 1000, elapsed: 0 };
 }
 
 export function advanceReturnMotion(state, dt) {
   state.elapsed += Math.max(0, dt);
   const clamp = value => Math.min(1, Math.max(0, value));
-  const ease = easeInOutCubic;
-  const duration = state.duration;
-  const restore = state.needsRestore ? ease(clamp(state.elapsed / (duration * .55))) : 1;
-  const cameraTimeline = clamp((state.elapsed - (state.needsRestore ? duration * .50 : 0)) / (duration * (state.needsRestore ? .50 : 1)));
+  const ease = easeInOutSine;
+  const duration = state.duration, t = clamp(state.elapsed / duration);
+  // Sleeve: board, comic and film reverse over the first 55%.
+  const restore = state.needsRestore ? ease(t / .55) : 1;
+  // Camera: starts at 25%, while the film is still closing, and glides to the end.
+  const cameraTimeline = state.needsRestore ? clamp((t - .25) / .75) : t;
   const cameraBlend = ease(cameraTimeline);
-  const blend = ease(clamp(state.elapsed / duration));
-  const unzoom = state.needsRestore ? ease(clamp(state.elapsed / (duration * .32))) : blend;
-  return { extraction: state.extraction * (1 - restore), focus: state.focus * (1 - cameraBlend), blend, unzoom, cameraTimeline, timeline:clamp(state.elapsed/duration), done: state.elapsed >= duration };
+  const blend = ease(t);
+  const unzoom = state.needsRestore ? ease(t / .4) : blend;
+  return { extraction: state.extraction * (1 - restore), focus: state.focus * (1 - cameraBlend), blend, unzoom, cameraTimeline, timeline: t, done: state.elapsed >= duration };
 }
 
 // Sample the same timeline curve for the canvas's viewport transition. WAAPI
 // applies these keyframes without introducing inline styles or another ease.
 export function createStageReturnFrames(from, to) {
   return Array.from({length:61},(_,i)=>{
-    const offset=i/60, amount=easeInOutCubic(offset), frame={offset,position:'fixed',zIndex:'20'};
+    const offset=i/60, amount=easeInOutSine(offset), frame={offset,position:'fixed',zIndex:'20'};
     for(const key of ['left','top','width','height'])frame[key]=`${from[key]+(to[key]-from[key])*amount}px`;
     return frame;
   });
@@ -33,7 +39,7 @@ export function createStageReturnFrames(from, to) {
 export function createPageReturnFrames() {
   return Array.from({length:61},(_,i)=>{
     const offset=i/60;
-    return {offset,opacity:easeInOutCubic(Math.min(1,offset*2))};
+    return {offset,opacity:easeInOutSine(Math.min(1,offset*2))};
   });
 }
 
@@ -41,13 +47,13 @@ export function createPageReturnFrames() {
 // their actual previous position so an interrupted inspection stays smooth.
 export function returnBoxOffset(start, timeline) {
   const progress=Math.max(0,Math.min(1,timeline/.65));
-  return progress===1?0:start*(1-easeInOutCubic(progress));
+  return progress===1?0:start*(1-easeInOutSine(progress));
 }
 
 // Start bringing the box up during the latter part of the sleeve restoration,
 // while the viewport and camera still wait for the film to close.
 export function returnBoxTimeline(timeline, cameraTimeline, needsRestore) {
-  return needsRestore ? Math.max(0,Math.min(1,(timeline-.12)/.58)) : cameraTimeline;
+  return needsRestore ? Math.max(0,Math.min(1,(timeline-.15)/.6)) : cameraTimeline;
 }
 
 // The saved camera is already in world space, including any partial focus.
@@ -103,7 +109,7 @@ export function scheduleReturnWatchdog(state, stage, onTimeout, schedule = setTi
     if (state.finished) return;
     onTimeout();
     releaseReturn(state, stage);
-  }, 2400);
+  }, 2800);
 }
 
 // Keep ticking a return even when the scene has momentarily settled before its
