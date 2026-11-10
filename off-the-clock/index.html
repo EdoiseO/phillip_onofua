@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./style.css?v=38.0">
   <link rel="stylesheet" href="../assets/site-header.css">
   <link rel="stylesheet" href="./sticker-studio.css?v=26.0">
-  <link rel="stylesheet" href="./mobile-controls.css?v=36.1">
+  <link rel="stylesheet" href="./mobile-controls.css?v=36.3">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}</script>
 </head>
 <body class="off-clock-page">
@@ -38,7 +38,6 @@
         <div class="actions">
           <button class="inspect-button" id="inspect-button" hidden>Take a closer look <span aria-hidden="true">⤢</span></button>
           <button class="decorate-button" id="decorate-button" disabled><span class="sticker-icon" aria-hidden="true">✦</span> Make it yours <span class="sticker-button-note">STICKER PACK / 01</span></button>
-          <button class="compact-launch" id="compact-launch" disabled>Explore paperback displays ↗</button>
           <div class="compact-collection-switch" role="group" aria-label="Choose collection">
             <button type="button" id="collection-comics" aria-pressed="true">Comics</button>
             <button type="button" id="collection-compacts" aria-pressed="false" disabled>Compacts</button>
@@ -76,15 +75,9 @@
     <header class="compact-header">
       <button class="back-button" id="compact-close" type="button">← <span>Back to comics</span></button>
       <button class="back-button" id="compact-return" type="button" hidden>← <span>Back to display</span></button>
-      <div><p>A CLOSER LOOK AT THE COLLECTION</p><h2 id="compact-title">Compact Comics displays</h2></div>
+      <div><p>A CLOSER LOOK AT THE COLLECTION</p><h2 id="compact-title">Compact Comics</h2></div>
       <span>01 / 04</span>
     </header>
-    <nav class="compact-options" aria-label="Choose a paperback display">
-      <button type="button" data-display="shelf" aria-pressed="true">Shelf beside box</button>
-      <button type="button" data-display="stand" aria-pressed="false">Face-out stand</button>
-      <button type="button" data-display="stack" aria-pressed="false">Desk stack</button>
-      <button type="button" data-display="switch" aria-pressed="false">Compacts shelf</button>
-    </nav>
     <div class="compact-inspect-controls" hidden role="group" aria-label="Paperback viewing angle">
       <button type="button" data-view="front" aria-pressed="true">Front</button>
       <button type="button" data-view="back" aria-pressed="false">Back</button>
@@ -170,6 +163,6 @@
       </section>
     </div>
   </dialog>
-  <script type="module" src="./main.js?v=51.6"></script>
+  <script type="module" src="./main.js?v=51.8"></script>
 </body>
 </html>
