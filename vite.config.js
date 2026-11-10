@@ -1,5 +1,6 @@
 import { cp } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import vercel from './vercel.json' with { type: 'json' };
@@ -14,6 +15,22 @@ const pages = [
   'terms.html',
 ];
 
+const staticReactPages = {
+  name: 'portfolio-static-react-pages',
+  transformIndexHtml: {
+    order: 'post',
+    async handler(html, { filename, server }) {
+      const outlet = '<!--react-page-->';
+      if (!html.includes(outlet)) return html;
+
+      const { renderStaticPage } = server
+        ? await server.ssrLoadModule('/src/render-static.jsx')
+        : await import(pathToFileURL(resolve(root, '.static-renderer/render-static.js')).href);
+      return html.replace(outlet, () => renderStaticPage(basename(filename)));
+    },
+  },
+};
+
 // The scene owns its module graph and loads assets by URL. Ship it as a
 // separate static page so its import map, cache keys and lazy imports survive.
 const comicCollection = {
@@ -26,9 +43,12 @@ const comicCollection = {
   },
 };
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => isSsrBuild ? {
+  plugins: [react()],
+  build: { copyPublicDir: false },
+} : {
   appType: 'mpa',
-  plugins: [react(), comicCollection],
+  plugins: [react(), staticReactPages, comicCollection],
   resolve: {
     alias: [
       { find: /^three\/addons\//, replacement: resolve(root, 'off-the-clock/vendor/addons') + '/' },
