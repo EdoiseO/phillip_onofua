@@ -20,11 +20,10 @@ test('all routes restrict executable content, embedding and sensitive permission
   assert.equal(headers.get('permissions-policy'),'camera=(), microphone=(), geolocation=(), payment=()');
 });
 
-test('every HTML script is local or explicitly hash-approved; import-map hash cannot drift',async()=>{
-  const files=(await readdir(root,{recursive:true})).filter(path=>path.endsWith('.html')&&!path.startsWith('.git/'));
+async function checkHtmlScripts(directory,files){
   let inlineCount=0;
-  for(const path of files){
-    const html=await readFile(new URL(path,root),'utf8');
+  for(const path of files.filter(path=>path.endsWith('.html'))){
+    const html=await readFile(new URL(path,directory),'utf8');
     assert.doesNotMatch(html,/\son\w+\s*=/i,`${path}: inline event handler`);
     for(const [,attributes,body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
       const src=attributes.match(/\bsrc=["']([^"']+)["']/i)?.[1];
@@ -35,4 +34,16 @@ test('every HTML script is local or explicitly hash-approved; import-map hash ca
     }
   }
   assert.equal(inlineCount,1,'only the Three.js import map should be inline');
+}
+
+test('every HTML script is local or explicitly hash-approved; import-map hash cannot drift',async()=>{
+  const files=(await readdir(root,{recursive:true})).filter(path=>!/^(\.git|node_modules|dist)\//.test(path));
+  await checkHtmlScripts(root,files);
+
+  const output=new URL('dist/',root);
+  const builtFiles=await readdir(output,{recursive:true}).catch(error=>{
+    if(error.code==='ENOENT')return null;
+    throw error;
+  });
+  if(builtFiles)await checkHtmlScripts(output,builtFiles);
 });
