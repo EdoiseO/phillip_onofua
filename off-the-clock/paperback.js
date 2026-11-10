@@ -7,6 +7,8 @@ const UNITS_PER_INCH = 2.7 / 10.25;
 function coverMaterial(THREE, map) {
   return new THREE.ShaderMaterial({
     uniforms: { art: { value: map }, foil: { value: 0 } }, side: THREE.DoubleSide,
+    // Keep the printed face in front of its thin cover shell at distant views.
+    polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,
     vertexShader: `#include <common>
       #include <morphtarget_pars_vertex>
       varying vec2 vArtUv; varying vec3 vWorld; varying vec3 vN;

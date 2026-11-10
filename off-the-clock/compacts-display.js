@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.4';
-import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook} from './compact-return.js?v=1.3';
-import {createPaperback} from './paperback.js?v=2.3';
+import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc} from './compact-return.js?v=1.4';
+import {createPaperback} from './paperback.js?v=2.4';
 
 // These display studies are created only on request, after the short box paints.
 export function openCompactDisplays({box,inline=false}){
@@ -72,9 +72,9 @@ export function openCompactDisplays({box,inline=false}){
         setBook(0,1.92,1.93,0,0,Math.PI/2,0);setBook(1,2.12,1.93,0,0,Math.PI/2,0);
       }else if(display==='stand'){
         cube(2.0,.12,1.8,materials.desk,2.05,.17,0);
-        const back=cube(1.5,1.9,.06,materials.acrylic,2.06,1.25,-.13);back.rotation.x=-.14;
+        const back=cube(1.5,1.9,.06,materials.acrylic,2.06,1.25,-.49);back.rotation.x=-.14;
         cube(1.55,.09,.32,materials.acrylic,2.06,.36,.53);contactShadow(2.05,.232,0,2.1,1.5);
-        setBook(0,2.53,1.49,-.30,-.14,0,-.07);setBook(1,1.68,1.49,.02,-.14,0,.05);
+        COMPACT_STAND_POSES.forEach((pose,i)=>setBook(i,...pose));
       }else if(display==='stack'){
         cube(2.5,.12,2.7,materials.desk,2,.16,0);contactShadow(2.05,.222,0,2.0,2.1);
         setBook(0,1.98,.34,0,-Math.PI/2,0,0);setBook(1,2.12,.48,.18,-Math.PI/2,0,.06);
@@ -151,8 +151,7 @@ export function openCompactDisplays({box,inline=false}){
     cancelReturn=startCompactPickup({
       onFrame({eased,travel,lift},progress){
         restoreBookDepth.set(eased>.05);returnFade.set(1-eased);
-        book.position.lerpVectors(fromPosition,toPosition,travel);book.position.y+=.25*lift;
-        book.quaternion.slerpQuaternions(fromRotation,toRotation,travel);book.scale.copy(fromScale);
+        interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,travel,{lift,standArc:display==='stand'&&i===0?-1:0});book.scale.copy(fromScale);
         camera.position.lerpVectors(fromCamera,targetCamera.position,eased);camera.quaternion.slerpQuaternions(fromCameraRotation,targetCamera.quaternion,eased);
         camera.fov=fromFov+(toFov-fromFov)*eased;camera.aspect=fromAspect+(toAspect-fromAspect)*eased;camera.updateProjectionMatrix();
         const time=eased*850;canvasAnimation.currentTime=time;if(background)background.currentTime=time;ui.set(progress);
@@ -187,12 +186,14 @@ export function openCompactDisplays({box,inline=false}){
     camera.position.copy(fromCamera);camera.quaternion.copy(fromCameraRotation);camera.fov=fromFov;camera.updateProjectionMatrix();
     moving=true;returning=true;mount.dataset.returning='true';
     const restoreBookDepth=prioritizeCompactBook(book);restoreBookDepth.set(true);
+    const frontRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.06,-.5,0));
+    const standArc=display==='stand'?standReturnArc(returningIndex,fromRotation,frontRotation):0;
     returnFade=createCompactSceneFade(root,book);returnFade.set(0);
     pickupCleanup=()=>{restoreBookDepth.dispose();pickupCleanup=null;};
     cancelReturn=startCompactReturn({
       onFrame(t,progress){
         ui.set(progress);restoreBookDepth.set(t<.95);returnFade.set(t);
-        book.position.lerpVectors(fromPosition,toPosition,t);book.quaternion.slerpQuaternions(fromRotation,toRotation,t);book.scale.lerpVectors(fromScale,toScale,t);
+        interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,t,{standArc});book.scale.lerpVectors(fromScale,toScale,t);
         camera.position.lerpVectors(fromCamera,toCamera,t);camera.quaternion.slerpQuaternions(fromCameraRotation,toCameraRotation,t);camera.fov=fromFov+(toFov-fromFov)*t;camera.updateProjectionMatrix();
       },
       onComplete(){

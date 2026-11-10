@@ -33,6 +33,11 @@ test('paperback photo mapping keeps a continuous grid and survives replacement',
   globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
   try{
     const book=createPaperback(THREE,compacts[0]),face=book.group.getObjectByName('paperback-front'),uv=face.geometry.attributes.uv;
+    for(const side of ['front','back','spine']){
+      const material=book.group.getObjectByName(`paperback-${side}`).material;
+      assert.equal(material.polygonOffset,true,'printed face has a depth bias over the thin cover shell');
+      assert.ok(material.polygonOffsetFactor<0&&material.polygonOffsetUnits<0);
+    }
     assert.ok(uv.count>4);
     book.setCover('front',new THREE.Texture());
     const first=Array.from(uv.array),middle=(16*17+8)*2;
@@ -84,4 +89,53 @@ test('paperback has a thin connected cover and flush textured page edges',async(
     book.dispose();
     }
   }finally{globalThis.document=previous;}
+});
+
+test('stand paperbacks clear one another at rest and throughout both pickup and return paths',async()=>{
+  const THREE=await import('./vendor/three.module.js');
+  const {createPaperback}=await import('./paperback.js');
+  const {COMPACT_STAND_POSES,compactPickupSample,interpolateCompactBook,standReturnArc}=await import('./compact-return.js');
+  const previous=globalThis.document;
+  globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},translate(){},rotate(){},fillText(){},restore(){},measureText:()=>({width:30})})})};
+  const books=compacts.map(data=>createPaperback(THREE,data));
+  try{
+    // Enclose each real model's geometry in its local oriented box. Separating
+    // axes cover face normals and every pair of edge directions.
+    const boxes=books.map(book=>new THREE.Box3().setFromObject(book.group));
+    function oriented(book,index){
+      book.group.updateMatrixWorld(true);
+      const center=boxes[index].getCenter(new THREE.Vector3()).applyMatrix4(book.group.matrixWorld);
+      const half=boxes[index].getSize(new THREE.Vector3()).multiplyScalar(.5);
+      const rotation=new THREE.Matrix4().extractRotation(book.group.matrixWorld);
+      const axes=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)].map(axis=>axis.applyMatrix4(rotation));
+      return {center,half,axes};
+    }
+    function separation(a,b){
+      const direction=b.center.clone().sub(a.center),axes=[...a.axes,...b.axes];
+      for(const x of a.axes)for(const y of b.axes){const axis=x.clone().cross(y);if(axis.lengthSq()>1e-10)axes.push(axis.normalize());}
+      return Math.max(...axes.map(axis=>{
+        const radius=box=>box.axes.reduce((sum,v,i)=>sum+Math.abs(v.dot(axis))*box.half.getComponent(i),0);
+        return Math.abs(direction.dot(axis))-radius(a)-radius(b);
+      }));
+    }
+    function reset(){books.forEach((book,i)=>{const [x,y,z,rx,ry,rz]=COMPACT_STAND_POSES[i];book.group.position.set(x,y,z);book.group.rotation.set(rx,ry,rz);book.group.updateMatrixWorld(true);});}
+    function gap(){return separation(oriented(books[0],0),oriented(books[1],1));}
+    reset();assert.ok(gap()>.02,`books at rest need clearance, measured ${gap()}`);
+    const closePosition=new THREE.Vector3(),closeRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.06,-.5,0));
+    const returnRotations=[];
+    for(const yaw of [-Math.PI,-2.5,-2,-1.5,-1,-.5,0,.5,1,Math.PI/2,2,2.5,Math.PI])for(const pitch of [-.7,0,.7])returnRotations.push(new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch,yaw,0)));
+    for(const selected of [0,1])for(const direction of ['pickup','return'])for(const startRotation of direction==='pickup'?[closeRotation]:[closeRotation,...returnRotations]){
+      for(let frame=0;frame<=1000;frame++){
+        reset();const book=books[selected].group,standPosition=book.position.clone(),standRotation=book.quaternion.clone(),progress=frame/1000;
+        if(direction==='pickup'){
+          const {travel,lift}=compactPickupSample(progress);
+          interpolateCompactBook(book,standPosition,closePosition,standRotation,closeRotation,travel,{lift,standArc:selected===0?-1:0});
+        }else{
+          interpolateCompactBook(book,closePosition,standPosition,startRotation,standRotation,progress,{standArc:standReturnArc(selected,startRotation,closeRotation)});
+        }
+        const clearance=gap();
+        assert.ok(clearance>0,`${direction} book ${selected}, frame ${frame}: oriented boxes intersect by ${-clearance}`);
+      }
+    }
+  }finally{books.forEach(book=>book.dispose());globalThis.document=previous;}
 });

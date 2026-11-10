@@ -27,6 +27,25 @@ export function compactUiOpacity(progress){
   return {outgoing:Math.max(0,1-u/.45),incoming:u===1?1:Math.max(0,Math.min(1,(u-.55)/.45))};
 }
 
+// The rear book sits clear of Green Arrow. During its trip to the close-up it
+// travels around the other book, then follows the same arc in reverse.
+export const COMPACT_STAND_POSES=[
+  [2.53,1.49,-.40,-.14,0,-.07],
+  [1.68,1.49,.02,-.14,0,.05]
+];
+export function standReturnArc(index,fromRotation,frontRotation){
+  // When returning from a rotated inspection, give its wider swept volume
+  // additional clearance. Normal front-view returns keep the shorter arc.
+  const rotated=Math.min(1,fromRotation.angleTo(frontRotation)/.7);
+  return index===0?-1-2*rotated:rotated;
+}
+export function interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,progress,{lift=0,standArc=0}={}){
+  book.position.lerpVectors(fromPosition,toPosition,progress);
+  book.position.y+=.25*lift;
+  book.position.z+=standArc*Math.sin(Math.PI*progress);
+  book.quaternion.slerpQuaternions(fromRotation,toRotation,progress);
+}
+
 // Shared by normal scene builds and pickup target calculation, so the final
 // camera position is identical when the temporary scene is replaced.
 export function frameCompactBounds(THREE,camera,bounds,width,height){
