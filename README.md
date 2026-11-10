@@ -127,8 +127,9 @@ Open [http://localhost:8000](http://localhost:8000).
 Vercel deploys the production site from the `main` branch.
 
 Vite builds the site into `dist/`. The HTML pages keep their own entry points
-and `public/` keeps shared assets at their original URLs. Off the clock ships
-as a separate static page with its vendored Three.js scene.
+and `public/` keeps shared assets at their original URLs. Off the clock renders
+its page and controls with React and mounts the vendored Three.js scene through
+a ref. Its import map keeps Three.js shared between the box and Compacts.
 
 Privacy, Terms, Receipt Splitter and Overlay Studio render from React components
 in `src/pages/`. Vite inserts the rendered HTML at build time so these pages

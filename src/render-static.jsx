@@ -5,10 +5,12 @@ import { ReceiptSplitter } from './pages/ReceiptSplitter.jsx';
 import { OverlayStudio } from './pages/OverlayStudio.jsx';
 import { Home } from './pages/Home.jsx';
 import { StudentMarket } from './pages/StudentMarket.jsx';
+import { OffTheClock } from './pages/OffTheClock.jsx';
 
 const pages = {
   'index.html': Home,
   'student-market.html': StudentMarket,
+  'off-the-clock/index.html': OffTheClock,
   'privacy.html': Privacy,
   'terms.html': Terms,
   'receipt-splitter.html': ReceiptSplitter,

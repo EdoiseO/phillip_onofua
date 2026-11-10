@@ -1,5 +1,5 @@
 import { cp } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -13,6 +13,7 @@ const pages = [
   'overlay-studio.html',
   'privacy.html',
   'terms.html',
+  'off-the-clock/index.html',
 ];
 
 const staticReactPages = {
@@ -26,19 +27,20 @@ const staticReactPages = {
       const { renderStaticPage } = server
         ? await server.ssrLoadModule('/src/render-static.jsx')
         : await import(pathToFileURL(resolve(root, '.static-renderer/render-static.js')).href);
-      return html.replace(outlet, () => renderStaticPage(basename(filename)));
+      const page = relative(root, filename).split(sep).join('/');
+      return html.replace(outlet, () => renderStaticPage(page));
     },
   },
 };
 
-// The scene owns its module graph and loads assets by URL. Ship it as a
-// separate static page so its import map, cache keys and lazy imports survive.
+// The browser loads the scene's module graph through its import map. Keep
+// those modules and assets at the paths warmed by the homepage.
 const comicCollection = {
   name: 'portfolio-comic-collection',
   async writeBundle({ dir }) {
     await cp(resolve(root, 'off-the-clock'), resolve(dir, 'off-the-clock'), {
       recursive: true,
-      filter: source => !source.endsWith('.test.mjs'),
+      filter: source => source !== resolve(root, 'off-the-clock/index.html') && !source.endsWith('.test.mjs'),
     });
   },
 };
