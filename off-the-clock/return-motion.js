@@ -50,6 +50,13 @@ export function returnBoxTimeline(timeline, cameraTimeline, needsRestore) {
   return needsRestore ? Math.max(0,Math.min(1,(timeline-.12)/.58)) : cameraTimeline;
 }
 
+// The saved camera is already in world space, including any partial focus.
+// Cancel the second focus blend at the start, then remove that correction as
+// the stable wide view takes over.
+export function correctReturnCameraComponent(current, start, overview, focus, unzoom) {
+  return current+(start-overview)*(1-focus)*(1-unzoom);
+}
+
 // All inspection transforms and the raised comic height use the same eased
 // timeline progress. Supplying the current raised target also permits the box to
 // finish opening while the comic is returning.

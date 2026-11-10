@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.4';
+import { createReturnMotion, advanceReturnMotion, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.4';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -352,6 +352,12 @@ export async function createBox(stage,comics){
       }
       camera.position.copy(overviewCamera).lerp(inspectionCamera,focus);
       cameraTarget.copy(overviewTarget).lerp(inspectionCenter,focus);
+      if(stableUnzoom){
+        for(const axis of ['x','y','z']){
+          camera.position[axis]=correctReturnCameraComponent(camera.position[axis],returnState.startCamera[axis],overviewCamera[axis],focus,returnState.unzoom);
+          cameraTarget[axis]=correctReturnCameraComponent(cameraTarget[axis],returnState.startTarget[axis],overviewTarget[axis],focus,returnState.unzoom);
+        }
+      }
       // Set the bag and its board aside in the comic close-up. Offset in screen
       // space so they cannot obscure the cover or enlarge its camera framing.
       if(bookFocus>0){

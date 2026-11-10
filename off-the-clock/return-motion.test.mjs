@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,sampleSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxOffset,returnBoxTimeline,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
+import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,sampleSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxOffset,returnBoxTimeline,correctReturnCameraComponent,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
 
 test('slide-out reverses staged sleeve movement before the camera pulls out',()=>{
   const state=createReturnMotion(1,1,true);
@@ -57,6 +57,21 @@ test('box rises during sleeve restoration before the camera pulls out',()=>{
   assert.ok(sampleSleeveRig(frame.extraction).bagOpen>0,'film is still closing');
   assert.ok(returnBoxOffset(start,boxTimeline)>start/2,'box is already coming into view');
   assert.equal(returnBoxTimeline(.3,.3,false),.3,'ordinary returns keep their existing timing');
+});
+
+test('return preserves the world camera when inspection focus is incomplete',()=>{
+  const start=9, overview=5, focus=.35, wide=13;
+  const blended=overview+(start-overview)*focus;
+  assert.equal(correctReturnCameraComponent(blended,start,overview,focus,0),start);
+  assert.equal(correctReturnCameraComponent(wide,start,overview,focus,1),wide);
+  assert.equal(correctReturnCameraComponent(blended,start,overview,1,0),blended);
+  let previous=start;
+  for(let i=1;i<=60;i++){
+    const unzoom=i/60, inspection=start+(wide-start)*unzoom;
+    const current=correctReturnCameraComponent(overview+(inspection-overview)*focus,start,overview,focus,unzoom);
+    assert.ok(Math.abs(current-previous)<.1,`camera jumps at sample ${i}`);
+    previous=current;
+  }
 });
 
 test('60 fps return frames stay continuous through overlap and final handoff',()=>{
