@@ -200,7 +200,9 @@ export async function createBox(stage,comics){
     if(shouldSkipSceneFrame(Boolean(returnState),dirty,wasSettled,floatStrength,stickersMoving))return;
     openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
     if(returnState){
-      const position=advanceReturnMotion(returnState.motion,reduced?10:dt);
+      // Advance the return on real time (capped for long stalls) so slow GPUs
+      // keep its intended length instead of stretching it frame by frame.
+      const position=advanceReturnMotion(returnState.motion,reduced?10:Math.min(elapsed,.1));
       focusProgress=position.focus;unwrapProgress=position.extraction;returnState.blend=position.blend;returnState.unzoom=position.unzoom;returnState.cameraTimeline=position.cameraTimeline;
       returnState.onProgress?.(position.timeline,position.cameraTimeline);
       const pose=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:returnState.startPose.height},position.blend);
@@ -437,6 +439,27 @@ export async function createBox(stage,comics){
     Promise.allSettled(fronts).then(()=>comics.forEach((_,i)=>loadBack(i)));
   });
   const raycaster=new THREE.Raycaster();
+  // The box, lid and other comics are hidden during a close-up. Prepare their
+  // shaders and textures while the visitor is inspecting, so the first frame
+  // that shows them again during "Back to the box" does not stall.
+  let warmupHandle=0;
+  function scheduleReturnWarmup(){
+    const idle=globalThis.requestIdleCallback||(callback=>setTimeout(callback,600));
+    const cancel=globalThis.cancelIdleCallback||clearTimeout;
+    if(warmupHandle)cancel(warmupHandle);
+    warmupHandle=idle(()=>{
+      warmupHandle=0;if(disposed||!inspecting)return;
+      const hidden=[body,lid,...cards.map(card=>card.group)].filter(object=>!object.visible);
+      hidden.forEach(object=>{object.visible=true;});
+      try{
+        renderer.compile(scene,camera);
+        scene.traverse(object=>{
+          const list=object.material?(Array.isArray(object.material)?object.material:[object.material]):[];
+          list.forEach(material=>{for(const key of ['map','normalMap','roughnessMap','metalnessMap','aoMap','bumpMap','emissiveMap','alphaMap'])if(material[key]?.isTexture)renderer.initTexture(material[key]);});
+        });
+      }finally{hidden.forEach(object=>{object.visible=false;});}
+    },{timeout:1500});
+  }
   return {
     firstPaint,
     cloneClosedBox(){
@@ -468,7 +491,7 @@ export async function createBox(stage,comics){
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
     focus(value,onProgress){
       wantedDetail=0;inspecting=value;held=false;
-      if(value){floatTime=0;floatStrength=0;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;return Promise.resolve();}
+      if(value){floatTime=0;floatStrength=0;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;scheduleReturnWarmup();return Promise.resolve();}
       const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
