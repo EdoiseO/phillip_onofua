@@ -4,13 +4,13 @@ import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,sampleSleev
 
 test('slide-out overlaps the sleeve and the camera in one motion',()=>{
   const state=createReturnMotion(1,1,true);
-  assert.equal(state.duration,1.4);
+  assert.equal(state.duration,2.2);
   let frame=advanceReturnMotion(state,.25);
   assert.equal(frame.focus,1,'camera waits for the zoom-out to get going');
   assert.ok(frame.extraction>0&&frame.extraction<1);assert.ok(frame.unzoom>.3);
-  frame=advanceReturnMotion(state,.35);
+  frame=advanceReturnMotion(state,.8);
   assert.ok(frame.focus<1&&frame.extraction>0,'camera starts while the film is still closing');
-  frame=advanceReturnMotion(state,.9);
+  frame=advanceReturnMotion(state,1.5);
   assert.equal(frame.focus,0);assert.equal(frame.extraction,0);assert.equal(frame.blend,1);assert.equal(frame.done,true);
 });
 
@@ -57,7 +57,7 @@ test('nothing holds still mid-return and no frame jumps',()=>{
 test('box rises while the sleeve closes and the camera begins',()=>{
   const state=createReturnMotion(1,1,true), start=-7;
   assert.equal(returnBoxOffset(start,returnBoxTimeline(0,0,true)),start);
-  const frame=advanceReturnMotion(state,.6);
+  const frame=advanceReturnMotion(state,1.05);
   const boxTimeline=returnBoxTimeline(frame.timeline,frame.cameraTimeline,true);
   assert.ok(frame.cameraTimeline>0&&frame.cameraTimeline<.5,'camera has started');
   assert.ok(sampleSleeveRig(frame.extraction).bagOpen>0,'film is still closing');
@@ -86,7 +86,7 @@ test('60 fps return frames stay continuous through overlap and final handoff',()
   const target={turn:.08,tilt:-.025,zoom:0,height:4.55};
   const rig=sampleSleeveRig(1);
   let previous={focus:1,extraction:1,...start,...rig}, final;
-  for(let i=0;i<90;i++){
+  for(let i=0;i<140;i++){
     const frame=advanceReturnMotion(state,1/60), pose=interpolateReturnPose(start,target,frame.blend);
     pose.zoom=start.zoom*(1-frame.unzoom);
     const current={focus:frame.focus,extraction:frame.extraction,...pose,...sampleSleeveRig(frame.extraction)};
@@ -147,7 +147,7 @@ test('return unlocks even when another scene component never settles',()=>{
   const stage={dataset:{returning:'true'}};
   let resolved=0;
   const state={motion:createReturnMotion(1,1,true),complete:false,resolve:()=>{resolved++;}};
-  for(let frame=0;frame<120&&stage.dataset.returning==='true';frame++){
+  for(let frame=0;frame<160&&stage.dataset.returning==='true';frame++){
     state.complete=advanceReturnMotion(state.motion,1/60).done;
     finishReturnIfReady(state,stage,false,1/60);
   }
@@ -186,7 +186,7 @@ test('watchdog unlocks an offscreen return when no animation frames arrive',()=>
   let resolved=0, reset=0, callback, delay;
   const state={complete:false,resolve:()=>{resolved++;}};
   scheduleReturnWatchdog(state,stage,()=>{reset++;},(fn,ms)=>{callback=fn;delay=ms;return 1;});
-  assert.equal(delay,2800);
+  assert.equal(delay,3600);
   callback();
   assert.equal(stage.dataset.returning,'false');
   assert.equal(reset,1);
