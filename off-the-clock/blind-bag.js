@@ -70,7 +70,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
     for(let i=0;i<n;i++){color.set([0xffe0a0,0xf6f7fb,0xa2d9ff][i%3]);color.toArray(colors,i*3);}
     geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
     geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
-    const material=new THREE.PointsMaterial({size:.045,vertexColors:true,transparent:true,depthWrite:false});
+    const material=new THREE.PointsMaterial({size:.074,vertexColors:true,transparent:true,depthWrite:false});
     sparks=new THREE.Points(geometry,material);sparks.frustumCulled=false;group.add(sparks);
   }
 
@@ -105,7 +105,7 @@ export function createBlindBag(THREE,gltf,{comicModel,frontTexture=null,backText
         const attr=sparks.geometry.attributes.position;
         for(let i=0;i<attr.count;i++){
           const angle=i*2.39996,energy=.6+(i%7)*.13;
-          attr.setXYZ(i,Math.cos(angle)*energy*age*2.15,1.20+age*(1.8+energy*1.4)-3.2*age*age,.13+Math.sin(angle)*energy*age*.7);
+          attr.setXYZ(i,Math.cos(angle)*energy*age*4.4,1.20+age*(1.8+energy*1.4)-3.2*age*age,.42+Math.sin(angle)*energy*age*.48);
         }
         attr.needsUpdate=true;
         sparks.material.opacity=smooth(0,.035,age)*(1-smooth(.12,.68,age));

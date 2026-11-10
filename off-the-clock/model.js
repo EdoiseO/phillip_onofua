@@ -5,7 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
 import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=39.1';
 import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.1';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.2';
 import { FILE_DURATION, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.1';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';

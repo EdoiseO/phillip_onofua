@@ -1,6 +1,6 @@
 import {comics as catalogue} from './comics.js?v=39.5';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.1';
-import {createBox} from './model.js?v=46.1';
+import {createBox} from './model.js?v=46.2';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.7';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
@@ -127,7 +127,7 @@ export function mountOffTheClock(stage, pageRoot) {
       button.innerHTML=bag?(row?'Add to my box <span aria-hidden="true">↓</span>':busy?'Opening the bag…':'Tear the bag <span aria-hidden="true">↯</span>'):unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
       if(bag)button.removeAttribute('aria-pressed');else button.setAttribute('aria-pressed',String(unwrapped));
       $('sleeve-status').textContent=bag?(row?'BAGGED & BOARDED':filed?'OPENED · KEEPSAKE':busy?'OPENING':'SEALED'):unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
-      $('inspection-instructions').textContent=bag?(row?'Point at a cover or use the arrow keys to tilt it. Add the pulls to your box to browse them.':filed?'Drag to turn the torn wrapper. Your pulls are in the box.':busy?'Watch the three pulls come out.':'Drag right to left along the dotted line, or tap the bag to tear it.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
+      $('inspection-instructions').textContent=bag?(row?`${mobileCollection.matches?'Tap':'Point at'} a cover to tilt it, or use the arrow keys. Add the pulls to browse them.`:filed?'Drag to turn the torn wrapper. Your pulls are in the box.':busy?'Watch the three pulls come out.':'Drag right to left along the dotted line, or tap the bag to tear it.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
     }
   }
   function setOpen(value){if(!box)return;if(inspecting)leaveInspection();opened=value;box.setOpen(value);render();announce(value?`Box opened. ${comics[index].title}, ${comics[index].variant}.`:'Box closed.');}
