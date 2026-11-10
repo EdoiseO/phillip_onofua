@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createReturnMotion,advanceReturnMotion,finishReturnIfReady,shouldSkipSceneFrame} from './return-motion.js';
+import {createReturnMotion,advanceReturnMotion,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
 
 test('return movement restores the comic before pulling back to the box',()=>{
   const state=createReturnMotion(1,1,true);
@@ -57,4 +57,19 @@ test('return unlocks as soon as the completed scene settles',()=>{
   assert.equal(finishReturnIfReady(state,stage,true,1/60),true);
   assert.equal(stage.dataset.returning,'false');
   assert.equal(resolved,true);
+});
+
+test('watchdog unlocks an offscreen return when no animation frames arrive',()=>{
+  const stage={dataset:{returning:'true'}};
+  let resolved=0, reset=0, callback, delay;
+  const state={complete:false,resolve:()=>{resolved++;}};
+  scheduleReturnWatchdog(state,stage,()=>{reset++;},(fn,ms)=>{callback=fn;delay=ms;return 1;});
+  assert.equal(delay,1500);
+  callback();
+  assert.equal(stage.dataset.returning,'false');
+  assert.equal(reset,1);
+  assert.equal(resolved,1);
+  callback();
+  assert.equal(reset,1);
+  assert.equal(resolved,1);
 });

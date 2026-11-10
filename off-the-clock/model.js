@@ -10,7 +10,7 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.0';
 import { mobileControlsQuery } from './ruler-control.js?v=19.0';
-import { createReturnMotion, advanceReturnMotion, finishReturnIfReady, shouldSkipSceneFrame } from './return-motion.js?v=1.1';
+import { createReturnMotion, advanceReturnMotion, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.1';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -354,7 +354,7 @@ export async function createBox(stage,comics){
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving;
     stage.dataset.motionSettled=String(settled && (!returnState || returnState.complete));
     if(finishReturnIfReady(returnState,stage,settled,dt)){
-      returnState=null;cards[selected].blind?.reset();
+      clearTimeout(returnState.watchdog);returnState=null;cards[selected].blind?.reset();
       // Render the final pose even if this is the last animated frame.
       dirty=true;
     }
@@ -435,12 +435,22 @@ export async function createBox(stage,comics){
       const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;cards[selected].blind?.reset();return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
-      return new Promise(resolve=>{returnState={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),startY:cards[selected].y,complete:false,resolve};});
+      return new Promise(resolve=>{
+        const state={motion:createReturnMotion(focusProgress,unwrapProgress,needsRestore),startY:cards[selected].y,complete:false,resolve};
+        returnState=state;
+        state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
+          // Preserve a coherent final pose for the next visible frame.
+          focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;
+          const reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
+          cards[selected].y=1.42+(opened?reveal*3.13:0);cards[selected].v=0;cards[selected].blind?.reset();
+          returnState=null;dirty=true;wasSettled=false;stage.dataset.motionSettled='false';
+        });
+      });
     },
     hold(value){held=value;dirty=true;},
     unwrap(value){unwrapped=inspecting&&value;dirty=true;},
     reduce(value){reduced=value;dirty=true;},
     hit(x,y){const r=stage.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1),camera);const hits=raycaster.intersectObjects(inspecting?[cards[selected].group]:[body,lid,...cards.map(c=>c.group)],true);if(!hits.length)return null;let o=hits[0].object;while(o&&o!==world){if(o.userData.comicIndex!==undefined)return {comic:o.userData.comicIndex};if(o.userData.lid)return {lid:true};if(o.userData.box)return {box:true};o=o.parent;}return null;},
-    dispose(){if(returnState){returnState.resolve();returnState=null;}disposed=true;artworkGate.dispose();stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
+    dispose(){if(returnState){clearTimeout(returnState.watchdog);releaseReturn(returnState,stage);returnState=null;}disposed=true;artworkGate.dispose();stickerSystem.dispose();cancelAnimationFrame(frame);ro.disconnect();io.disconnect();renderer.dispose();envTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});cards.forEach(c=>{c.blind?.dispose();c.booklet?.dispose();});[...loadedArt,...cardboardMaps].forEach(t=>t.dispose());}
   };
 }

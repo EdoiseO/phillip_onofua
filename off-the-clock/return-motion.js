@@ -18,10 +18,25 @@ export function finishReturnIfReady(state, stage, settled, dt) {
   if (!state?.complete || state.finished) return false;
   state.settleWait = (state.settleWait || 0) + Math.max(0, dt);
   if (!settled && state.settleWait < .2) return false;
+  return releaseReturn(state, stage);
+}
+
+export function releaseReturn(state, stage) {
+  if (!state || state.finished) return false;
   state.finished = true;
   stage.dataset.returning = 'false';
   state.resolve();
   return true;
+}
+
+// rAF can pause when the canvas leaves the viewport. Do not leave input locked
+// while there are no frames to advance the normal return timeline.
+export function scheduleReturnWatchdog(state, stage, onTimeout, schedule = setTimeout) {
+  return schedule(() => {
+    if (state.finished) return;
+    onTimeout();
+    releaseReturn(state, stage);
+  }, 1500);
 }
 
 // Keep ticking a return even when the scene has momentarily settled before its
