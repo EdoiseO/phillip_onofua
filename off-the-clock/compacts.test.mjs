@@ -68,6 +68,8 @@ test('paperback has a thin connected cover and flush textured page edges',async(
     assert.equal(book.group.getObjectByName('paperback-page-lines'),undefined,'page lines come from the photo');
     const edgeTexture=new THREE.Texture();book.setPageEdge(edgeTexture);
     assert.equal(pages.material[1].map,edgeTexture);
+    assert.equal(pages.material[1].emissiveMap,edgeTexture,'shaded edges retain their page texture');
+    assert.ok(pages.material[1].emissiveIntensity>0,'page edges have a modest light contribution');
     assert.equal(edgeTexture.wrapS,THREE.MirroredRepeatWrapping);
     const positions=pages.geometry.attributes.position,uv=pages.geometry.attributes.uv,side=pages.geometry.groups.find(g=>g.materialIndex===1);
     const seen=new Set();

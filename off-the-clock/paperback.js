@@ -174,6 +174,10 @@ export function createPaperback(THREE, data) {
     map.colorSpace=THREE.SRGBColorSpace;
     edgeMaterial.color.set(0xffffff);
     edgeMaterial.map=map;
+    // Preserve the page texture in shade without changing the cover lighting.
+    edgeMaterial.emissive.set(0xfff4e8);
+    edgeMaterial.emissiveIntensity=.35;
+    edgeMaterial.emissiveMap=map;
     edgeMaterial.needsUpdate=true;
   }
   return {group, width, height, depth, setCover, setPageEdge, dispose() {
