@@ -21,6 +21,31 @@ export function startCompactReturn({onFrame,onComplete,request=requestAnimationF
   return ()=>{if(!finished){finished=true;clearTimer(timer);cancel(frame);}};
 }
 
+// Shared by normal scene builds and pickup target calculation, so the final
+// camera position is identical when the temporary scene is replaced.
+export function frameCompactBounds(THREE,camera,bounds,width,height){
+  camera.fov=width<600?45:34;camera.aspect=width/height;
+  const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
+  const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
+  const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*1.14;
+  camera.position.set(center.x,center.y,bounds.max.z+distance);camera.lookAt(center);camera.updateProjectionMatrix();
+}
+
+// A single cubic easing drives the book, camera and presentation. The small
+// lift starts before horizontal travel, while both settle exactly at the end.
+export function compactPickupSample(progress){
+  const u=Math.max(0,Math.min(1,progress));
+  const eased=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+  return {eased,travel:Math.max(0,(eased-.12)/.88),lift:Math.sin(Math.PI*eased)};
+}
+export function startCompactPickup({onFrame,onComplete,request=requestAnimationFrame,cancel=cancelAnimationFrame,setTimer=setTimeout,clearTimer=clearTimeout,now=()=>performance.now()}){
+  let start=now(),frame=0,timer=0,finished=false;
+  const finish=()=>{if(finished)return;finished=true;clearTimer(timer);cancel(frame);onFrame(compactPickupSample(1),1);onComplete();};
+  const tick=time=>{if(finished)return;const u=Math.max(0,Math.min(1,(time-start)/850));if(u>=1)finish();else{onFrame(compactPickupSample(u),u);frame=request(tick);}};
+  timer=setTimer(finish,2000);frame=request(tick);
+  return ()=>{if(!finished){finished=true;clearTimer(timer);cancel(frame);}};
+}
+
 // Fade only the destination scene, never the inspected book. Materials are
 // cloned temporarily because the preview box shares materials with the real
 // comic box; mutating them would fade the user's box too.

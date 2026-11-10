@@ -69,3 +69,41 @@ test('printed-cover fade preserves the original live art uniform',async()=>{
   fade.dispose();assert.equal(object.material,original);
   object.geometry.dispose();original.dispose();texture.dispose();
 });
+
+test('compact pickup moves continuously and reaches its destination before unlocking', async()=>{
+  const {startCompactPickup}=await import('./compact-return.js');
+  const scheduler=simulatedScheduler();let locked=true,completed=0;const samples=[];
+  startCompactPickup({...scheduler,onFrame:sample=>samples.push(sample),onComplete(){assert.deepEqual(samples.at(-1),{eased:1,travel:1,lift:Math.sin(Math.PI)});locked=false;completed++;}});
+  for(let time=0;time<1200&&locked;time+=1000/60)scheduler.frame(time);
+  assert.equal(locked,false);assert.equal(completed,1);assert.equal(samples[0].eased,0);
+  assert.ok(samples.some(s=>s.lift>0&&s.travel===0),'lift begins before the book travels');
+  for(let i=1;i<samples.length;i++)for(const key of ['eased','travel','lift'])assert.ok(Math.abs(samples[i][key]-samples[i-1][key])<.1,`${key} must not jump at frame ${i}`);
+  assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
+});
+
+test('compact pickup watchdog reaches destination and releases input exactly once',async()=>{
+  const {startCompactPickup}=await import('./compact-return.js');
+  const scheduler=simulatedScheduler();let locked=true,completed=0,last;
+  startCompactPickup({...scheduler,onFrame:sample=>last=sample,onComplete(){locked=false;completed++;}});
+  scheduler.timeout();assert.equal(last.travel,1);assert.equal(locked,false);assert.equal(completed,1);assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
+  scheduler.frame(900);assert.equal(completed,1);
+});
+
+test('closing during pickup cancels frames and the watchdog',async()=>{
+  const {startCompactPickup}=await import('./compact-return.js');const scheduler=simulatedScheduler();let completed=0;
+  const cancel=startCompactPickup({...scheduler,onFrame(){},onComplete(){completed++;}});cancel();scheduler.frame(900);scheduler.timeout();
+  assert.equal(completed,0);assert.deepEqual(scheduler.pending(),{frames:0,timers:0});
+});
+
+test('pickup target and rebuilt close-up use the same camera for desktop and phone',async()=>{
+  const THREE=await import('./vendor/three.module.js');const {frameCompactBounds}=await import('./compact-return.js');
+  const book=new THREE.Mesh(new THREE.BoxGeometry(1.8,2.7,.36));book.rotation.set(-.06,-.5,0);book.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(book);
+  for(const [width,height] of [[1280,680],[375,600]]){
+    const target=new THREE.PerspectiveCamera(),rebuilt=new THREE.PerspectiveCamera();
+    frameCompactBounds(THREE,target,bounds,width,height);frameCompactBounds(THREE,rebuilt,bounds,width,height);
+    assert.ok(target.position.distanceTo(rebuilt.position)<1e-12);assert.ok(target.quaternion.angleTo(rebuilt.quaternion)<1e-7);
+    assert.equal(target.fov,rebuilt.fov);assert.equal(target.aspect,rebuilt.aspect);
+  }
+  book.geometry.dispose();
+});

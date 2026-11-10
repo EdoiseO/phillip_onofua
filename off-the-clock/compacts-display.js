@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.4';
-import {startCompactReturn, createCompactSceneFade} from './compact-return.js?v=1.0';
+import {startCompactReturn, startCompactPickup, frameCompactBounds, createCompactSceneFade} from './compact-return.js?v=1.1';
 import {createPaperback} from './paperback.js?v=2.3';
 
 // These display studies are created only on request, after the short box paints.
 export function openCompactDisplays({box,inline=false}){
   const dialog=document.querySelector('#compact-dialog'), mount=document.querySelector('#compact-canvas');
-  mount.dataset.returning='false';
+  mount.dataset.returning='false';mount.dataset.picking='false';
   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;renderer.setClearColor(0x0b0e13,0);renderer.domElement.setAttribute('aria-hidden','true');mount.append(renderer.domElement);
   const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(34,1,.1,80);
   scene.add(new THREE.HemisphereLight(0xd8e7ff,0x655a48,1.35));
@@ -21,11 +21,11 @@ export function openCompactDisplays({box,inline=false}){
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=shadowCanvas.height=128;const shadowCtx=shadowCanvas.getContext('2d'),gradient=shadowCtx.createRadialGradient(64,64,2,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.36)');gradient.addColorStop(1,'rgba(0,0,0,0)');shadowCtx.fillStyle=gradient;shadowCtx.fillRect(0,0,128,128);const shadowTexture=new THREE.CanvasTexture(shadowCanvas),shadowMaterial=new THREE.MeshBasicMaterial({map:shadowTexture,transparent:true,depthWrite:false});
   const materials={wood:new THREE.MeshStandardMaterial({color:0x9a7655,roughness:.83}), dark:new THREE.MeshStandardMaterial({color:0x363f48,roughness:.75}), acrylic:new THREE.MeshStandardMaterial({color:0xb4d3dd,transparent:true,opacity:.30,roughness:.18,metalness:.05}),desk:new THREE.MeshStandardMaterial({color:0x66594e,roughness:.95})};
   const cube=(w,h,d,material,x,y,z)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);root.add(mesh);return mesh;};
-  let display=inline?'switch':'shelf',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,returning=false,closed=false,boxClone=null,moving=false;
+  let display=inline?'switch':'shelf',selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,moveFrame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,returning=false,closed=false,boxClone=null,moving=false;
   const title=document.querySelector('#compact-title'),note=document.querySelector('#compact-note'),options=[...dialog.querySelectorAll('[data-display]')],views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return');
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
   const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
-  const ro=new ResizeObserver(()=>{if(!returning)frameScene();});ro.observe(mount);
+  const ro=new ResizeObserver(()=>{if(!moving&&!returning)frameScene();});ro.observe(mount);
   function clean(){
     books.forEach(b=>b.group.removeFromParent());
     while(root.children.length){const child=root.children[0];root.remove(child);if(child===boxClone)continue;child.geometry?.dispose();}
@@ -42,10 +42,7 @@ export function openCompactDisplays({box,inline=false}){
     if(selected>=0||display==='switch'){
       root.updateMatrixWorld(true);
       const bounds=new THREE.Box3().setFromObject(selected>=0?books[selected].group:root);
-      const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
-      const tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
-      const distance=Math.max(size.y/(2*tanV),size.x/(2*tanH))*1.14;
-      camera.position.set(center.x,center.y,bounds.max.z+distance);camera.lookAt(center);
+      frameCompactBounds(THREE,camera,bounds,Math.max(1,mount.clientWidth),Math.max(1,mount.clientHeight));
     }else{camera.position.set((display==='stack'?-1:1)*(mobile?2.2:4.0),mobile?4.0:4.2,mobile?15.5:10.8);camera.lookAt(0,1.5,0);}
   }
   function build({preserveInspection=false}={}){
@@ -91,13 +88,53 @@ export function openCompactDisplays({box,inline=false}){
   const draw=()=>{if(closed)return;renderer.render(activeScene,camera);frame=requestAnimationFrame(draw);};
   const select=i=>{
     if(moving||selected>=0)return;
-    const finish=()=>{moving=false;selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;build();views[0].focus();};
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){finish();return;}
-    moving=true;const book=books[i].group,start=book.position.clone(),at=performance.now();
-    const move=now=>{if(closed)return;const t=Math.min(1,(now-at)/350),ease=1-Math.pow(1-t,3);book.position.copy(start);if(display==='stack')book.position.y+=.35*ease;else book.position.z+=.45*ease;if(t<1)moveFrame=requestAnimationFrame(move);else finish();};
-    moveFrame=requestAnimationFrame(move);
+    const finishInstant=()=>{selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;build();views[0].focus();};
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){finishInstant();return;}
+    moving=true;mount.dataset.picking='true';
+    const book=books[i].group,fromPosition=book.position.clone(),fromRotation=book.quaternion.clone(),fromScale=book.scale.clone();
+    const fromCamera=camera.position.clone(),fromCameraRotation=camera.quaternion.clone(),fromFov=camera.fov,fromAspect=camera.aspect;
+    const oldCanvas=renderer.domElement.getBoundingClientRect();
+    // Keep snapshots of the old controls in their original screen positions
+    // while the inspection controls take their final layout underneath.
+    const snapshots=[];
+    [dialog.querySelector('.compact-header'),dialog.querySelector('.compact-options'),dialog.querySelector('.compact-book-controls'),note].forEach(element=>{
+      const r=element.getBoundingClientRect();if(!r.width||!r.height)return;
+      const copy=element.cloneNode(true);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));copy.setAttribute('aria-hidden','true');copy.inert=true;dialog.append(copy);
+      const animation=copy.animate([{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,margin:'0',pointerEvents:'none',opacity:1},{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,margin:'0',pointerEvents:'none',opacity:0}],{duration:850,fill:'both'});animation.pause();snapshots.push({copy,animation});
+    });
+    selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;
+    dialog.classList.toggle('compact-inspecting',inline);if(inline)dialog.setAttribute('aria-modal','true');
+    inspectControls.hidden=false;backButton.hidden=false;bookButtons.forEach(b=>b.hidden=true);options.forEach(b=>b.hidden=true);
+    title.textContent=compacts[i].title;note.textContent=`${compacts[i].frontImageNote} · Drag to turn`;
+    views.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view==='front')));
+    const incoming=[dialog.querySelector('.compact-header'),inspectControls,note,dialog.querySelector('.compact-book-controls')].map(element=>{const animation=element.animate([{opacity:0,offset:0},{opacity:0,offset:.3},{opacity:1,offset:1}],{duration:850,fill:'both'});animation.pause();return animation;});
+    if(inline){const background=dialog.animate([{backgroundColor:'rgba(11,14,19,0)'},{backgroundColor:'#0b0e13'}],{duration:850,fill:'both'});background.pause();incoming.push(background);}
+    // Compute the exact pose and framing build() will use without displaying
+    // a rebuilt scene. The renderer takes the final layout before interpolation.
+    book.position.set(0,0,0);book.rotation.set(inspectPitch,inspectYaw,0);root.updateMatrixWorld(true);
+    const bounds=new THREE.Box3().setFromObject(book);
+    const width=Math.max(1,mount.clientWidth),height=Math.max(1,mount.clientHeight);
+    const targetCamera=camera.clone();frameCompactBounds(THREE,targetCamera,bounds,width,height);
+    const toAspect=targetCamera.aspect,toFov=targetCamera.fov;
+    const toPosition=book.position.clone(),toRotation=book.quaternion.clone();book.position.copy(fromPosition);book.quaternion.copy(fromRotation);book.scale.copy(fromScale);
+    renderer.setSize(width,height,false);
+    const newCanvas=renderer.domElement.getBoundingClientRect(),dx=oldCanvas.left-newCanvas.left,dy=oldCanvas.top-newCanvas.top,sx=oldCanvas.width/newCanvas.width,sy=oldCanvas.height/newCanvas.height;
+    const canvasAnimation=renderer.domElement.animate([{transformOrigin:'top left',transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},{transformOrigin:'top left',transform:'translate(0,0) scale(1,1)'}],{duration:850,fill:'both'});canvasAnimation.pause();
+    returnFade=createCompactSceneFade(root,book);returnFade.set(1);
+    pickupCleanup=()=>{canvasAnimation.cancel();incoming.forEach(a=>a.cancel());snapshots.forEach(({copy,animation})=>{animation.cancel();copy.remove();});returnFade?.dispose();returnFade=null;pickupCleanup=null;};
+    cancelReturn=startCompactPickup({
+      onFrame({eased,travel,lift}){
+        returnFade.set(1-eased);
+        book.position.lerpVectors(fromPosition,toPosition,travel);book.position.y+=.25*lift;
+        book.quaternion.slerpQuaternions(fromRotation,toRotation,travel);book.scale.copy(fromScale);
+        camera.position.lerpVectors(fromCamera,targetCamera.position,eased);camera.quaternion.slerpQuaternions(fromCameraRotation,targetCamera.quaternion,eased);
+        camera.fov=fromFov+(toFov-fromFov)*eased;camera.aspect=fromAspect+(toAspect-fromAspect)*eased;camera.updateProjectionMatrix();
+        const time=eased*850;canvasAnimation.currentTime=time;incoming.forEach(a=>a.currentTime=time);snapshots.forEach(({animation})=>animation.currentTime=time);
+      },
+      onComplete(){if(closed)return;pickupCleanup();cancelReturn=null;moving=false;mount.dataset.picking='false';build();views[0].focus();}
+    });
   };
-  options.forEach(button=>button.addEventListener('click',()=>{cancelAnimationFrame(moveFrame);moving=false;display=button.dataset.display;selected=-1;build();},eventOptions));
+  options.forEach(button=>button.addEventListener('click',()=>{if(moving)return;display=button.dataset.display;selected=-1;build();},eventOptions));
   views.forEach(button=>button.addEventListener('click',()=>{if(moving)return;angle=button.dataset.view;inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();},eventOptions));
   bookButtons.forEach(button=>button.addEventListener('click',()=>select(Number(button.dataset.book)),eventOptions));
   const returnDisplay=()=>{
@@ -138,7 +175,7 @@ export function openCompactDisplays({box,inline=false}){
   mount.addEventListener('pointerup',event=>{if(selected>=0){drag=null;return;}const r=mount.getBoundingClientRect();pointer.set((event.clientX-r.left)/r.width*2-1,-(event.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(books.map(b=>b.group),true);let object=hits[0]?.object;while(object&&object.userData.compactIndex===undefined)object=object.parent;if(object)select(object.userData.compactIndex);},eventOptions);
   const close=()=>{dialog.close();};dialog.querySelector('#compact-close').addEventListener('click',close,eventOptions);
   dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(inline&&selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
-  dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();returnFade?.dispose();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#compact-launch').disabled=false;document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#compact-launch').focus();},{once:true});
+  dialog.addEventListener('close',()=>{closed=true;listeners.abort();cancelReturn?.();pickupCleanup?.();mount.dataset.picking='false';returnFade?.dispose();mount.dataset.returning='false';cancelAnimationFrame(frame);cancelAnimationFrame(moveFrame);ro.disconnect();clean();if(boxClone){boxClone.traverse(o=>{if(o.userData.compactPreviewOwned){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}if(o.userData.compactPreviewOwnedMaterial)o.material.dispose();});boxClone=null;}books.forEach(b=>b.dispose());textures.forEach(t=>t.dispose());shadowTexture.dispose();shadowMaterial.dispose();Object.values(materials).forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();document.querySelector('#compact-launch').disabled=false;document.querySelector('#collection-compacts').disabled=false;if(inline){document.querySelector('.viewer').classList.remove('compact-active');document.body.append(dialog);delete dialog.dataset.inline;dialog.classList.remove('compact-inspecting');dialog.removeAttribute('aria-modal');document.querySelector('#collection-comics').setAttribute('aria-pressed','true');document.querySelector('#collection-compacts').setAttribute('aria-pressed','false');document.querySelector('#collection-comics').focus();}else document.querySelector('#compact-launch').focus();},{once:true});
   if(inline){dialog.dataset.inline='';document.querySelector('.viewer').append(dialog);document.querySelector('.viewer').classList.add('compact-active');document.querySelector('#collection-comics').setAttribute('aria-pressed','false');document.querySelector('#collection-compacts').setAttribute('aria-pressed','true');}
   build();if(inline)dialog.show();else dialog.showModal();frameScene();draw();
 }
