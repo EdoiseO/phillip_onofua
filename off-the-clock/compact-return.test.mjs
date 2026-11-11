@@ -163,3 +163,15 @@ test('moving book retains its own depth while rendering over props and restores 
   renderer.info.render.frame++;a.onBeforeRender(renderer);assert.equal(clears,2);restore.set(false);assert.equal(a.renderOrder,3);assert.equal(a.onBeforeRender,original);restore.dispose();
   a.geometry.dispose();a.material.dispose();b.geometry.dispose();b.material.dispose();
 });
+
+test('return uses wall time and the first frame already travels',()=>{
+  const scheduler=simulatedScheduler();const frames=[];let done=false;
+  startCompactReturn({...scheduler,onFrame:(t,elapsed)=>frames.push({t,elapsed}),onComplete(){done=true;}});
+  scheduler.frame(16);
+  assert.ok(frames[0].t>0);
+  scheduler.frame(480);
+  assert.ok(Math.abs(frames.at(-1).t-.5)<1e-12,'a late frame catches up with the same timeline');
+  scheduler.frame(960);
+  assert.equal(done,true);
+  assert.deepEqual(frames.at(-1),{t:1,elapsed:1});
+});

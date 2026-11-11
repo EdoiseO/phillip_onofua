@@ -64,7 +64,7 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.26');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.27');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;

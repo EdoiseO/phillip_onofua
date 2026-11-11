@@ -1,4 +1,6 @@
-import {createReturnMotion, advanceReturnMotion} from './return-motion.js?v=1.11';
+import {easeInOutSine} from './return-motion.js?v=1.11';
+
+export const COMPACT_RETURN_MS=960;
 
 export function shouldReturnFromCompactTap({startedOnBook, endedOnBook, distance, elapsed}) {
   return !startedOnBook && !endedOnBook && distance < 7 && elapsed > 450;
@@ -7,18 +9,16 @@ export function shouldReturnFromCompactTap({startedOnBook, endedOnBook, distance
 // Run a continuous return, with a watchdog so an interrupted animation cannot
 // leave the display controls locked. Cancellation is reserved for teardown.
 export function startCompactReturn({onFrame,onComplete,request=requestAnimationFrame,cancel=cancelAnimationFrame,setTimer=setTimeout,clearTimer=clearTimeout,now=()=>performance.now()}){
-  const motion=createReturnMotion(1,0,false);motion.duration=.7;
-  let previous=now(),frame=0,timer=0,finished=false;
+  const start=now();
+  let frame=0,timer=0,finished=false;
   const finish=()=>{
     if(finished)return;
     finished=true;clearTimer(timer);cancel(frame);onFrame(1,1);onComplete();
   };
   const tick=time=>{
     if(finished)return;
-    const dt=Math.min(.035,Math.max(0,(time-previous)/1000));previous=time;
-    const state=advanceReturnMotion(motion,dt);
-    onFrame(1-state.focus,Math.min(1,motion.elapsed/motion.duration));
-    if(state.done)finish();else frame=request(tick);
+    const progress=Math.max(0,(time-start)/COMPACT_RETURN_MS);
+    if(progress>=1)finish();else{onFrame(easeInOutSine(progress),progress);frame=request(tick);}
   };
   timer=setTimer(finish,2000);
   frame=request(tick);
@@ -48,6 +48,29 @@ export function interpolateCompactBook(book,fromPosition,toPosition,fromRotation
   book.position.y+=.25*lift;
   book.position.z+=standArc*Math.sin(Math.PI*progress);
   book.quaternion.slerpQuaternions(fromRotation,toRotation,progress);
+}
+
+// Put the other book behind the turning volume while the selected book
+// comes forward. Once it is in front of the shelf, turn and align its spine
+// with its slot, then slide straight back between the other book and bookend.
+export function createSpineShelfReturn(book, neighbor, from, to, fromRotation, toRotation){
+  const destination=neighbor.group.position.clone();
+  const reach=Math.hypot(book.width,book.height,book.depth)/2+neighbor.width/2+.08;
+  const front=Math.max(from.z,destination.z+reach);
+  const parked=Math.min(destination.z,from.z-reach);
+  const clamp=value=>Math.min(1,Math.max(0,value));
+  const ease=(progress,start,end)=>easeInOutSine((progress-start)/(end-start));
+  return progress=>{
+    const forward=Math.sin(Math.PI/2*clamp(progress/.28));
+    const align=ease(progress,.08,.64);
+    const slide=ease(progress,.64,1);
+    book.group.position.lerpVectors(from,to,align);
+    book.group.position.z=progress<.64
+      ? from.z+(front-from.z)*forward
+      : front+(to.z-front)*slide;
+    book.group.quaternion.slerpQuaternions(fromRotation,toRotation,align);
+    neighbor.group.position.z=parked+(destination.z-parked)*ease(progress,.28,.57);
+  };
 }
 
 // Shared by normal scene builds and pickup target calculation, so the final
