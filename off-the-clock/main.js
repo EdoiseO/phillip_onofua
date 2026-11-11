@@ -1,6 +1,6 @@
 import {comics as catalogue} from './comics.js?v=39.5';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.3';
-import {createBox} from './model.js?v=47.1';
+import {createBox} from './model.js?v=47.2';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.11';
 import {createInspectionFadeFrames, INSPECTION_OPEN_MS} from './inspection-motion.js?v=1.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
@@ -65,12 +65,12 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.28');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.29');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;
         const focused=document.activeElement;
-        compacts=module.openCompactDisplays({box,inline:true,pageRoot,onClose:()=>chooseCollection('comics')});
+        compacts=module.openCompactDisplays({inline:true,pageRoot,onClose:()=>chooseCollection('comics')});
         if(focused instanceof HTMLElement&&document.activeElement!==focused)focused.focus({preventScroll:true});
       }catch(error){
         compactModule=undefined;

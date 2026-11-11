@@ -12,8 +12,8 @@ async page => {
           const response=await route.fetch();
           // Measure the real geometry and layout at paint time, without a
           // debug API in the built application.
-          const source=(await response.text()).replaceAll('renderer.render(activeScene,camera);', `
-            renderer.render(activeScene,camera);
+          const source=(await response.text()).replaceAll('renderer.render(scene,camera);', `
+            renderer.render(scene,camera);
             if(window.compactProbe){
               const rect=mount.getBoundingClientRect();
               const bounds=books.map(({group})=>new THREE.Box3().setFromObject(group));

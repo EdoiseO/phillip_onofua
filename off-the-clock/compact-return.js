@@ -31,22 +31,9 @@ export function compactUiOpacity(progress){
   return {outgoing:Math.max(0,1-u/.45),incoming:u===1?1:Math.max(0,Math.min(1,(u-.55)/.45))};
 }
 
-// The rear book sits clear of Green Arrow. During its trip to the close-up it
-// travels around the other book, then follows the same arc in reverse.
-export const COMPACT_STAND_POSES=[
-  [2.53,1.49,-.40,-.14,0,-.07],
-  [1.68,1.49,.02,-.14,0,.05]
-];
-export function standReturnArc(index,fromRotation,frontRotation){
-  // When returning from a rotated inspection, give its wider swept volume
-  // additional clearance. Normal front-view returns keep the shorter arc.
-  const rotated=Math.min(1,fromRotation.angleTo(frontRotation)/.7);
-  return index===0?-1-2*rotated:rotated;
-}
-export function interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,progress,{lift=0,standArc=0}={}){
+export function interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,progress,{lift=0}={}){
   book.position.lerpVectors(fromPosition,toPosition,progress);
   book.position.y+=.25*lift;
-  book.position.z+=standArc*Math.sin(Math.PI*progress);
   book.quaternion.slerpQuaternions(fromRotation,toRotation,progress);
 }
 
@@ -116,10 +103,8 @@ export function prioritizeCompactBook(book){
   return {set,dispose(){set(false);}};
 }
 
-// Blend props into the dialog background without making opaque box walls
-// transparent. Otherwise the walls, artwork and comics inside become visible
-// through one another during pickup and return. Materials are temporary: the
-// preview box shares some of them with the live comic box.
+// Blend the shelf and the other book into the background while preserving
+// depth testing, so their surfaces never show through each other.
 export function createCompactSceneFade(root,excluded){
   const skipped=new Set(), originals=[], clones=new Map();
   excluded.traverse(object=>skipped.add(object));
@@ -140,11 +125,9 @@ export function createCompactSceneFade(root,excluded){
         shader.fragmentShader='uniform float compactVisibility;\n'+shader.fragmentShader.replace('#include <colorspace_fragment>','#include <colorspace_fragment>'+blend);
       };
     }
-    // Different original hooks (such as holographic stickers) need distinct
-    // shader programs; they must not collide with an unmodified live material.
+    // Keep the fade shader distinct from the unfaded material.
     clone.customProgramCacheKey=()=>`compact-colour-blend-v1:${original.customProgramCacheKey()}`;
-    // Keep intrinsic transparency (clear acrylic, decals and soft shadows),
-    // but never turn an opaque wall into a translucent one.
+    // Keep the contact shadow transparent and the solid props opaque.
     clones.set(original,{clone,visibility});return clones.get(original);
   }
   root.traverse(object=>{
@@ -161,7 +144,7 @@ export function createCompactSceneFade(root,excluded){
       originals.forEach(({object,visible})=>{object.visible=visible&&amount>0;});
       for(const [original,{clone,visibility}] of clones){
         visibility.value=amount;
-        // Independent box stand-in photos can arrive during the transition.
+        // The neighboring book’s page-edge texture can arrive during the transition.
         if('map' in original&&clone.map!==original.map){clone.map=original.map;clone.needsUpdate=true;}
         if(original.color&&clone.color)clone.color.copy(original.color);
       }
