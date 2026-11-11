@@ -3,11 +3,11 @@ export function CompactsDialog() {
     <dialog
       className="compact-dialog collection-panel collection-fade"
       id="compact-dialog"
-      aria-labelledby="compact-title"
+      aria-label="Compact Comics"
       inert
       aria-hidden="true"
     >
-      <header className="compact-header">
+      <header className="compact-header" hidden>
         <button className="back-button" id="compact-close" type="button">
           {'← '}
           <span>Back to comics</span>
@@ -18,7 +18,7 @@ export function CompactsDialog() {
         </button>
         <div>
           <p>A CLOSER LOOK AT THE COLLECTION</p>
-          <h2 id="compact-title">Compact Comics</h2>
+          <h2 id="compact-title"></h2>
         </div>
         <span>01 / 04</span>
       </header>
@@ -43,7 +43,7 @@ export function CompactsDialog() {
         id="compact-canvas"
         tabIndex="0"
         role="region"
-        aria-label="Paperback display. Select a book to inspect it."
+        aria-label="Compact Comics. Select a book to inspect it."
       ></div>
       <p className="compact-note" id="compact-note">
         <svg className="tap-icon" viewBox="0 0 28 28" aria-hidden="true">
