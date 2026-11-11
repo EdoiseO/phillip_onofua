@@ -11,19 +11,19 @@ export function createReturnMotion(focus, extraction, needsRestore) {
 }
 
 export function advanceReturnMotion(state, dt) {
-  state.elapsed += Math.max(0, dt);
+  state.elapsed = Math.min(state.duration, state.elapsed + Math.max(0, dt));
   const clamp = value => Math.min(1, Math.max(0, value));
   const ease = easeInOutSine;
   const duration = state.duration, t = clamp(state.elapsed / duration);
   // Sleeve: board, comic and film reverse slowly over the first 60% (1.3 s),
   // so each stage reads before the collection comes back.
   const restore = state.needsRestore ? ease(t / .6) : 1;
-  // Camera: starts at 45%, while the film is still closing, and glides to the end.
-  const cameraTimeline = state.needsRestore ? clamp((t - .45) / .55) : t;
+  // Overlap the pull-out with the last part of the initial sleeve framing.
+  const cameraTimeline = state.needsRestore ? clamp((t - .30) / .70) : t;
   const cameraBlend = ease(cameraTimeline);
   const blend = ease(t);
-  const unzoom = state.needsRestore ? ease(t / .25) : blend;
-  return { extraction: state.extraction * (1 - restore), focus: state.focus * (1 - cameraBlend), blend, unzoom, cameraTimeline, timeline: t, done: state.elapsed >= duration };
+  const unzoom = state.needsRestore ? ease(t / .34) : blend;
+  return { extraction: state.extraction * (1 - restore), focus: state.focus * (1 - cameraBlend), blend, unzoom, cameraBlend, cameraTimeline, timeline: t, done: state.elapsed >= duration };
 }
 
 // Sample the same timeline curve for the canvas's viewport transition. WAAPI
@@ -44,32 +44,34 @@ export function createPageReturnFrames() {
   });
 }
 
-// The box and its contents return sooner than the camera, while beginning at
-// their actual previous position so an interrupted inspection stays smooth.
-export function returnBoxOffset(start, timeline) {
-  const progress=Math.max(0,Math.min(1,timeline/.65));
-  return progress===1?0:start*(1-easeInOutSine(progress));
+// Bring the box into view before the camera finishes. Use this same progress
+// for the raised comic so the rim cannot catch up to it while the box rises.
+export function returnBoxLift(timeline, cameraTimeline, needsRestore) {
+  const travel = needsRestore ? (timeline - .2) / .55 : cameraTimeline;
+  return easeInOutSine(travel / .65);
 }
 
-// Start bringing the box up during the latter part of the sleeve restoration,
-// while the viewport and camera still wait for the film to close.
-export function returnBoxTimeline(timeline, cameraTimeline, needsRestore) {
-  return needsRestore ? Math.max(0,Math.min(1,(timeline-.2)/.55)) : cameraTimeline;
+export function mixReturn(start, end, progress) {
+  return start * (1 - progress) + end * progress;
 }
 
-// The saved camera is already in world space, including any partial focus.
-// Cancel the second focus blend at the start, then remove that correction as
-// the stable wide view takes over.
-export function correctReturnCameraComponent(current, start, overview, focus, unzoom) {
-  return current+(start-overview)*(1-focus)*(1-unzoom);
+// Blend in orbit coordinates: a Cartesian blend changes the apparent turn
+// rate as the camera's distance changes. Widening the sleeve framing starts
+// the turn, and the collection pull-out continues it on the same curve.
+export function sampleReturnOrbit(start, rest, wideDistance, unzoom, pullOut) {
+  const turn = wideDistance === undefined ? pullOut : mixReturn(unzoom * .18, 1, pullOut);
+  const wide = wideDistance === undefined ? start.radius : mixReturn(start.radius, wideDistance, unzoom);
+  return {
+    theta: mixReturn(start.theta, rest.theta, turn),
+    phi: mixReturn(start.phi, rest.phi, turn),
+    radius: mixReturn(wide, rest.radius, pullOut),
+  };
 }
 
-// All inspection transforms and the raised comic height use the same eased
-// timeline progress. Supplying the current raised target also permits the box to
-// finish opening while the comic is returning.
-export function interpolateReturnPose(start, target, blend) {
-  const mix = (a, b) => a + (b - a) * blend;
-  return { turn: mix(start.turn, target.turn), tilt: mix(start.tilt, target.tilt), zoom: mix(start.zoom, target.zoom), height: mix(start.height, target.height), float: mix(start.float, 0) };
+// Keep the book's lower edge above the rising rim even when the inspection
+// scale and rotation still make it taller than it is in the resting pose.
+export function returnComicHeight(start, rest, lift, rim, bottomOffset, clearance) {
+  return Math.max(mixReturn(start, rest, lift), rim + clearance - bottomOffset);
 }
 
 // Use the extraction rig's own staged thresholds in reverse. The sleeve
@@ -88,15 +90,6 @@ export function sampleSleeveRig(out) {
     bagOpen:smooth(0,.13,out)*(1-smooth(.88,1,out)),
     bookFocus:smooth(.74,.85,out)
   };
-}
-
-// A slow unrelated spring or effect must not keep the collection locked after
-// the return itself has finished. Give it a short grace period to settle.
-export function finishReturnIfReady(state, stage, settled, dt) {
-  if (!state?.complete || state.finished) return false;
-  state.settleWait = (state.settleWait || 0) + Math.max(0, dt);
-  if (!settled && state.settleWait < .2) return false;
-  return releaseReturn(state, stage);
 }
 
 export function releaseReturn(state, stage) {

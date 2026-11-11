@@ -1,13 +1,13 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createReturnMotion,advanceReturnMotion,interpolateReturnPose,sampleSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxOffset,returnBoxTimeline,correctReturnCameraComponent,finishReturnIfReady,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
+import {createReturnMotion,advanceReturnMotion,sampleSleeveRig,createStageReturnFrames,createPageReturnFrames,returnBoxLift,returnComicHeight,sampleReturnOrbit,mixReturn,releaseReturn,shouldSkipSceneFrame,scheduleReturnWatchdog} from './return-motion.js';
 
 test('slide-out overlaps the sleeve and the camera in one motion',()=>{
   const state=createReturnMotion(1,1,true);
   assert.equal(state.duration,2.2);
   let frame=advanceReturnMotion(state,.25);
   assert.equal(frame.focus,1,'camera waits for the zoom-out to get going');
-  assert.ok(frame.extraction>0&&frame.extraction<1);assert.ok(frame.unzoom>.3);
+  assert.ok(frame.extraction>0&&frame.extraction<1);assert.ok(frame.unzoom>.2);
   frame=advanceReturnMotion(state,.8);
   assert.ok(frame.focus<1&&frame.extraction>0,'camera starts while the film is still closing');
   frame=advanceReturnMotion(state,1.5);
@@ -55,50 +55,68 @@ test('nothing holds still mid-return and no frame jumps',()=>{
 });
 
 test('box rises while the sleeve closes and the camera begins',()=>{
-  const state=createReturnMotion(1,1,true), start=-7;
-  assert.equal(returnBoxOffset(start,returnBoxTimeline(0,0,true)),start);
+  const state=createReturnMotion(1,1,true);
+  const start=advanceReturnMotion(state,0);
+  assert.equal(returnBoxLift(start.timeline,start.cameraTimeline,true),0);
   const frame=advanceReturnMotion(state,1.05);
-  const boxTimeline=returnBoxTimeline(frame.timeline,frame.cameraTimeline,true);
   assert.ok(frame.cameraTimeline>0&&frame.cameraTimeline<.5,'camera has started');
   assert.ok(sampleSleeveRig(frame.extraction).bagOpen>0,'film is still closing');
-  assert.ok(returnBoxOffset(start,boxTimeline)>start/2,'box is already coming into view');
-  assert.equal(returnBoxTimeline(.3,.3,false),.3,'ordinary returns keep their existing timing');
+  assert.ok(returnBoxLift(frame.timeline,frame.cameraTimeline,true)>.5,'box is already coming into view');
 });
 
-test('return preserves the world camera when inspection focus is incomplete',()=>{
-  const start=9, overview=5, focus=.35, wide=13;
-  const blended=overview+(start-overview)*focus;
-  assert.equal(correctReturnCameraComponent(blended,start,overview,focus,0),start);
-  assert.equal(correctReturnCameraComponent(wide,start,overview,focus,1),wide);
-  assert.equal(correctReturnCameraComponent(blended,start,overview,1,0),blended);
-  let previous=start;
-  for(let i=1;i<=60;i++){
-    const unzoom=i/60, inspection=start+(wide-start)*unzoom;
-    const current=correctReturnCameraComponent(overview+(inspection-overview)*focus,start,overview,focus,unzoom);
-    assert.ok(Math.abs(current-previous)<.1,`camera jumps at sample ${i}`);
-    previous=current;
+test('the orbit widens and turns on the same curve in each camera phase',()=>{
+  const start={theta:0,phi:Math.PI/2,radius:4};
+  const rest={theta:.52,phi:1.33,radius:15};
+  const wide=9;
+  for(const needsRestore of [true,false]){
+    const state=createReturnMotion(1,Number(needsRestore),needsRestore);
+    for(let time=0;time<=state.duration*60;time++){
+      const frame=advanceReturnMotion(state,time===0?0:1/60);
+      const orbit=sampleReturnOrbit(start,rest,needsRestore?wide:undefined,frame.unzoom,frame.cameraBlend);
+      const wideYaw=needsRestore?.18*rest.theta*frame.unzoom:0;
+      const widePitch=needsRestore?mixReturn(start.phi,rest.phi,.18*frame.unzoom):start.phi;
+      const wideRadius=needsRestore?mixReturn(start.radius,wide,frame.unzoom):start.radius;
+      const pullOut=(orbit.radius-wideRadius)/(rest.radius-wideRadius);
+      assert.ok(Math.abs((orbit.theta-wideYaw)/(rest.theta-wideYaw)-pullOut)<1e-9);
+      assert.ok(Math.abs((orbit.phi-widePitch)/(rest.phi-widePitch)-pullOut)<1e-9);
+      if(needsRestore&&frame.cameraBlend===0){
+        assert.ok(Math.abs(orbit.theta/(rest.theta*.18)-(orbit.radius-start.radius)/(wide-start.radius))<1e-9);
+      }
+    }
+    const end=advanceReturnMotion(state,1);
+    assert.deepEqual(sampleReturnOrbit(start,rest,needsRestore?wide:undefined,end.unzoom,end.cameraBlend),rest);
   }
 });
 
-test('60 fps return frames stay continuous through overlap and final handoff',()=>{
-  const state=createReturnMotion(1,1,true);
-  const start={turn:Math.PI+.08,tilt:.8,zoom:1,height:1.42,float:.065};
-  const target={turn:.08,tilt:-.025,zoom:0,height:4.55};
-  const rig=sampleSleeveRig(1);
-  let previous={focus:1,extraction:1,...start,...rig}, final;
-  for(let i=0;i<140;i++){
-    const frame=advanceReturnMotion(state,1/60), pose=interpolateReturnPose(start,target,frame.blend);
-    pose.zoom=start.zoom*(1-frame.unzoom);
-    const current={focus:frame.focus,extraction:frame.extraction,...pose,...sampleSleeveRig(frame.extraction)};
-    // The framing rig applies bookFocus together with the zoom.
-    current.bookFocus*=pose.zoom;
-    const limits={focus:.09,extraction:.08,zoom:.19,float:.01,pull:.2,settle:.2,free:.2,bagOpen:.23,bookFocus:.23,turn:.14,tilt:.04,height:.14};
-    for(const [key,limit] of Object.entries(limits))assert.ok(Math.abs(current[key]-previous[key])<limit,`${key} jumps at frame ${i}`);
-    previous=current;final=frame;
+test('the lower edge never dips below the resting clearance as the rim rises',()=>{
+  const rim=2.913, restHeight=4.55, restBottom=-1.38, clearance=restHeight+restBottom-rim;
+  for(const needsRestore of [true,false]){
+    const state=createReturnMotion(1,Number(needsRestore),needsRestore);
+    let previous=3.2;
+    for(let i=0;i<=Math.ceil(state.duration*60);i++){
+      const frame=advanceReturnMotion(state,i===0?0:1/60);
+      const lift=returnBoxLift(frame.timeline,frame.cameraTimeline,needsRestore);
+      const movingRim=rim+mixReturn(-7,0,lift);
+      const bottom=mixReturn(-1.82,restBottom,frame.cameraBlend);
+      const height=returnComicHeight(3.2,restHeight,lift,movingRim,bottom,clearance);
+      assert.ok(height+bottom-movingRim>=clearance-1e-9,`rim catches the book at frame ${i}`);
+      assert.ok(Math.abs(height-previous)<.19,`height jumps at frame ${i}`);
+      previous=height;
+    }
+    assert.ok(Math.abs(previous-restHeight)<1e-9);
   }
-  assert.equal(final.done,true);
-  const handoff={focus:0,extraction:0,...target,float:0,...sampleSleeveRig(0)};
-  for(const key of Object.keys(handoff))assert.ok(Math.abs(previous[key]-handoff[key])<1e-9,`${key} jumps on handoff`);
+});
+
+test('the final motion sample stays exact even when another frame ticks',()=>{
+  for(const needsRestore of [true,false]){
+    const state=createReturnMotion(.85,Number(needsRestore),needsRestore);
+    const final=advanceReturnMotion(state,3);
+    assert.equal(final.done,true);
+    assert.deepEqual(final,advanceReturnMotion(state,1/60));
+    for(const key of ['blend','unzoom','cameraBlend','cameraTimeline','timeline'])assert.equal(final[key],1);
+    assert.equal(final.focus,0);
+    assert.equal(final.extraction,0);
+  }
 });
 
 test('compact return can still override the timeline duration',()=>{
@@ -129,56 +147,18 @@ test('page controls fade in continuously over the first half of the return',()=>
   }
 });
 
-test('box and lid return early without changing their starting or final offsets',()=>{
-  const start=-7;
-  assert.equal(returnBoxOffset(start,0),start);
-  assert.ok(returnBoxOffset(start,.4)>start/2,'box is already more than halfway back');
-  assert.equal(returnBoxOffset(start,.65),0);
-  assert.equal(returnBoxOffset(start,1),0);
-  let previous=start;
-  for(let i=1;i<=60;i++){
-    const offset=returnBoxOffset(start,i/60);
-    assert.ok(offset>=previous && offset-previous<.6,`box jumps on frame ${i}`);
-    previous=offset;
-  }
-});
-
-test('return unlocks even when another scene component never settles',()=>{
+test('a momentarily settled return continues ticking until the last frame unlocks it',()=>{
   const stage={dataset:{returning:'true'}};
   let resolved=0;
-  const state={motion:createReturnMotion(1,1,true),complete:false,resolve:()=>{resolved++;}};
-  for(let frame=0;frame<160&&stage.dataset.returning==='true';frame++){
-    state.complete=advanceReturnMotion(state.motion,1/60).done;
-    finishReturnIfReady(state,stage,false,1/60);
-  }
-  assert.equal(stage.dataset.returning,'false');
-  assert.equal(resolved,1);
-  assert.equal(finishReturnIfReady(state,stage,true,1/60),false);
-  assert.equal(resolved,1);
-});
-
-test('a momentarily settled return continues ticking until it unlocks',()=>{
-  const stage={dataset:{returning:'true'}};
-  let resolved=0;
-  const state={motion:createReturnMotion(1,0,false),complete:false,resolve:()=>{resolved++;}};
-  // Simulate the render loop becoming clean and settled before the last frame.
+  const state={motion:createReturnMotion(1,0,false),resolve:()=>{resolved++;}};
   for(let frame=0;frame<80&&stage.dataset.returning==='true';frame++){
     if(shouldSkipSceneFrame(true,false,true,0,false))continue;
-    state.complete=advanceReturnMotion(state.motion,1/60).done;
-    finishReturnIfReady(state,stage,true,1/60);
+    if(advanceReturnMotion(state.motion,1/60).done)releaseReturn(state,stage);
   }
   assert.equal(stage.dataset.returning,'false');
   assert.equal(resolved,1);
+  assert.equal(releaseReturn(state,stage),false);
   assert.equal(shouldSkipSceneFrame(false,false,true,0,false),true);
-});
-
-test('return unlocks as soon as the completed scene settles',()=>{
-  const stage={dataset:{returning:'true'}};
-  let resolved=false;
-  const state={complete:true,resolve:()=>{resolved=true;}};
-  assert.equal(finishReturnIfReady(state,stage,true,1/60),true);
-  assert.equal(stage.dataset.returning,'false');
-  assert.equal(resolved,true);
 });
 
 test('watchdog unlocks an offscreen return when no animation frames arrive',()=>{

@@ -11,11 +11,13 @@ import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
 import { mobileControlsQuery } from './ruler-control.js?v=19.1';
-import { createReturnMotion, advanceReturnMotion, easeInOutSine, interpolateReturnPose, sampleSleeveRig, returnBoxOffset, returnBoxTimeline, correctReturnCameraComponent, finishReturnIfReady, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.9';
+import { createReturnMotion, advanceReturnMotion, easeInOutSine, sampleSleeveRig, returnBoxLift, mixReturn, sampleReturnOrbit, returnComicHeight, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.11';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
 const damp = (a,b,dt,s=7) => THREE.MathUtils.damp(a,b,s,dt);
+const raisedHeight = 3.13;
+const closeUpHeight = 3.2;
 
 function canvasTexture(w,h,draw) {
   const c=document.createElement('canvas'); c.width=w;c.height=h;
@@ -299,22 +301,76 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     io.disconnect();
     if (warmupHandle) (globalThis.cancelIdleCallback || clearTimeout)(warmupHandle);
   });
+  const startOrbit=new THREE.Spherical(), overviewOrbit=new THREE.Spherical(), returnOrbit=new THREE.Spherical();
+  const bookReturnBounds=new THREE.Box3();
+  const bookInverse=new THREE.Matrix4(), bookTransform=new THREE.Matrix4(), bookPartTransform=new THREE.Matrix4();
+  const restingCardRotation=new THREE.Euler(), restingCardQuaternion=new THREE.Quaternion();
+  const origin=new THREE.Vector3(), unitScale=new THREE.Vector3(1,1,1);
+  const cardHeight=(card,active,reveal)=>SLOT_HEIGHT+(active&&!card.seatAfterFiling?reveal*raisedHeight:0);
+  function slotRotation(rotation,index,amount){
+    rotation.set(SLOT_LEAN*(1-amount)+amount*.025,amount*.33,(index%3-1)*.009*(1-amount)-.025*amount);
+  }
+  function bookBoundsInLocalSpace(book){
+    book.updateWorldMatrix(true,true);
+    bookInverse.copy(book.matrixWorld).invert();
+    const bounds=[];
+    book.traverse(part=>{
+      if(!part.isMesh)return;
+      if(!part.geometry.boundingBox)part.geometry.computeBoundingBox();
+      bounds.push({
+        box:part.geometry.boundingBox,
+        transform:new THREE.Matrix4().multiplyMatrices(bookInverse,part.matrixWorld),
+      });
+    });
+    return bounds;
+  }
+  function bookBottom(bounds,transform){
+    let bottom=Infinity;
+    for(const part of bounds){
+      bookPartTransform.multiplyMatrices(transform,part.transform);
+      bottom=Math.min(bottom,bookReturnBounds.copy(part.box).applyMatrix4(bookPartTransform).min.y);
+    }
+    return bottom;
+  }
+  function currentBookBottom(card,bounds){
+    card.book.updateMatrix();
+    bookTransform.compose(origin,card.group.quaternion,card.group.scale).multiply(card.book.matrix);
+    return bookBottom(bounds,bookTransform);
+  }
+  function returnLayout(state,blend,turn){
+    const start=state.layout;
+    openProgress=mixReturn(start.open,Number(opened),blend);
+    lidMotion.progress=mixReturn(start.lid,Number(opened),blend);
+    lidMotion.velocity=0;
+    lidSide=mixReturn(start.side,wantedLidSide,blend);
+    lidTilt=mixReturn(start.tilt,wantedLidTilt,blend);
+    yaw=mixReturn(start.yaw,desiredYaw,turn);
+    pitch=mixReturn(start.pitch,desiredPitch,turn);
+  }
+  const fieldOfView=(width,height)=>mobileView.matches||width/height<.83?40:33;
   function update(now){
     frame=requestAnimationFrame(update);const elapsed=Math.max(0,(now-last)/1000),dt=Math.min(elapsed,.035);last=now;
     if(document.hidden||!visible)return;
     const stickersMoving=stickerSystem.tick(dt,reduced);
     if(shouldSkipSceneFrame(Boolean(returnState||packFiling),dirty,wasSettled,floatStrength,stickersMoving))return;
-    openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
-    if(returnState){
-      // Advance the return on real time (capped for long stalls) so slow GPUs
-      // keep its intended length instead of stretching it frame by frame.
-      const position=advanceReturnMotion(returnState.motion,reduced?10:Math.min(elapsed,.1));
-      focusProgress=position.focus;unwrapProgress=position.extraction;returnState.blend=position.blend;returnState.unzoom=position.unzoom;returnState.cameraTimeline=position.cameraTimeline;
+    const position=returnState?advanceReturnMotion(returnState.motion,reduced?10:Math.min(elapsed,.1)):null;
+    if(position){
+      focusProgress=position.focus;
+      unwrapProgress=position.extraction;
+      inspectYaw=mixReturn(returnState.startYaw,wantedInspectYaw,position.blend);
+      inspectPitch=mixReturn(returnState.startPitch,wantedInspectPitch,position.blend);
+      detailProgress=mixReturn(returnState.startDetail,wantedDetail,position.unzoom);
+      floatStrength=mixReturn(returnState.startFloat,0,position.blend);
+      returnLayout(returnState,position.blend,position.cameraBlend);
       returnState.onProgress?.(position.timeline,position.cameraTimeline);
-      const pose=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:returnState.startPose.height},position.blend);
-      inspectYaw=pose.turn;inspectPitch=pose.tilt;detailProgress=lerp(returnState.startPose.zoom,wantedDetail,position.unzoom);floatStrength=pose.float;
-      if(position.done)returnState.complete=true;
+      // WAAPI has just resized the canvas's container. Read that size before
+      // fitting the camera so the final frame cannot use an older projection.
+      resize();
     }else{
+      openProgress=reduced?Number(opened):damp(openProgress,Number(opened),dt,4.5);
+      lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);
+      lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
+      yaw=damp(yaw,desiredYaw,dt,5);pitch=damp(pitch,desiredPitch,dt,5);
       focusProgress=reduced?Number(inspecting):damp(focusProgress,Number(inspecting),dt,5);
       if(reduced){unwrapProgress=Number(unwrapped);unwrapMotion=null;}
       else if(unwrapMotion){
@@ -327,13 +383,12 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       inspectYaw=reduced?wantedInspectYaw:damp(inspectYaw,wantedInspectYaw,dt,8);
       inspectPitch=reduced?wantedInspectPitch:damp(inspectPitch,wantedInspectPitch,dt,8);
     }
-    lidSide=reduced?wantedLidSide:damp(lidSide,wantedLidSide,dt,5);lidTilt=reduced?wantedLidTilt:damp(lidTilt,wantedLidTilt,dt,5);
     const focus=returnState?focusProgress:smooth(0,1,focusProgress), extraction=cards[selected].blind?0:unwrapProgress;
     const sleeveRig=sampleSleeveRig(extraction);
     // Keep one mobile canvas and field of view throughout opening. Make room
     // for the 56px ruler + 8px gap inside the camera, without resizing WebGL.
     const rail=mobileView.matches&&!decorating?64*smooth(0,1,openProgress)*(1-focus):0;
-    camera.fov=mobileView.matches?40:viewportWidth/viewportHeight<.83?40:33;
+    camera.fov=position?mixReturn(returnState.startFov,fieldOfView(returnState.viewport.width,returnState.viewport.height),position.cameraBlend):fieldOfView(viewportWidth,viewportHeight);
     camera.setViewOffset(Math.max(1,viewportWidth-rail),viewportHeight,0,0,viewportWidth,viewportHeight);
     // Steady the book as soon as its dedicated close-up is requested, instead
     // of carrying the Front/Back float through the whole extraction animation.
@@ -343,12 +398,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     if(inspecting&&!reduced)floatTime+=dt;
     // Keep the lid aside until every raised comic is back below the rim.
     const lidWanted=opened||cards.some(c=>c.y>1.52)?1:0;
-    advanceLidMotion(lidMotion,reduced?Number(opened):lidWanted,dt,reduced);lidProgress=lidMotion.progress;
+    if(!position)advanceLidMotion(lidMotion,reduced?Number(opened):lidWanted,dt,reduced);
+    lidProgress=lidMotion.progress;
     boxDetails.setLidShadow(1-smooth(0,.12,lidProgress));
     const lidT=lidProgress,reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-    const timeline=returnState?returnBoxTimeline(clamp(returnState.motion.elapsed/returnState.motion.duration,0,1),returnState.cameraTimeline,returnState.motion.needsRestore):0;
-    const boxOffset=returnState?returnBoxOffset(returnState.startBoxOffset,timeline):-7*focus;
-    const boxVisible=focus<.995||(returnState&&timeline>.22);
+    const lift=position?returnBoxLift(position.timeline,position.cameraTimeline,returnState.motion.needsRestore):0;
+    const boxOffset=position?mixReturn(returnState.startBoxOffset,0,lift):-7*focus;
+    const boxVisible=focus<.995||lift>.25;
     body.position.y=boxOffset;body.visible=boxVisible;
     lid.visible=boxVisible;
     const pose=lidPose(THREE,lidT,lidSide,lidTilt);
@@ -361,19 +417,17 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     let bagsMoving=false;
     cards.forEach((card,i)=>{
       if(packFiling&&i>=packFiling.previousSlots.length)return;
-      const active=i===selected, keepSeated=card.seatAfterFiling, lift=active&&!keepSeated?reveal:0;
-      const target=SLOT_HEIGHT+lift*3.13;
-      if(active&&returnState){
-        card.y=interpolateReturnPose(returnState.startPose,{turn:wantedInspectYaw,tilt:wantedInspectPitch,zoom:wantedDetail,height:target},returnState.blend).height;card.v=0;
+      const active=i===selected, keepSeated=card.seatAfterFiling;
+      const target=cardHeight(card,active,reveal);
+      if(position){
+        card.y=mixReturn(returnState.cardHeights[i],target,position.blend);card.v=0;
       }else if(reduced){card.y=target;card.v=0;}else{card.v+=(target-card.y)*155*dt;card.v*=Math.exp(-20*dt);card.y+=card.v*dt;}
       card.group.visible=active||boxVisible;
-      card.group.position.y=active?lerp(card.y,3.2,focus)+(keepSeated?boxOffset*(1-focus):0):card.y+boxOffset;
-      const amount=clamp((card.y-SLOT_HEIGHT)/3.13,0,1);
-      card.group.position.z=THREE.MathUtils.lerp(card.baseZ,1.12,amount);
-      card.group.position.x=THREE.MathUtils.lerp(card.baseX,.2,amount);
-      card.group.rotation.y=amount*.33;
-      card.group.rotation.x=SLOT_LEAN*(1-amount)+amount*.025;
-      card.group.rotation.z=(i%3-1)*.009*(1-amount)-.025*amount;
+      card.group.position.y=active?lerp(card.y,closeUpHeight,focus)+(keepSeated?boxOffset*(1-focus):0):card.y+boxOffset;
+      const amount=clamp((card.y-SLOT_HEIGHT)/raisedHeight,0,1);
+      card.group.position.z=lerp(card.baseZ,1.12,amount);
+      card.group.position.x=lerp(card.baseX,.2,amount);
+      slotRotation(card.group.rotation,i,amount);
       card.group.scale.setScalar(1+focus*.32*(active?1:0));
       if(card.blind){bagsMoving=card.blind.tick(packFrame,reduced,active?focus:0,mobileView.matches,1-smooth(0,.45,Math.max(amount,active?focus:0)))||bagsMoving;}
       else poseComicSleeve(card,active?sleeveRig:restingSleeve);
@@ -385,7 +439,20 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
         card.group.rotation.z=lerp(card.group.rotation.z,0,focus);
       }
     });
-    yaw=damp(yaw,desiredYaw,dt,5);pitch=damp(pitch,desiredPitch,dt,5);
+    const activeCard=cards[selected],freeFloat=smooth(.85,1,extraction);
+    const floatY=Math.sin(floatTime*Math.PI*2/4.8)*.065*floatStrength;
+    const floatRoll=Math.sin(floatTime*Math.PI*2/6.4)*.007*floatStrength;
+    const returningBook=position&&returnState.bookBounds;
+    if(returningBook&&!position.done){
+      // Include the residual float in the lower edge measurement. Otherwise
+      // it can put a corner back below the rim just before the last frame.
+      activeCard.group.rotation.z+=floatRoll*(1-freeFloat);
+      activeCard.book.position.y+=floatY*freeFloat/activeCard.group.scale.y;
+      activeCard.book.rotation.z+=floatRoll*freeFloat;
+      const bottom=currentBookBottom(activeCard,returningBook);
+      const clearance=mixReturn(returnState.startClearance,returnState.restClearance,lift);
+      activeCard.group.position.y=returnComicHeight(returnState.startHeight,cardHeight(activeCard,true,1),lift,boxOffset+bodyLocalBounds.max.y,bottom,clearance);
+    }
     world.rotation.y=(-.13+yaw)*(1-focus);world.rotation.x=pitch*(1-focus);
     scene.environmentRotation.y=yaw*.32;
     world.updateWorldMatrix(true,true);
@@ -421,7 +488,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       for(const point of overviewCorners){relative.copy(point).sub(overviewTarget);const depth=relative.dot(overviewDirection);distance=Math.max(distance,depth+Math.abs(relative.dot(overviewRight))*1.1/tanH,depth+Math.abs(relative.dot(overviewUp))*1.08/tanV);}
       overviewCamera.copy(overviewTarget).addScaledVector(overviewDirection,distance);
     }
-    if(focus>.0001){
+    if(focus>.0001||(position&&returnState.motion.needsRestore&&!returnState.wideTarget)){
       // Frame the actual animated bounds, including the comic at the top of its pull.
       cards[selected].group.updateWorldMatrix(true,true);
       if(cards[selected].blind)cards[selected].blind.bounds(inspectionBounds);else inspectionBounds.setFromObject(cards[selected].group);
@@ -430,8 +497,8 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       // During a zoomed slide-out return, capture a stable wide view once. The
       // extracted comic rises before descending, so include that peak pose in
       // the fit instead of chasing the changing bounds and zooming in and out.
-      const stableUnzoom=returnState?.motion.needsRestore&&returnState.startPose.zoom>.001&&cards[selected].book;
-      if(stableUnzoom&&!returnState.wideCamera){
+      const stableUnzoom=returnState?.motion.needsRestore&&cards[selected].book;
+      if(stableUnzoom&&!returnState.wideTarget){
         const card=cards[selected];
         unzoomBounds.copy(inspectionBounds);
         if(extraction>.56){
@@ -442,7 +509,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
         returnState.wideTarget=unzoomBounds.getCenter(new THREE.Vector3());
         const size=unzoomBounds.getSize(new THREE.Vector3()),tanV=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2),tanH=tanV*camera.aspect;
         const distance=Math.max(size.x*.56/tanH,size.y*.56/tanV)+unzoomBounds.max.z-returnState.wideTarget.z+.08;
-        returnState.wideCamera=returnState.wideTarget.clone();returnState.wideCamera.z+=distance;
+        returnState.wideDistance=distance;
       }
       if(bookFocus>0){
         bookBounds.setFromObject(cards[selected].book);
@@ -455,21 +522,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       const extentY=Math.max(Math.abs(inspectionBounds.min.y-inspectionCenter.y),Math.abs(inspectionBounds.max.y-inspectionCenter.y));
       const distance=Math.max(extentX*1.12/tanH,extentY*1.12/tanV)+inspectionBounds.max.z-inspectionCenter.z+.08;
       inspectionCamera.copy(inspectionCenter);inspectionCamera.z+=distance;
-      if(packFiling&&returnState){
-        inspectionCenter.copy(returnState.startTarget);inspectionCamera.copy(returnState.startCamera);
-      }
-      if(stableUnzoom){
-        inspectionCenter.copy(returnState.startTarget).lerp(returnState.wideTarget,returnState.unzoom);
-        inspectionCamera.copy(returnState.startCamera).lerp(returnState.wideCamera,returnState.unzoom);
-      }
-      camera.position.copy(overviewCamera).lerp(inspectionCamera,focus);
-      cameraTarget.copy(overviewTarget).lerp(inspectionCenter,focus);
-      if(stableUnzoom){
-        for(const axis of ['x','y','z']){
-          camera.position[axis]=correctReturnCameraComponent(camera.position[axis],returnState.startCamera[axis],overviewCamera[axis],focus,returnState.unzoom);
-          cameraTarget[axis]=correctReturnCameraComponent(cameraTarget[axis],returnState.startTarget[axis],overviewTarget[axis],focus,returnState.unzoom);
-        }
-      }
+      if(!position){camera.position.copy(overviewCamera).lerp(inspectionCamera,focus);cameraTarget.copy(overviewTarget).lerp(inspectionCenter,focus);}
       // Set the bag and its board aside in the comic close-up. Offset in screen
       // space so they cannot obscure the cover or enlarge its camera framing.
       if(bookFocus>0){
@@ -479,16 +532,29 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
         sleeveOffset.set(parkX*bookFocus/cards[selected].group.scale.x,0,0).applyQuaternion(inverseCardRotation);
         cards[selected].sleeve.position.add(sleeveOffset);
       }
-    }else{camera.position.copy(overviewCamera);cameraTarget.copy(overviewTarget);}
+    }else if(!position){camera.position.copy(overviewCamera);cameraTarget.copy(overviewTarget);}
+    if(position){
+      const {startTarget,wideTarget,wideDistance}=returnState;
+      if(position.done){
+        cameraTarget.copy(overviewTarget);camera.position.copy(overviewCamera);
+      }else{
+        cameraTarget.copy(startTarget);
+        if(wideTarget)cameraTarget.lerp(wideTarget,position.unzoom);
+        cameraTarget.lerp(overviewTarget,position.cameraBlend);
+        overviewOrbit.setFromVector3(relative.copy(overviewCamera).sub(overviewTarget));
+        const {theta,phi,radius}=sampleReturnOrbit(startOrbit,overviewOrbit,wideDistance,position.unzoom,position.cameraBlend);
+        returnOrbit.set(radius,phi,theta);
+        camera.position.setFromSpherical(returnOrbit).add(cameraTarget);
+      }
+    }
     camera.lookAt(cameraTarget);
-    // Apply idle movement after fitting the camera: otherwise camera tracking
-    // cancels the float. Each frame resets these transforms before measuring.
-    const floatY=Math.sin(floatTime*Math.PI*2/4.8)*.065*floatStrength;
-    const floatRoll=Math.sin(floatTime*Math.PI*2/6.4)*.007*floatStrength;
-    const activeCard=cards[selected],freeFloat=smooth(.85,1,extraction);
-    activeCard.group.position.y+=floatY*(1-freeFloat);
-    activeCard.group.rotation.z+=floatRoll*(1-freeFloat);
-    if(activeCard.book){activeCard.book.position.y+=floatY*freeFloat/activeCard.group.scale.y;activeCard.book.rotation.z+=floatRoll*freeFloat;}
+    // In inspection, apply idle movement after fitting so the camera doesn't
+    // track it. The return already includes it in its rim clearance.
+    if(!returningBook){
+      activeCard.group.position.y+=floatY*(1-freeFloat);
+      activeCard.group.rotation.z+=floatRoll*(1-freeFloat);
+      if(activeCard.book){activeCard.book.position.y+=floatY*freeFloat/activeCard.group.scale.y;activeCard.book.rotation.z+=floatRoll*freeFloat;}
+    }
     halo.visible=focus>.001;
     if(halo.visible){
       activeCard.group.updateWorldMatrix(true,true);
@@ -500,9 +566,10 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     stage.dataset.idleMotion=inspecting&&!reduced&&floatStrength>.001?'floating':'still';
     stage.dataset.halo=halo.visible?'on':'off';
     const settled=Math.abs(lidProgress-Number(opened))<.0001&&Math.abs(lidSide-wantedLidSide)<.0001&&Math.abs(lidTilt-wantedLidTilt)<.0001&&Math.abs(openProgress-Number(opened))<.0001&&cards.every(c=>Math.abs(c.v)<.001)&&Math.abs(yaw-desiredYaw)<.0001&&Math.abs(pitch-desiredPitch)<.0001&&Math.abs(focusProgress-Number(inspecting))<.0001&&Math.abs(unwrapProgress-Number(unwrapped))<.0001&&Math.abs(inspectYaw-wantedInspectYaw)<.0001&&Math.abs(inspectPitch-wantedInspectPitch)<.0001&&Math.abs(detailProgress-wantedDetail)<.0001&&!bagsMoving&&!packFiling;
-    stage.dataset.motionSettled=String(settled && (!returnState || returnState.complete));
-    if(finishReturnIfReady(returnState,stage,settled,dt)){
-      clearTimeout(returnState.watchdog);returnState=null;
+    stage.dataset.motionSettled=String(settled && (!position || position.done));
+    if(position?.done){
+      clearTimeout(returnState.watchdog);
+      releaseReturn(returnState,stage);returnState=null;
       // Render the final pose even if this is the last animated frame.
       dirty=true;
     }
@@ -598,21 +665,38 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     decorationFace(face){const views={front:[.66,0],right:[-.91,0],back:[-2.48,0],left:[2.23,0],lid:[.66,1.05]};[desiredYaw,desiredPitch]=views[face]??views.front;dirty=true;},
     reset(){wantedDetail=0;if(inspecting){wantedInspectYaw=.08;wantedInspectPitch=-.025;}else{desiredYaw=0;desiredPitch=0;wantedLidSide=1;wantedLidTilt=0;}dirty=true;},
     inspectView(view){if(!inspecting)return;wantedDetail=view==='comic'?1:0;wantedInspectYaw=view==='back'?Math.PI+.08:.08;wantedInspectPitch=-.025;dirty=true;},
-    focus(value,onProgress){
+    focus(value,onProgress,viewport){
       wantedDetail=0;inspecting=value;held=false;
       if(value){floatTime=0;floatStrength=0;unwrapped=false;unwrapProgress=0;unwrapMotion=null;wantedInspectYaw=.08;wantedInspectPitch=-.025;loadBack(selected);cards[selected].blind?.crinkle();dirty=true;scheduleReturnWarmup();return Promise.resolve();}
       const needsRestore=unwrapped||unwrapProgress>.001;unwrapped=false;unwrapMotion=null;wantedInspectYaw=.08;wantedInspectPitch=-.025;dirty=true;
       if(reduced){focusProgress=0;unwrapProgress=0;return Promise.resolve();}
       stage.dataset.motionSettled='false';stage.dataset.returning='true';
       return new Promise(resolve=>{
-        const startExtraction=unwrapProgress;
-        const state={motion:createReturnMotion(smooth(0,1,focusProgress),startExtraction,needsRestore),startBoxOffset:body.position.y,startCamera:camera.position.clone(),startTarget:cameraTarget.clone(),startPose:{turn:inspectYaw,tilt:inspectPitch,zoom:detailProgress,height:cards[selected].y,float:floatStrength},blend:0,cameraTimeline:0,complete:false,resolve,onProgress};
+        const card=cards[selected], bookBounds=card.book&&!card.seatAfterFiling?bookBoundsInLocalSpace(card.book):null;
+        const state={
+          motion:createReturnMotion(smooth(0,1,focusProgress),unwrapProgress,needsRestore),
+          layout:{open:openProgress,lid:lidProgress,side:lidSide,tilt:lidTilt,yaw,pitch},
+          cardHeights:cards.map(card=>card.y),startBoxOffset:body.position.y,
+          startYaw:inspectYaw,startPitch:inspectPitch,startDetail:detailProgress,startFloat:floatStrength,
+          startFov:camera.fov,startTarget:cameraTarget.clone(),viewport,bookBounds,resolve,onProgress,
+        };
+        startOrbit.setFromVector3(relative.copy(camera.position).sub(cameraTarget));
+        if(bookBounds){
+          slotRotation(restingCardRotation,selected,1);
+          restingCardQuaternion.setFromEuler(restingCardRotation);
+          bookTransform.compose(origin,restingCardQuaternion,unitScale).scale(card.book.scale);
+          const bottom=bookBottom(bookBounds,bookTransform);
+          const rim=bodyLocalBounds.max.y;
+          state.restClearance=cardHeight(card,true,1)+bottom-rim;
+          state.startClearance=Math.min(state.restClearance,card.group.position.y+currentBookBottom(card,bookBounds)-body.position.y-rim);
+          state.startHeight=card.group.position.y;
+        }
         returnState=state;
         state.watchdog=scheduleReturnWatchdog(state,stage,()=>{
-          // Preserve a coherent final pose for the next visible frame.
+          // Land on the same pose even when the return ran out of view.
+          returnLayout(state,1,1);
           focusProgress=0;unwrapProgress=0;detailProgress=0;inspectYaw=wantedInspectYaw;inspectPitch=wantedInspectPitch;floatStrength=0;
-          const reveal=smooth(.56,.96,openProgress)*smooth(.8,1,lidProgress);
-          cards[selected].y=SLOT_HEIGHT+(opened&&!cards[selected].seatAfterFiling?reveal*3.13:0);cards[selected].v=0;
+          cards.forEach((item,i)=>{item.y=cardHeight(item,i===selected,Number(opened));item.v=0;});
           returnState=null;dirty=true;wasSettled=false;stage.dataset.motionSettled='false';
         });
       });
