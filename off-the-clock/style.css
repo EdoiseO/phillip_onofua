@@ -73,3 +73,26 @@ body[data-reduced-motion=true] .viewer .open-cue{animation:none}
 .inspection[data-pack=row] .pull-list{position:absolute;top:0;inset-inline:0;z-index:4;pointer-events:none}
 .inspection[data-pack]:not([data-pack=""]) .inspection-footer p{min-height:3lh}
 @media(max-width:650px){.inspection[data-pack]:not([data-pack=""]) .inspection-footer p{min-height:2lh}}
+
+/* Keep the box and story in flow while the paperback display overlays them. */
+.experience{--collection-fade-duration:400ms}
+.collection-fade{
+  opacity:1;
+  visibility:visible;
+  transition:opacity var(--collection-fade-duration) ease-in-out,visibility 0s;
+}
+.collection-fade[inert]{
+  opacity:0;
+  visibility:hidden;
+  transition-delay:0s,var(--collection-fade-duration),0s,0s;
+}
+.collection-panel[inert]{transform:scale(.97)}
+.collection-panel{
+  transition-property:opacity,visibility,transform,grid-template-rows;
+  transition-duration:var(--collection-fade-duration),0s,var(--collection-fade-duration),var(--lid-layout-duration,700ms);
+  transition-timing-function:ease-in-out,linear,ease-in-out,cubic-bezier(.22,1,.36,1);
+}
+.collection-hint{display:grid}
+.collection-hint>span{grid-area:1/1}
+body[data-reduced-motion=true] .experience{--collection-fade-duration:0ms;--lid-layout-duration:0ms}
+@media(prefers-reduced-motion:reduce){.collection-fade{transition:none!important}}
