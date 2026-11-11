@@ -1,7 +1,7 @@
 import {comics as catalogue} from './comics.js?v=39.5';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.3';
-import {createBox} from './model.js?v=46.8';
-import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.9';
+import {createBox} from './model.js?v=46.9';
+import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.10';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
@@ -156,6 +156,7 @@ export function mountOffTheClock(stage, pageRoot) {
     setPullHover(-1);guide.hidden=true;cancelAnimationFrame(guideFrame);guideFrame=0;
     const from=stage.getBoundingClientRect();
     dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
+    const returnSize={width:stage.clientWidth,height:stage.clientHeight};
     // Keep the canvas in the same screen-space position as it leaves the dialog,
     // then carry it smoothly to the box. A normal-flow placeholder preserves
     // the page layout while the stage is temporarily fixed to the viewport.
@@ -180,7 +181,7 @@ export function mountOffTheClock(stage, pageRoot) {
       const time=progress*RETURN_DURATION_MS;
       if(stageAnimation)stageAnimation.currentTime=cameraProgress*RETURN_DURATION_MS;
       pageAnimations.forEach(animation=>{animation.currentTime=time;});
-    });
+    },returnSize);
     stage.setAttribute('aria-label','Comic box. Enter opens or closes. Arrow keys browse; I inspects. Drag the box to turn or drag the lid to move and tilt it. Click the raised cover for a closer look. Click the lid to close. Escape closes.');render();$('inspect-button').focus({preventScroll:true});
     if(returning)announce(filing?'Filing the three pulls.':'Returning to the box.');
     Promise.all([finished,filing]).then(([,pulls]) => {
@@ -382,7 +383,7 @@ export function mountOffTheClock(stage, pageRoot) {
           if (!await box.firstPaint || signal.aborted) return;
           await loadCompactsStyle();
           if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.23');
+          const { openCompactDisplays } = await import('./compacts-display.js?v=2.25');
           if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
         } catch (error) {
           if (signal.aborted) return;
