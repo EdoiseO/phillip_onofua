@@ -5,9 +5,8 @@ import {createStageReturnFrames, createPageReturnFrames} from './return-motion.j
 import {createPaperback} from './paperback.js?v=2.4';
 
 // The Compacts shelf is created only on request, after the short box paints.
-export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
+export function openCompactDisplays({pageRoot,onClose}){
   const dialog=pageRoot.querySelector('#compact-dialog'), mount=dialog.querySelector('#compact-canvas');
-  const comicsButton=pageRoot.querySelector('#collection-comics');
   const experience=pageRoot.querySelector('#experience');
   const compactsButton=pageRoot.querySelector('#collection-compacts');
   mount.dataset.returning='false';mount.dataset.picking='false';
@@ -28,7 +27,7 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
   let selected=-1,angle='front',inspectYaw=-.5,inspectPitch=-.06,drag=null,frame=0,cancelReturn=null,returnFade=null,pickupCleanup=null,uiCleanup=null,returning=false,closed=false,moving=false;
   let inspectionStarted = 0;
   const header=dialog.querySelector('.compact-header');
-  const title=header.querySelector('#compact-title'),note=dialog.querySelector('#compact-note'),views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return'),closeButton=dialog.querySelector('#compact-close');
+  const title=header.querySelector('#compact-title'),note=dialog.querySelector('#compact-note'),views=[...dialog.querySelectorAll('[data-view]')],bookButtons=[...dialog.querySelectorAll('[data-book]')],inspectControls=dialog.querySelector('.compact-inspect-controls'),backButton=dialog.querySelector('#compact-return');
   const noteLabel = note.querySelector('#compact-note-label');
   const shelfCue = () => `${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Click'} a book to take a closer look`;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -54,12 +53,11 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
   function updateDisplayUI(){
     const inspecting=selected>=0;
     const book=inspecting?compacts[selected]:null;
-    dialog.classList.toggle('compact-inspecting',inline&&inspecting);
-    if(inline)dialog.setAttribute('aria-modal',String(inspecting));
-    header.hidden=inline&&!inspecting;
+    dialog.classList.toggle('compact-inspecting',inspecting);
+    dialog.setAttribute('aria-modal',String(inspecting));
+    header.hidden=!inspecting;
     inspectControls.hidden=!inspecting;
     backButton.hidden=!inspecting;
-    closeButton.hidden=inspecting;
     bookButtons.forEach(button=>{button.hidden=inspecting;});
     if(book){
       title.textContent=book.title;
@@ -91,14 +89,14 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
   // the destination controls are prepared. They are inert and have no IDs.
   const uiElements=()=>[header,inspectControls,dialog.querySelector('.compact-book-controls'),note]
     .filter(element=>element&&!element.hidden);
-  function snapshotUI({embedded=false}={}){
+  function snapshotUI(){
     const snapshots=[];
     uiElements().forEach(element=>{
       const r=element.getBoundingClientRect();if(!r.width||!r.height)return;
       const copy=element.cloneNode(true);copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));copy.setAttribute('aria-hidden','true');copy.inert=true;dialog.append(copy);
       const animation=copy.animate([{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,boxSizing:'border-box',margin:'0',pointerEvents:'none',opacity:0},{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,boxSizing:'border-box',margin:'0',pointerEvents:'none',opacity:1}],{duration:1000,fill:'both'});animation.pause();
       const fixedStyles=[];
-      if(embedded&&element.matches('.compact-header')){
+      if(element.matches('.compact-header')){
         const headerStyles=[
           [element,copy,['display','padding','gridTemplateColumns']],
           [element.querySelector('h2'),copy.querySelector('h2'),['fontSize']],
@@ -148,12 +146,11 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
     const book=books[i].group,fromPosition=book.position.clone(),fromRotation=book.quaternion.clone(),fromScale=book.scale.clone();
     const fromCamera=camera.position.clone(),fromCameraRotation=camera.quaternion.clone(),fromFov=camera.fov,fromAspect=camera.aspect;
     const oldCanvas=renderer.domElement.getBoundingClientRect();
-    const snapshots=snapshotUI({embedded:inline});
+    const snapshots=snapshotUI();
     selected=i;angle='front';inspectYaw=-.5;inspectPitch=-.06;
     updateDisplayUI();
     const ui=startUISwap(snapshots);uiCleanup=()=>{ui.dispose();uiCleanup=null;};
-    let background=null;
-    if(inline){background=dialog.animate([{backgroundColor:'rgba(11,14,19,0)'},{backgroundColor:'#0b0e13'}],{duration:850,fill:'both'});background.pause();background.currentTime=0;}
+    const background=dialog.animate([{backgroundColor:'rgba(11,14,19,0)'},{backgroundColor:'#0b0e13'}],{duration:850,fill:'both'});background.pause();background.currentTime=0;
     // Compute the exact pose and framing build() will use without displaying
     // a rebuilt scene. The renderer takes the final layout before interpolation.
     book.position.set(0,0,0);book.rotation.set(inspectPitch,inspectYaw,0);root.updateMatrixWorld(true);
@@ -167,14 +164,14 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
     const canvasAnimation=renderer.domElement.animate([{transformOrigin:'top left',transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},{transformOrigin:'top left',transform:'translate(0,0) scale(1,1)'}],{duration:850,fill:'both'});canvasAnimation.pause();
     const restoreBookDepth=prioritizeCompactBook(book);
     returnFade=createCompactSceneFade(root,book);returnFade.set(1);
-    pickupCleanup=()=>{restoreBookDepth.dispose();canvasAnimation.cancel();background?.cancel();uiCleanup?.();returnFade?.dispose();returnFade=null;pickupCleanup=null;};
+    pickupCleanup=()=>{restoreBookDepth.dispose();canvasAnimation.cancel();background.cancel();uiCleanup?.();returnFade?.dispose();returnFade=null;pickupCleanup=null;};
     cancelReturn=startCompactPickup({
       onFrame({eased,travel,lift},progress){
         restoreBookDepth.set(eased>.05);returnFade.set(1-eased);
         interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,travel,{lift});book.scale.copy(fromScale);
         camera.position.lerpVectors(fromCamera,targetCamera.position,eased);camera.quaternion.slerpQuaternions(fromCameraRotation,targetCamera.quaternion,eased);
         camera.fov=fromFov+(toFov-fromFov)*eased;camera.aspect=fromAspect+(toAspect-fromAspect)*eased;camera.updateProjectionMatrix();
-        const time=eased*850;canvasAnimation.currentTime=time;if(background)background.currentTime=time;ui.set(progress);
+        const time=eased*850;canvasAnimation.currentTime=time;background.currentTime=time;ui.set(progress);
       },
       onComplete(){if(closed)return;pickupCleanup();cancelReturn=null;moving=false;mount.dataset.picking='false';build();views[0].focus();}
     });
@@ -187,28 +184,28 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
     const returningIndex=selected, book=books[returningIndex].group;
     // Keep the reading order near the display. Hidden book buttons reveal
     // themselves only when reached with the keyboard.
-    const focus=()=>{(inline?(pointerExit?experience:compactsButton):mount).focus({preventScroll:true});};
+    const focus=()=>{(pointerExit?experience:compactsButton).focus({preventScroll:true});};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){
       selected=-1;build();focus();return;
     }
     const fromRect=mount.getBoundingClientRect();
     const fromPosition=book.position.clone(),fromRotation=book.quaternion.clone(),fromScale=book.scale.clone();
     const fromCamera=camera.position.clone(),fromCameraRotation=camera.quaternion.clone(),fromFov=camera.fov;
-    const snapshots=snapshotUI({embedded:inline});
+    const snapshots=snapshotUI();
     // Put the destination back into normal flow so its final framing and
     // controls can be measured before the old canvas starts moving.
     selected=-1;build();
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone(),toScale=book.scale.clone();
     const toCamera=camera.position.clone(),toCameraRotation=camera.quaternion.clone(),toFov=camera.fov;
-    const layout=inline?animateBackToPage(fromRect):null;
+    const layout=animateBackToPage(fromRect);
     const ui=startUISwap(snapshots);
-    uiCleanup=()=>{ui.dispose();layout?.dispose();uiCleanup=null;};
+    uiCleanup=()=>{ui.dispose();layout.dispose();uiCleanup=null;};
     const shelfPath=createSpineShelfReturn(books[returningIndex],books[1-returningIndex],fromPosition,toPosition,fromRotation,toRotation);
     const cameraOffset=new THREE.Vector3();
     returnFade=createCompactSceneFade(root,book);
     moving=true;returning=true;mount.dataset.returning='true';
     const paint=(t,progress)=>{
-      layout?.set(progress);ui.set(progress);returnFade.set(t);
+      layout.set(progress);ui.set(progress);returnFade.set(t);
       shelfPath(t);
       book.scale.lerpVectors(fromScale,toScale,t);
       camera.position.lerpVectors(fromCamera,toCamera,t);
@@ -283,9 +280,8 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
     while (object && object.userData.compactIndex === undefined) object = object.parent;
     if (object) select(object.userData.compactIndex);
   }, eventOptions);
-  const close=()=>{if(onClose)onClose();else dialog.close();};dialog.querySelector('#compact-close').addEventListener('click',close,eventOptions);
-  dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(inline&&selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
-  function dispose({ restoreFocus = false } = {}) {
+  dialog.addEventListener('keydown',event=>{if(moving){if(event.key!=='Tab'&&event.key!=='Escape')event.preventDefault();return;}if(selected>=0&&event.key==='Tab'){const focusable=[...dialog.querySelectorAll('button:not([hidden]):not(:disabled)')].filter(el=>el.getClientRects().length);if(focusable.length&&((event.shiftKey&&document.activeElement===focusable[0])||(!event.shiftKey&&document.activeElement===focusable.at(-1)))){event.preventDefault();(event.shiftKey?focusable.at(-1):focusable[0]).focus();}}else if(selected>=0&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const order=['front','spine','back'],i=order.indexOf(angle);angle=order[(i+(event.key==='ArrowRight'?1:2))%3];inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();}else if(event.key==='Escape'&&selected>=0){event.preventDefault();returnDisplay();}},eventOptions);
+  function dispose() {
     if (closed) return;
     closed = true;
     listeners.abort();
@@ -308,18 +304,10 @@ export function openCompactDisplays({inline=false,pageRoot=document,onClose}){
     renderer.forceContextLoss();
     renderer.domElement.remove();
     compactsButton.disabled = false;
-    if (inline) {
-      delete dialog.dataset.inline;
-      dialog.classList.remove('compact-inspecting');
-      dialog.removeAttribute('aria-modal');
-    }
-    if (restoreFocus) (inline ? comicsButton : compactsButton).focus();
+    dialog.classList.remove('compact-inspecting');
+    dialog.removeAttribute('aria-modal');
   }
-  dialog.addEventListener('close', () => {
-    if(onClose)onClose();
-    else dispose({restoreFocus:true});
-  }, eventOptions);
-  if(inline)dialog.dataset.inline='';
-  build();if(inline)dialog.show();else dialog.showModal();frameScene();draw();
+  dialog.addEventListener('close',onClose,eventOptions);
+  build();dialog.show();frameScene();draw();
   return { dispose };
 }

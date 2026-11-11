@@ -65,12 +65,12 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.29');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.30');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;
         const focused=document.activeElement;
-        compacts=module.openCompactDisplays({inline:true,pageRoot,onClose:()=>chooseCollection('comics')});
+        compacts=module.openCompactDisplays({pageRoot,onClose:()=>chooseCollection('comics')});
         if(focused instanceof HTMLElement&&document.activeElement!==focused)focused.focus({preventScroll:true});
       }catch(error){
         compactModule=undefined;
@@ -440,7 +440,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if (document.head.querySelector('link[data-compacts]')) return;
     const style = document.createElement('link');
     style.rel = 'stylesheet';
-    style.href = './compacts.css?v=2.14';
+    style.href = './compacts.css?v=2.15';
     style.dataset.compacts = '';
     await new Promise((resolve, reject) => {
       const cancel = () => { style.remove(); reject(signal.reason); };

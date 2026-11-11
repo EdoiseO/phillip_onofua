@@ -8,10 +8,6 @@ export function CompactsDialog() {
       aria-hidden="true"
     >
       <header className="compact-header" hidden>
-        <button className="back-button" id="compact-close" type="button">
-          {'← '}
-          <span>Back to comics</span>
-        </button>
         <button className="back-button" id="compact-return" type="button" hidden>
           {'← '}
           <span>Back to display</span>
@@ -20,7 +16,6 @@ export function CompactsDialog() {
           <p>A CLOSER LOOK AT THE COLLECTION</p>
           <h2 id="compact-title"></h2>
         </div>
-        <span>01 / 04</span>
       </header>
       <div
         className="compact-inspect-controls"
