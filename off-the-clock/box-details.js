@@ -178,7 +178,7 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
     plane(body, W, T * .95, rimMaterial, [0, H + .016, side * D / 2], [-Math.PI / 2, 0, 0]);
   }
 
-  const sideStamp = keepTexture(texture(THREE, 1024, 512, (ctx, w, h) => {
+  const sideStamp = keepTexture(texture(THREE, 1024, 512, (ctx, w) => {
     ctx.fillStyle = '#4f5955a0'; ctx.font = '600 66px monospace'; ctx.fillText('OTHER WORLDS', 52, 110);
     ctx.font = '35px monospace'; ctx.fillText('HANDLE WITH CURIOSITY.', 55, 176);
     ctx.strokeStyle = '#626c6860'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(55, 220); ctx.lineTo(w - 55, 220); ctx.stroke();
@@ -201,7 +201,7 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
   const tapeMaterial = decalMaterial(tapeTexture);
   plane(body, .27, .49, tapeMaterial, [-.97, .31, D / 2 + T / 2 + .011], [0, 0, -.09]);
 
-  const lidStamp = keepTexture(texture(THREE, 1024, 512, (ctx, w, h) => {
+  const lidStamp = keepTexture(texture(THREE, 1024, 512, ctx => {
     ctx.fillStyle = '#414d47'; ctx.font = '700 72px monospace'; ctx.fillText('THE SHORT BOX', 60, 124);
     ctx.font = '32px monospace'; ctx.fillStyle = '#626b62'; ctx.fillText('A FEW BIG ADVENTURES.', 63, 198);
     ctx.strokeStyle = '#7c887970'; ctx.lineWidth = 2; ctx.strokeRect(35, 49, 945, 204);
@@ -216,7 +216,6 @@ export function addBoxDetails({ THREE, body, lid, W = 2.4, H = 2.9, D = 3.5, T =
     }
   }
   return {
-    meshes,
     setLidShadow(amount) { lidShadowMaterial.opacity = Math.max(0, Math.min(1, amount)); },
     dispose() { meshes.forEach(m => { m.removeFromParent(); m.geometry.dispose(); }); materials.forEach(m => m.dispose()); textures.forEach(t => t.dispose()); }
   };

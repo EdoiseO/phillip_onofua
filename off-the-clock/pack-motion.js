@@ -1,7 +1,7 @@
 export const PACK_DURATION=2.3;
 export const FILE_DURATION=1.5;
 export const TEAR_THRESHOLD=.6;
-export const PULL_SCALE=.975;
+const PULL_SCALE=.975;
 export const BAG_SCALE=.9;
 export const SLOT_HEIGHT=1.42;
 export const SLOT_LEAN=-.025;
@@ -11,7 +11,7 @@ export const collectionSlot=(i,count)=>({
 export const SHORT_BOX={width:2.16,height:2.9,depth:4.15,wall:.068};
 export const tornPouchSeat=amount=>({scale:BAG_SCALE-.025*amount,lift:.064*amount});
 export const showTearStrip=(phase,time)=>phase==='sealed'||(phase==='opening'&&time<1.02);
-export const PACK_STACK_Z=[0,.025,-.025];
+const PACK_STACK_Z=[0,.025,-.025];
 
 const clamp=t=>Math.max(0,Math.min(1,t));
 export const smooth=(from,to,value)=>{

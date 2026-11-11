@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.3';
-import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.8';
-import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.3';
+import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.1';
+import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.4';
+import { createComicBook } from './comic-book.js?v=40.1';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.9';
+import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.4';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
@@ -751,7 +751,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       if(!pulls.length)return Promise.resolve([]);
       cards[selected].seatAfterFiling=true;
       const previousSlots=cards.map(c=>c.baseZ);
-      const entries=pulls.map((card,k)=>{
+      const entries=pulls.map(card=>{
         const index=cards.length;
         world.attach(card.group);
         delete card.group.userData.pullIndex;

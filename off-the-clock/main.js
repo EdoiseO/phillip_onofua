@@ -1,9 +1,9 @@
 import {comics as catalogue} from './comics.js?v=39.5';
-import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.3';
-import {createBox} from './model.js?v=47.3';
+import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.4';
+import {createBox} from './model.js?v=47.4';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.12';
 import {createInspectionFadeFrames, INSPECTION_OPEN_MS} from './inspection-motion.js?v=1.1';
-import {createStickerStudio} from './sticker-studio.js?v=30.1';
+import {createStickerStudio} from './sticker-studio.js?v=30.2';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
 export function mountOffTheClock(stage, pageRoot) {
@@ -255,7 +255,7 @@ export function mountOffTheClock(stage, pageRoot) {
     });
     stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
   }
-  function leaveInspection(event,fileRequested=false){
+  function leaveInspection(fileRequested=false){
     if(!inspecting||packPhase()==='opening')return;
     const filing=packPhase()==='row'&&fileRequested?box.filePack():null;
     if(pointer)cancelPointer();
@@ -308,7 +308,7 @@ export function mountOffTheClock(stage, pageRoot) {
     const comic=comics[index];
     if(comic.blindBag){
       const phase=packPhase();
-      if(phase==='row'){leaveInspection(null,true);return;}
+      if(phase==='row'){leaveInspection(true);return;}
       if(phase!=='sealed')return;
       inspectionView='front';box.inspectView('front');
       const button=$('sleeve-button'),refocus=document.activeElement===button;
@@ -326,7 +326,7 @@ export function mountOffTheClock(stage, pageRoot) {
     announce(unwrapped?'Sleeve opened. Comic sliding out.':'Comic sliding back into its sleeve.');
   }
   function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
-  listen($('inspect-button'),'click',()=>enterInspection());listen($('return-button'),'click',leaveInspection);listen($('sleeve-button'),'click',toggleSleeve);
+  listen($('inspect-button'),'click',()=>enterInspection());listen($('return-button'),'click',()=>leaveInspection());listen($('sleeve-button'),'click',toggleSleeve);
   for(const view of ['front','comic','back'])listen($('view-'+view),'click',()=>{if(packPhase()==='opening'||packPhase()==='row')return;inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?((comics[index].blindBag?comics[index].bagBack:comics[index].backCover)?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
   listen(dialog,'cancel',e=>{e.preventDefault();leaveInspection();});
   listen($('previous'),'click',()=>step(-1));listen($('next'),'click',()=>step(1));
