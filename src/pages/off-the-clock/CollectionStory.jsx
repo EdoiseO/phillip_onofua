@@ -14,11 +14,11 @@ export function CollectionStory() {
         Away from coding, I collect comics. Take a look through my short box.
       </p>
       <div className="actions">
-        <button className="inspect-button" id="inspect-button" hidden>
+        <button className="inspect-button collection-fade" id="inspect-button" hidden>
           {'Take a closer look '}
           <span aria-hidden="true">⤢</span>
         </button>
-        <button className="decorate-button" id="decorate-button" disabled>
+        <button className="decorate-button collection-fade" id="decorate-button" disabled>
           <span className="sticker-icon" aria-hidden="true">
             ✦
           </span>
@@ -33,11 +33,16 @@ export function CollectionStory() {
             Compacts
           </button>
         </div>
-        <p className="small-hint" id="left-hint">
-          A SMALL COLLECTION. A FEW BIG ADVENTURES.
+        <p className="small-hint collection-hint">
+          <span className="collection-fade" id="left-hint">
+            A SMALL COLLECTION. A FEW BIG ADVENTURES.
+          </span>
+          <span className="collection-fade" id="compact-left-hint" inert aria-hidden="true">
+            Click a book to take a closer look.
+          </span>
         </p>
       </div>
-      <div className="reading-progress" id="reading-progress" hidden>
+      <div className="reading-progress collection-fade" id="reading-progress" hidden>
         <span id="issue-count">01 / 05</span>
         <div className="progress-track">
           <div id="progress-fill"></div>

@@ -1,6 +1,12 @@
 export function CompactsDialog() {
   return (
-    <dialog className="compact-dialog" id="compact-dialog" aria-labelledby="compact-title">
+    <dialog
+      className="compact-dialog collection-panel collection-fade"
+      id="compact-dialog"
+      aria-labelledby="compact-title"
+      inert
+      aria-hidden="true"
+    >
       <header className="compact-header">
         <button className="back-button" id="compact-close" type="button">
           {'← '}

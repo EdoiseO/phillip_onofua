@@ -17,6 +17,71 @@ export function mountOffTheClock(stage, pageRoot) {
   const initialMotion = document.body.getAttribute('data-reduced-motion');
   const collectionViewer=stage.closest('.viewer');
   const mobileCollection=matchMedia(mobileControlsQuery);
+  const touchPointer=matchMedia('(pointer:coarse)');
+  const experience=$('experience');
+  const comicsPanel=stage.closest('.comics-panel');
+  const compactDialog=$('compact-dialog');
+  const collectionButtons={comics:$('collection-comics'),compacts:$('collection-compacts')};
+  const comicsOnly=[comicsPanel,$('inspect-button'),$('decorate-button'),$('reading-progress'),$('left-hint')];
+  const compactsOnly=[compactDialog,$('compact-left-hint')];
+  let collectionChange=0, compactModule;
+  const updateCompactHint=()=>{$('compact-left-hint').textContent=`${touchPointer.matches?'Tap':'Click'} a book to take a closer look.`;};
+  listen(touchPointer,'change',updateCompactHint);
+  updateCompactHint();
+
+  function setCollection(mode){
+    const compactsSelected=mode==='compacts';
+    const outgoing=compactsSelected?comicsOnly:compactsOnly;
+    if(outgoing.some(element=>element.contains(document.activeElement)))collectionButtons[mode].focus({preventScroll:true});
+    experience.dataset.collection=mode;
+    for(const [elements, hidden] of [[comicsOnly,compactsSelected],[compactsOnly,!compactsSelected]]){
+      for(const element of elements){
+        element.inert=hidden;
+        if(hidden)element.setAttribute('aria-hidden','true');
+        else element.removeAttribute('aria-hidden');
+      }
+    }
+    for(const [name,button] of Object.entries(collectionButtons))button.setAttribute('aria-pressed',String(name===mode));
+  }
+
+  async function chooseCollection(mode){
+    const change=++collectionChange;
+    if(mode==='comics'){
+      setCollection(mode);
+      if(!compacts)return;
+      // Leave the old scene mounted until its opacity transition ends. A
+      // reversal can then start from the opacity already on screen.
+      const fade=compactDialog.getAnimations().find(animation=>animation.transitionProperty==='opacity');
+      if(fade)await fade.finished.catch(()=>{});
+      if(!signal.aborted&&change===collectionChange){
+        compacts.dispose();
+        compacts=undefined;
+      }
+      return;
+    }
+    if(!compacts){
+      try{
+        compactModule??=(async()=>{
+          if(!await box.firstPaint||signal.aborted)return;
+          await loadCompactsStyle();
+          if(!signal.aborted)return import('./compacts-display.js?v=2.24');
+        })();
+        const module=await compactModule;
+        if(!module||signal.aborted||change!==collectionChange)return;
+        const focused=document.activeElement;
+        compacts=module.openCompactDisplays({box,inline:true,pageRoot,onClose:()=>chooseCollection('comics')});
+        if(focused instanceof HTMLElement&&document.activeElement!==focused)focused.focus({preventScroll:true});
+      }catch(error){
+        compactModule=undefined;
+        if(signal.aborted||change!==collectionChange)return;
+        console.error('Unable to prepare paperback displays',error);
+        announce('The paperback displays could not be opened. Please try again.');
+        return;
+      }
+    }
+    cancelPointer();
+    setCollection(mode);
+  }
   // Pointer focus keeps keyboard controls active without framing the 3D scene.
   // Switch back immediately when the user resumes keyboard navigation.
   listen(document,'pointerdown',()=>{stage.dataset.pointerFocus='';},{capture:true});
@@ -165,7 +230,7 @@ export function mountOffTheClock(stage, pageRoot) {
       placeholder=stage.cloneNode(false);placeholder.removeAttribute('id');placeholder.removeAttribute('tabindex');placeholder.setAttribute('aria-hidden','true');stage.before(placeholder);
       stageAnimation=stage.animate(createStageReturnFrames(from,to),{duration:RETURN_DURATION_MS,fill:'both'});
       stageAnimation.pause();stageAnimation.currentTime=0;
-      pageAnimations=Array.from(pageRoot.querySelectorAll('.portfolio-header-wrap, .story, .viewer > :not(.stage), .footer'),element=>{
+      pageAnimations=Array.from(pageRoot.querySelectorAll('.portfolio-header-wrap, .story, .comics-panel > :not(.stage), .footer'),element=>{
         const animation=element.animate(createPageReturnFrames(),{duration:RETURN_DURATION_MS,fill:'both'});
         animation.pause();animation.currentTime=0;return animation;
       });
@@ -331,7 +396,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if (document.head.querySelector('link[data-compacts]')) return;
     const style = document.createElement('link');
     style.rel = 'stylesheet';
-    style.href = './compacts.css?v=2.12';
+    style.href = './compacts.css?v=2.13';
     style.dataset.compacts = '';
     await new Promise((resolve, reject) => {
       const cancel = () => { style.remove(); reject(signal.reason); };
@@ -371,33 +436,8 @@ export function mountOffTheClock(stage, pageRoot) {
         },
       });
       $('decorate-button').disabled = false;
-      $('collection-compacts').disabled = false;
-
-      // Keep the selected segment enabled and ignore repeat clicks while loading.
-      let compactsLoading = false;
-      async function launchCompacts() {
-        if (compactsLoading || $('compact-dialog').open) return;
-        compactsLoading = true;
-        try {
-          if (!await box.firstPaint || signal.aborted) return;
-          await loadCompactsStyle();
-          if (signal.aborted) return;
-          const { openCompactDisplays } = await import('./compacts-display.js?v=2.23');
-          if (!signal.aborted) compacts = openCompactDisplays({ box, inline: true, pageRoot });
-        } catch (error) {
-          if (signal.aborted) return;
-          console.error('Unable to prepare paperback displays', error);
-          announce('The paperback displays could not be opened. Please try again.');
-        } finally {
-          compactsLoading = false;
-        }
-      }
-
-      listen($('collection-compacts'), 'click', launchCompacts);
-      listen($('collection-comics'), 'click', () => {
-        const compactDialog = $('compact-dialog');
-        if (compactDialog.open) compactDialog.close();
-      });
+      collectionButtons.compacts.disabled=false;
+      for(const [mode,button] of Object.entries(collectionButtons))listen(button,'click',()=>chooseCollection(mode));
     } catch (error) {
       if (signal.aborted) return;
       box?.dispose();
@@ -412,6 +452,7 @@ export function mountOffTheClock(stage, pageRoot) {
   function dispose() {
     if (signal.aborted) return;
     compacts?.dispose();
+    setCollection('comics');
     studio?.dispose();
     cancelPointer();
     cancelAnimationFrame(guideFrame);guide.remove();
