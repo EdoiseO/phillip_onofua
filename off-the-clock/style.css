@@ -96,3 +96,5 @@ body[data-reduced-motion=true] .viewer .open-cue{animation:none}
 .collection-hint>span{grid-area:1/1}
 body[data-reduced-motion=true] .experience{--collection-fade-duration:0ms;--lid-layout-duration:0ms}
 @media(prefers-reduced-motion:reduce){.collection-fade{transition:none!important}}
+
+.inspection[data-opening=true],.inspection[data-opening=true]::backdrop{background:transparent}

@@ -1,7 +1,8 @@
 import {comics as catalogue} from './comics.js?v=39.5';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.3';
-import {createBox} from './model.js?v=47.0';
+import {createBox} from './model.js?v=47.1';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.11';
+import {createInspectionFadeFrames, INSPECTION_OPEN_MS} from './inspection-motion.js?v=1.0';
 import {createStickerStudio} from './sticker-studio.js?v=30.1';
 import {createRuler,mobileControlsQuery} from './ruler-control.js?v=19.1';
 
@@ -13,7 +14,7 @@ export function mountOffTheClock(stage, pageRoot) {
     target.addEventListener(type, callback, { ...options, signal });
   const comics=[...catalogue];
   const dialog = $('inspection');
-  let studio, compacts, stopReturnAnimation;
+  let studio, compacts, stopReturnAnimation, stopOpeningAnimation;
   const initialMotion = document.body.getAttribute('data-reduced-motion');
   const collectionViewer=stage.closest('.viewer');
   const mobileCollection=matchMedia(mobileControlsQuery);
@@ -117,7 +118,9 @@ export function mountOffTheClock(stage, pageRoot) {
   // letting a new selection interrupt the movement or alter the active book.
   for(const type of ['pointerdown','pointerup','click','dblclick','wheel','input','change','keydown']){
     listen(document,type,event=>{
-      if(returning && event.target instanceof Element && event.target.closest('#experience, .footer')){
+      const openingStage=stopOpeningAnimation&&stage.contains(event.target)&&event.key!=='Escape';
+      const returningPage=returning&&event.target instanceof Element&&event.target.closest('#experience, .footer');
+      if(openingStage||returningPage){
         event.preventDefault();event.stopImmediatePropagation();
       }
     },{capture:true,passive:false});
@@ -206,12 +209,51 @@ export function mountOffTheClock(stage, pageRoot) {
     announce(`${prefix}${index+1} of ${comics.length}. ${comics[index].title}. ${comics[index].variant}.`);
   }
   function step(direction){if(inspecting)return;if(!opened){setOpen(true);return;}select(index+direction);}
+  const collectionControls=()=>pageRoot.querySelectorAll('.portfolio-header-wrap, .story, .comics-panel > :not(.stage), .footer');
+  function animateInspectionOpen(placeholder,from){
+    const to=stage.getBoundingClientRect();
+    const {page,controls}=createInspectionFadeFrames();
+    const closeupControls=[...dialog.querySelectorAll('.inspection-header, .comic-views, .back-image-note, .inspection-footer')];
+    const fade=(element,frames)=>element.animate(frames,{duration:INSPECTION_OPEN_MS,fill:'both'});
+    const animations=[
+      fade(stage,createStageReturnFrames(from,to)),
+      ...Array.from(collectionControls(),element=>fade(element,page)),
+      ...closeupControls.map(element=>fade(element,controls)),
+    ];
+    closeupControls.forEach(element=>{element.inert=true;});
+    animations.forEach(animation=>{animation.pause();animation.currentTime=0;});
+    stopOpeningAnimation=()=>{
+      animations.forEach(animation=>animation.cancel());
+      closeupControls.forEach(element=>{element.inert=false;});
+      placeholder.remove();
+      delete dialog.dataset.opening;
+      stopOpeningAnimation=null;
+    };
+    return progress=>{
+      animations.forEach(animation=>{animation.currentTime=progress*INSPECTION_OPEN_MS;});
+    };
+  }
   function enterInspection(i=index){
     if(!box||inspecting||returning)return;clearTimeout(clickTimer);select(i);inspecting=true;unwrapped=false;inspectionView='front';focusStarted=performance.now();
+    let from,placeholder;
+    if(!reduced){
+      from=stage.getBoundingClientRect();
+      placeholder=stage.cloneNode(false);placeholder.removeAttribute('id');placeholder.removeAttribute('tabindex');placeholder.setAttribute('aria-hidden','true');
+      stage.before(placeholder);
+      dialog.dataset.opening='true';
+    }
     $('inspection-stage').append(stage);dialog.showModal();document.body.classList.add('is-inspecting');
     const bag=!!comics[index].blindBag;
     if(!bag)stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic out of its sleeve. R resets the view. Click empty space or press Escape to return to the box.');
-    box.focus(true);render();if(bag)updateGuide();stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
+    render();
+    const viewport={width:stage.clientWidth,height:stage.clientHeight};
+    const progress=placeholder?animateInspectionOpen(placeholder,from):null;
+    box.focus(true,progress,viewport).then(()=>{
+      if(!inspecting||signal.aborted)return;
+      stopOpeningAnimation?.();
+      if(bag)updateGuide();
+    });
+    stage.focus({preventScroll:true});announce(bag?`Inspecting ${comics[index].title}, a sealed mystery blind bag. Click the bag or press Enter to tear it open.`:`Inspecting ${comics[index].title}. Drag to rotate. Click the comic or press Enter to remove its sleeve.`);
   }
   function leaveInspection(event,fileRequested=false){
     if(!inspecting||packPhase()==='opening')return;
@@ -220,6 +262,7 @@ export function mountOffTheClock(stage, pageRoot) {
     clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;
     setPullHover(-1);guide.hidden=true;cancelAnimationFrame(guideFrame);guideFrame=0;
     const from=stage.getBoundingClientRect();
+    stopOpeningAnimation?.();
     dialog.close();document.body.classList.remove('is-inspecting');stageAnchor.after(stage);
     const returnSize={width:stage.clientWidth,height:stage.clientHeight};
     // Keep the canvas in the same screen-space position as it leaves the dialog,
@@ -231,7 +274,7 @@ export function mountOffTheClock(stage, pageRoot) {
       placeholder=stage.cloneNode(false);placeholder.removeAttribute('id');placeholder.removeAttribute('tabindex');placeholder.setAttribute('aria-hidden','true');stage.before(placeholder);
       stageAnimation=stage.animate(createStageReturnFrames(from,to),{duration:RETURN_DURATION_MS,fill:'both'});
       stageAnimation.pause();stageAnimation.currentTime=0;
-      pageAnimations=Array.from(pageRoot.querySelectorAll('.portfolio-header-wrap, .story, .comics-panel > :not(.stage), .footer'),element=>{
+      pageAnimations=Array.from(collectionControls(),element=>{
         const animation=element.animate(createPageReturnFrames(),{duration:RETURN_DURATION_MS,fill:'both'});
         animation.pause();animation.currentTime=0;return animation;
       });
@@ -457,6 +500,7 @@ export function mountOffTheClock(stage, pageRoot) {
     studio?.dispose();
     cancelPointer();
     cancelAnimationFrame(guideFrame);guide.remove();
+    stopOpeningAnimation?.();
     stopReturnAnimation?.();
     if (dialog.open) dialog.close();
     stageAnchor.after(stage);
