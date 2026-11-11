@@ -4,7 +4,6 @@ import { CollectionHeader } from './off-the-clock/CollectionHeader.jsx';
 import { CollectionStory } from './off-the-clock/CollectionStory.jsx';
 import { CollectionViewer } from './off-the-clock/CollectionViewer.jsx';
 import { CollectionFooter } from './off-the-clock/CollectionFooter.jsx';
-import { CompactsDialog } from './off-the-clock/CompactsDialog.jsx';
 import { InspectionDialog } from './off-the-clock/InspectionDialog.jsx';
 import { StickerDialog } from './off-the-clock/StickerDialog.jsx';
 
@@ -40,13 +39,12 @@ export function OffTheClock() {
     <>
       <CollectionHeader />
       <div className="page">
-        <main className="experience" id="experience" tabIndex={-1}>
+        <main className="experience" id="experience" data-collection="comics" tabIndex={-1}>
           <CollectionStory />
           <CollectionViewer stageRef={stageRef} />
         </main>
         <CollectionFooter />
       </div>
-      <CompactsDialog />
       <InspectionDialog />
       <StickerDialog />
     </>
