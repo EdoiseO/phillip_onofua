@@ -1,4 +1,4 @@
-import {createPageReturnFrames, easeInOutSine} from './return-motion.js?v=1.11';
+import {createPageReturnFrames, easeInOutSine} from './return-motion.js?v=1.12';
 
 export const INSPECTION_OPEN_MS=900;
 const LID_CLEAR=.66;

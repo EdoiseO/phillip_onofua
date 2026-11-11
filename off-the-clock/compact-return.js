@@ -1,4 +1,4 @@
-import {easeInOutSine} from './return-motion.js?v=1.11';
+import {easeInOutSine} from './return-motion.js?v=1.12';
 
 export const COMPACT_RETURN_MS=960;
 

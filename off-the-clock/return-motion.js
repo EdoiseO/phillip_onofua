@@ -1,5 +1,4 @@
 export const RETURN_DURATION_MS = 1050;
-export const easeInOutCubic = value => value < .5 ? 4 * value ** 3 : 1 - (-2 * value + 2) ** 3 / 2;
 // Gentler than cubic: its peak speed is about half as high, so a long camera
 // move reads as a glide rather than a crawl-then-swing.
 export const easeInOutSine = value => (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, value)))) / 2;

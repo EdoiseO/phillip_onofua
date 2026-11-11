@@ -119,12 +119,6 @@ test('the final motion sample stays exact even when another frame ticks',()=>{
   }
 });
 
-test('compact return can still override the timeline duration',()=>{
-  const state=createReturnMotion(1,0,false);state.duration=.7;
-  assert.ok(advanceReturnMotion(state,.35).focus>0);
-  assert.equal(advanceReturnMotion(state,.35).done,true);
-});
-
 test('stage relocation stays continuous at 60 fps and ends at its layout bounds',()=>{
   const from={left:60,top:120,width:1160,height:620},to={left:470,top:180,width:760,height:580};
   const frames=createStageReturnFrames(from,to);

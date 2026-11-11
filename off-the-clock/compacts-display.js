@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.5';
-import {COMPACT_RETURN_MS, createSpineShelfReturn, startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, interpolateCompactBook, shouldReturnFromCompactTap} from './compact-return.js?v=1.13';
-import {createStageReturnFrames, createPageReturnFrames} from './return-motion.js?v=1.11';
+import {COMPACT_RETURN_MS, createSpineShelfReturn, startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, interpolateCompactBook, shouldReturnFromCompactTap} from './compact-return.js?v=1.14';
+import {createStageReturnFrames, createPageReturnFrames} from './return-motion.js?v=1.12';
 import {createPaperback} from './paperback.js?v=2.4';
 
 // The Compacts shelf is created only on request, after the short box paints.
