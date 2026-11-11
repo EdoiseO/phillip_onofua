@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import {compacts} from './comics.js?v=39.5';
-import {startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.11';
+import {COMPACT_RETURN_MS, createSpineShelfReturn, startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, COMPACT_STAND_POSES, interpolateCompactBook, standReturnArc, shouldReturnFromCompactTap} from './compact-return.js?v=1.12';
+import {createStageReturnFrames, createPageReturnFrames} from './return-motion.js?v=1.11';
 import {createPaperback} from './paperback.js?v=2.4';
 
 // These display studies are created only on request, after the short box paints.
 export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}){
   const dialog=pageRoot.querySelector('#compact-dialog'), mount=dialog.querySelector('#compact-canvas');
   const comicsButton=pageRoot.querySelector('#collection-comics');
+  const experience=pageRoot.querySelector('#experience');
   const compactsButton=pageRoot.querySelector('#collection-compacts');
   mount.dataset.returning='false';mount.dataset.picking='false';
   const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;renderer.setClearColor(0x0b0e13,0);renderer.domElement.setAttribute('aria-hidden','true');mount.append(renderer.domElement);
@@ -29,7 +31,12 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
   const noteLabel = note.querySelector('#compact-note-label');
   const shelfCue = () => `${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Click'} a book to take a closer look`;
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
-  const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();};
+  let renderWidth=0,renderHeight=0;
+  function resizeRenderer(width,height){
+    if(width===renderWidth&&height===renderHeight)return;
+    renderer.setSize(width,height,false);renderWidth=width;renderHeight=height;
+  }
+  const resize=()=>{const w=Math.max(1,mount.clientWidth),h=Math.max(1,mount.clientHeight);resizeRenderer(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};
   const ro=new ResizeObserver(()=>{if(!moving&&!returning)frameScene();});ro.observe(mount);
   function clean(){
     books.forEach(b=>b.group.removeFromParent());
@@ -77,19 +84,17 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
       place();
     }
   }
-  function build({preserveInspection=false}={}){
-    if(!preserveInspection)dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
-    if(!preserveInspection){
-      dialog.classList.toggle('compact-inspecting',inline&&selected>=0);
-      if(inline)dialog.setAttribute('aria-modal',selected>=0?'true':'false');
-    }
+  function build(){
+    dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
+    dialog.classList.toggle('compact-inspecting',inline&&selected>=0);
+    if(inline)dialog.setAttribute('aria-modal',selected>=0?'true':'false');
     clean();
     if(display==='switch'){
       if(!separateScene){separateScene=new THREE.Scene();separateScene.add(new THREE.HemisphereLight(0xd8e7ff,0x655a48,1.35));const key=light.clone(),edge=rim.clone();separateScene.add(key,edge);}
       activeScene=separateScene;
     }else activeScene=scene;
     activeScene.add(root);
-    if(!preserveInspection){inspectControls.hidden=selected<0;backButton.hidden=selected<0;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});}
+    inspectControls.hidden=selected<0;backButton.hidden=selected<0;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=selected>=0);options.forEach(b=>{b.hidden=selected>=0;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
     if(selected>=0){
       title.textContent=compacts[selected].title;
       noteLabel.textContent='Drag to turn';
@@ -97,7 +102,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
       setBook(selected,0,0,0,inspectPitch,inspectYaw,0);
       mount.setAttribute('aria-label',`${compacts[selected].title} close-up. Drag to turn, or use the front, back and spine buttons.`);
     }else{
-      if(!preserveInspection){title.textContent='Compact Comics';noteLabel.textContent=shelfCue();mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');}
+      title.textContent='Compact Comics';noteLabel.textContent=shelfCue();mount.setAttribute('aria-label','Paperback display. Select a book to inspect it.');
       // Shelf, stand and stack layouts are kept for reference; the page uses
       // the Compacts shelf (display 'switch'): both books spine-out, no box.
       if(display!=='switch')showBox();
@@ -130,7 +135,12 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
       const animation=copy.animate([{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,boxSizing:'border-box',margin:'0',pointerEvents:'none',opacity:0},{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,boxSizing:'border-box',margin:'0',pointerEvents:'none',opacity:1}],{duration:1000,fill:'both'});animation.pause();
       const fixedStyles=[];
       if(embedded&&element.matches('.compact-header')){
-        for(const [source,target,properties] of [[element,copy,['padding','gridTemplateColumns']],[element.querySelector('h2'),copy.querySelector('h2'),['fontSize']]]){
+        const headerStyles=[
+          [element,copy,['display','padding','gridTemplateColumns']],
+          [element.querySelector('h2'),copy.querySelector('h2'),['fontSize']],
+          ...Array.from(element.querySelectorAll('button'),(button,index)=>[button,copy.querySelectorAll('button')[index],['display']]),
+        ];
+        for(const [source,target,properties] of headerStyles){
           const computed=getComputedStyle(source),frame={};properties.forEach(property=>frame[property]=computed[property]);
           const fixed=target.animate([frame,frame],{duration:1000,fill:'both'});fixed.pause();fixed.currentTime=0;fixedStyles.push(fixed);
         }
@@ -139,18 +149,32 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
     });
     return snapshots;
   }
-  function startUISwap(outgoing,{inlineReturn=false}={}){
-    // During inline return, measure the actual embedded destination controls
-    // without changing the visible fullscreen scene. Their fixed snapshots
-    // fade in at those final positions, so build() does not move them at the end.
-    let incomingSnapshots=[];
-    if(inlineReturn){dialog.classList.remove('compact-inspecting');incomingSnapshots=snapshotUI({embedded:true});dialog.classList.add('compact-inspecting');}
+  function startUISwap(outgoing){
     const incoming=uiElements().map(element=>{const animation=element.animate([{opacity:0},{opacity:1}],{duration:1000,fill:'both'});animation.pause();animation.currentTime=0;return animation;});
-    const set=progress=>{const opacity=compactUiOpacity(progress);outgoing.forEach(({animation})=>animation.currentTime=opacity.outgoing*1000);incomingSnapshots.forEach(({animation})=>animation.currentTime=opacity.incoming*1000);if(!inlineReturn)incoming.forEach(animation=>animation.currentTime=opacity.incoming*1000);};
+    const set=progress=>{const opacity=compactUiOpacity(progress);outgoing.forEach(({animation})=>animation.currentTime=opacity.outgoing*1000);incoming.forEach(animation=>animation.currentTime=opacity.incoming*1000);};
     set(0);
-    return {set,dispose(){incoming.forEach(animation=>animation.cancel());[...outgoing,...incomingSnapshots].forEach(({copy,animation,fixedStyles})=>{animation.cancel();fixedStyles.forEach(a=>a.cancel());copy.remove();});}};
+    return {set,dispose(){incoming.forEach(animation=>animation.cancel());outgoing.forEach(({copy,animation,fixedStyles})=>{animation.cancel();fixedStyles.forEach(a=>a.cancel());copy.remove();});}};
   }
-  const draw=()=>{if(closed)return;renderer.render(activeScene,camera);frame=requestAnimationFrame(draw);};
+  function animateBackToPage(from){
+    const to=mount.getBoundingClientRect();
+    const placeholder=document.createElement('div');placeholder.className=mount.className;placeholder.setAttribute('aria-hidden','true');mount.before(placeholder);
+    const stageAnimation=mount.animate(createStageReturnFrames(from,to),{duration:COMPACT_RETURN_MS,fill:'both'});
+    const pageElements=Array.from(pageRoot.querySelectorAll('.portfolio-header-wrap, .story, .footer'),element=>{
+      const inert=element.inert;element.inert=true;
+      return {element,inert,animation:element.animate(createPageReturnFrames(),{duration:COMPACT_RETURN_MS,fill:'both'})};
+    });
+    const animations=[stageAnimation,...pageElements.map(({animation})=>animation)];
+    animations.forEach(animation=>{animation.pause();animation.currentTime=0;});
+    return {
+      set(progress){animations.forEach(animation=>animation.currentTime=progress*COMPACT_RETURN_MS);},
+      dispose(){
+        animations.forEach(animation=>animation.cancel());
+        placeholder.remove();
+        pageElements.forEach(({element,inert})=>{element.inert=inert;});
+      },
+    };
+  }
+  const draw=()=>{if(closed)return;if(!returning){renderer.render(activeScene,camera);}frame=requestAnimationFrame(draw);};
   const select=i=>{
     if(moving||selected>=0)return;
     inspectionStarted = performance.now();
@@ -177,7 +201,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
     const targetCamera=camera.clone();frameCompactBounds(THREE,targetCamera,bounds,width,height);
     const toAspect=targetCamera.aspect,toFov=targetCamera.fov;
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone();book.position.copy(fromPosition);book.quaternion.copy(fromRotation);book.scale.copy(fromScale);
-    renderer.setSize(width,height,false);
+    resizeRenderer(width,height);
     const newCanvas=renderer.domElement.getBoundingClientRect(),dx=oldCanvas.left-newCanvas.left,dy=oldCanvas.top-newCanvas.top,sx=oldCanvas.width/newCanvas.width,sy=oldCanvas.height/newCanvas.height;
     const canvasAnimation=renderer.domElement.animate([{transformOrigin:'top left',transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},{transformOrigin:'top left',transform:'translate(0,0) scale(1,1)'}],{duration:850,fill:'both'});canvasAnimation.pause();
     const restoreBookDepth=prioritizeCompactBook(book);
@@ -197,48 +221,65 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
   options.forEach(button=>button.addEventListener('click',()=>{if(moving)return;display=button.dataset.display;selected=-1;build();},eventOptions));
   views.forEach(button=>button.addEventListener('click',()=>{if(moving)return;angle=button.dataset.view;inspectYaw=angle==='back'?Math.PI-.12:angle==='spine'?Math.PI/2:-.5;inspectPitch=angle==='front'?-.06:0;build();},eventOptions));
   bookButtons.forEach(button=>button.addEventListener('click',()=>select(Number(button.dataset.book)),eventOptions));
-  const returnDisplay=()=>{
+  const returnDisplay=(pointerExit=false)=>{
     if(moving||selected<0)return;
     drag = null;
     const returningIndex=selected, book=books[returningIndex].group;
-    const focus=()=>{(inline?bookButtons[returningIndex]:options.find(x=>x.dataset.display===display)).focus();};
+    // Keep the reading order near the display. Hidden book buttons reveal
+    // themselves only when reached with the keyboard.
+    const focus=()=>{(inline?(pointerExit?experience:compactsButton):mount).focus({preventScroll:true});};
     if(matchMedia('(prefers-reduced-motion: reduce)').matches||document.body.dataset.reducedMotion==='true'){
       selected=-1;build();focus();return;
     }
-    // Keep the inspection layout visible while preparing the destination.
-    // Interpolate the actual close-up pose and camera to the shelf/stand/stack
-    // instead of snapping to a rebuilt scene before the return starts.
+    const fromRect=mount.getBoundingClientRect();
     const fromPosition=book.position.clone(),fromRotation=book.quaternion.clone(),fromScale=book.scale.clone();
     const fromCamera=camera.position.clone(),fromCameraRotation=camera.quaternion.clone(),fromFov=camera.fov;
-    const snapshots=snapshotUI();
-    selected=-1;build({preserveInspection:true});
-    inspectControls.hidden=true;backButton.hidden=true;closeButton.hidden=!backButton.hidden;bookButtons.forEach(b=>b.hidden=false);options.forEach(b=>{b.hidden=false;b.setAttribute('aria-pressed',String(b.dataset.display===display));});
-    title.textContent='Compact Comics';noteLabel.textContent=shelfCue();
-    dialog.querySelector('.compact-header > span').textContent=`0${['shelf','stand','stack','switch'].indexOf(display)+1} / 04`;
-    const ui=startUISwap(snapshots,{inlineReturn:inline});uiCleanup=()=>{ui.dispose();uiCleanup=null;};
+    const snapshots=snapshotUI({embedded:inline});
+    // Put the destination back into normal flow so its final framing and
+    // controls can be measured before the old canvas starts moving.
+    selected=-1;build();
     const toPosition=book.position.clone(),toRotation=book.quaternion.clone(),toScale=book.scale.clone();
     const toCamera=camera.position.clone(),toCameraRotation=camera.quaternion.clone(),toFov=camera.fov;
-    book.position.copy(fromPosition);book.quaternion.copy(fromRotation);book.scale.copy(fromScale);
-    camera.position.copy(fromCamera);camera.quaternion.copy(fromCameraRotation);camera.fov=fromFov;camera.updateProjectionMatrix();
-    moving=true;returning=true;mount.dataset.returning='true';
-    const restoreBookDepth=prioritizeCompactBook(book);restoreBookDepth.set(true);
+    const layout=inline?animateBackToPage(fromRect):null;
+    const ui=startUISwap(snapshots);
+    uiCleanup=()=>{ui.dispose();layout?.dispose();uiCleanup=null;};
+    const shelfPath=display==='switch'
+      ?createSpineShelfReturn(books[returningIndex],books[1-returningIndex],fromPosition,toPosition,fromRotation,toRotation)
+      :null;
+    const depth=shelfPath?null:prioritizeCompactBook(book);
+    const cameraOffset=new THREE.Vector3();
     const frontRotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-.06,-.5,0));
     const standArc=display==='stand'?standReturnArc(returningIndex,fromRotation,frontRotation):0;
-    returnFade=createCompactSceneFade(root,book);returnFade.set(0);
-    pickupCleanup=()=>{restoreBookDepth.dispose();pickupCleanup=null;};
+    returnFade=createCompactSceneFade(root,book);
+    moving=true;returning=true;mount.dataset.returning='true';
+    const paint=(t,progress)=>{
+      layout?.set(progress);ui.set(progress);depth?.set(t<.95);returnFade.set(t);
+      if(shelfPath)shelfPath(t);
+      else interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,t,{standArc});
+      book.scale.lerpVectors(fromScale,toScale,t);
+      camera.position.lerpVectors(fromCamera,toCamera,t);
+      if(shelfPath){
+        // Follow the clearance move without zooming into the cover as it
+        // comes forward. The correction is zero at both endpoints.
+        cameraOffset.lerpVectors(fromPosition,toPosition,t).negate().add(book.position);
+        camera.position.add(cameraOffset);
+      }
+      camera.quaternion.slerpQuaternions(fromCameraRotation,toCameraRotation,t);
+      camera.fov=fromFov+(toFov-fromFov)*t;
+      resize();
+      renderer.render(activeScene,camera);
+    };
+    pickupCleanup=()=>{depth?.dispose();pickupCleanup=null;};
     cancelReturn=startCompactReturn({
-      onFrame(t,progress){
-        ui.set(progress);restoreBookDepth.set(t<.95);returnFade.set(t);
-        interpolateCompactBook(book,fromPosition,toPosition,fromRotation,toRotation,t,{standArc});book.scale.lerpVectors(fromScale,toScale,t);
-        camera.position.lerpVectors(fromCamera,toCamera,t);camera.quaternion.slerpQuaternions(fromCameraRotation,toCameraRotation,t);camera.fov=fromFov+(toFov-fromFov)*t;camera.updateProjectionMatrix();
-      },
+      onFrame:paint,
       onComplete(){
         if(closed)return;
         pickupCleanup?.();uiCleanup?.();returnFade.dispose();returnFade=null;cancelReturn=null;returning=false;moving=false;mount.dataset.returning='false';build();focus();
       }
     });
+    paint(0,0);
   };
-  backButton.addEventListener('click',returnDisplay,eventOptions);
+  backButton.addEventListener('click',event=>returnDisplay(event.detail>0),eventOptions);
   function raycastBooks(event, groups) {
     const bounds = mount.getBoundingClientRect();
     pointer.set((event.clientX-bounds.left)/bounds.width*2-1, -(event.clientY-bounds.top)/bounds.height*2+1);
@@ -284,7 +325,7 @@ export function openCompactDisplays({box,inline=false,pageRoot=document,onClose}
         startedOnBook, endedOnBook,
         distance: distance + Math.abs(event.clientX - x) + Math.abs(event.clientY - y),
         elapsed: performance.now() - inspectionStarted,
-      })) returnDisplay();
+      })) returnDisplay(true);
       return;
     }
     let object = raycastBooks(event, books.map(book => book.group))[0]?.object;
