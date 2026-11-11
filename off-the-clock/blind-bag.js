@@ -1,9 +1,9 @@
 // A sealed premium mystery bag. The pouch, its tear and the falling strip
 // come from the reviewed glTF; the three pulls reuse the site's comic model.
 import { loadModel } from './models.js?v=38.0';
-import { createComicBook } from './comic-book.js?v=40.0';
-import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.3';
-import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, tornPouchSeat } from './pack-motion.js?v=1.3';
+import { createComicBook } from './comic-book.js?v=40.1';
+import { createComicSleeve, posePackSleeve } from './comic-sleeve.js?v=40.4';
+import { BAG_SCALE, PACK_DURATION, samplePack, samplePouch, sampleTear, showTearStrip, tornPouchSeat } from './pack-motion.js?v=1.4';
 
 // The modelled pack is taller than a bagged comic. At 0.9 it stands in the
 // short box like the sleeved comics, and its comics still clear the film.

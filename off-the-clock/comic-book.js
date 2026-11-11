@@ -1,7 +1,6 @@
 // A saddle-stitched comic from the reviewed comic-set model: folded cover,
 // nested sheets and two staples, at true size (6⅝ × 10¼ in = 1.745 × 2.7).
 // Only the printed covers are the site's own: they carry each comic's photo.
-export const COMIC_WIDTH=1.745;
 // The model stands the comic 0.0185 in front of its board. The comic's own
 // group is centred on the booklet, so it can slide and turn about itself.
 const COMIC_CENTER_Z=.0185;

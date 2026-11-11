@@ -257,7 +257,6 @@ export function createStickerStudio({stage,box,beforeOpen,afterClose,pageRoot=do
     if(!system.draft()){selectFace();box.rotate(dx,-dy);}else{lastPlacement.u+=dx;lastPlacement.v+=dy;preview();}
   },{capture:true});
   return {
-    open,close,get active(){return active;},
     dispose(){
       if(lifetime.signal.aborted)return;
       exit();

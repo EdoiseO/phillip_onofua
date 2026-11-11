@@ -2,18 +2,18 @@ import * as THREE from 'three';
 import { createArtworkGate } from './artwork-gate.js?v=1.0';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.0';
-import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.3';
-import { createComicBook } from './comic-book.js?v=40.0';
-import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.8';
-import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.3';
+import { createCardboardTextures, addBoxDetails } from './box-details.js?v=17.1';
+import { createComicSleeve, poseComicSleeve } from './comic-sleeve.js?v=40.4';
+import { createComicBook } from './comic-book.js?v=40.1';
+import { loadBlindBag, createBlindBag } from './blind-bag.js?v=41.9';
+import { FILE_DURATION, SHORT_BOX, SLOT_HEIGHT, SLOT_LEAN, collectionSlot, makePackEntries, sampleFile, smooth as packSmooth } from './pack-motion.js?v=1.4';
 import { loadModel } from './models.js?v=38.0';
 import { lidPose, advanceLidMotion } from './lid-motion.js?v=15.0';
 import { createStickerSystem } from './stickers.js?v=30.1';
 import { mobileControlsQuery } from './ruler-control.js?v=19.1';
-import { createReturnMotion, advanceReturnMotion, easeInOutSine, sampleSleeveRig, returnBoxLift, mixReturn, sampleReturnOrbit, returnComicHeight, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.11';
+import { createReturnMotion, advanceReturnMotion, easeInOutSine, sampleSleeveRig, returnBoxLift, mixReturn, sampleReturnOrbit, returnComicHeight, shouldSkipSceneFrame, scheduleReturnWatchdog, releaseReturn } from './return-motion.js?v=1.12';
 
-import {sampleInspectionOpen, sampleInspectionLid, sealedSleeveSlideOut} from './inspection-motion.js?v=1.0';
+import {sampleInspectionOpen, sampleInspectionLid, sealedSleeveSlideOut} from './inspection-motion.js?v=1.1';
 
 const clamp = THREE.MathUtils.clamp;
 const smooth = (a, b, v) => THREE.MathUtils.smoothstep(v, a, b);
@@ -675,24 +675,6 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   }
   return {
     firstPaint,
-    cloneClosedBox(){
-      const copy=new THREE.Group(),shell=body.clone(true),top=lid.clone(true);
-      shell.position.set(0,0,0);shell.rotation.set(0,0,0);shell.visible=true;
-      top.position.set(.012,lidClosedY,-.008);top.rotation.set(0,0,0);top.visible=true;
-      copy.add(shell,top);
-      // These independently-owned stand-ins can receive their own artwork;
-      // the live comics replace and dispose their materials while streaming.
-      for(let i=0;i<5;i++){
-        const card=new THREE.Mesh(new THREE.BoxGeometry(1.72,2.65,.03),new THREE.MeshStandardMaterial({color:0xe7e4db,roughness:1}));
-        card.position.set(0,1.42,1.43-i*.55);card.userData.compactPreviewOwned=true;copy.add(card);
-        const artGeometry=new THREE.PlaneGeometry(1.72,2.65,12,20),quad=comics[i]?.frontQuad,uv=artGeometry.attributes.uv;
-        if(quad){const [tl,tr,br,bl]=quad;for(let j=0;j<uv.count;j++){const u=uv.getX(j),v=uv.getY(j);uv.setXY(j,(bl[0]*(1-u)+br[0]*u)*(1-v)+(tl[0]*(1-u)+tr[0]*u)*v,1-((bl[1]*(1-u)+br[1]*u)*(1-v)+(tl[1]*(1-u)+tr[1]*u)*v));}}
-        const art=new THREE.Mesh(artGeometry,new THREE.MeshBasicMaterial({color:0x777a78}));
-        art.position.set(0,1.42,1.45-i*.55);art.userData.compactPreviewOwned=true;art.userData.compactPhotoUrl=comics[i]?.cover;copy.add(art);
-      }
-      shell.traverse(object=>{if(object.isMesh&&object.material?.type==='MeshBasicMaterial'&&object.material?.transparent){object.material=object.material.clone();object.material.opacity=1;object.userData.compactPreviewOwnedMaterial=true;}});
-      return copy;
-    },
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
     select(index){if(index!==selected)cards[index].blind?.crinkle();cards[index].seatAfterFiling=false;selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},
@@ -769,7 +751,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       if(!pulls.length)return Promise.resolve([]);
       cards[selected].seatAfterFiling=true;
       const previousSlots=cards.map(c=>c.baseZ);
-      const entries=pulls.map((card,k)=>{
+      const entries=pulls.map(card=>{
         const index=cards.length;
         world.attach(card.group);
         delete card.group.userData.pullIndex;

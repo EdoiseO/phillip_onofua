@@ -10,7 +10,7 @@ A responsive portfolio presenting my full-stack web, Windows desktop, and produc
 
 This repository contains the source for my personal portfolio. The homepage pairs a letter-by-letter animated headline and skills-focused introduction with product previews, direct résumé access, two detailed case studies, an Android prototype, and a live interactive 3D collection.
 
-The portfolio is intentionally lightweight: it uses static HTML, CSS, and JavaScript, has no runtime dependencies, and deploys directly from the `main` branch.
+Vite renders the React pages to static HTML at build time. Off the clock is the only page that runs React in the browser, where it mounts the Three.js scene. The homepage animation and Student Market gallery use standalone JavaScript.
 
 ## Featured work
 
@@ -32,7 +32,7 @@ The case study opens with the working interface, a summary of the problem and my
 
 A Windows desktop application for managing reusable overlay instances, customizing their appearance, previewing live data, and preparing browser-source URLs for OBS.
 
-The case study covers the twelve-overlay library, audio-reactive animation, request pacing, local-server security, privacy, packaging, a recorded demonstration, and code highlights explaining how draft previews and saved output stay separate. Its hardest-problem section is a marked placeholder for a future personal account.
+The case study covers the twelve-overlay library, audio-reactive animation, request pacing, local-server security, privacy, and packaging. It includes a recorded demonstration and code highlights showing how draft previews stay separate from saved output.
 
 - **Role:** Product designer and developer
 - **Stack:** Python, JavaScript, aiohttp, WebSockets, WebView2, and OBS Studio
@@ -50,9 +50,9 @@ An Android team prototype built with Kotlin and Jetpack Compose for browsing res
 
 ### Off the clock
 
-A live interactive 3D comic collection built with Three.js. Visitors can open the box, browse the collection, and inspect the covers up close.
+A 3D comic collection you can open and browse. Slide a comic out of its sleeve for a closer look, tear open a Ben 10 mystery bag and file its three pulls, or switch to the DC Compact Comics shelf. The sticker studio lets you decorate the box and saves your layout on the current device.
 
-- **Stack:** JavaScript and Three.js
+- **Stack:** React, JavaScript, and Three.js
 - [Explore the collection](https://philliponofua.vercel.app/off-the-clock/)
 
 The [Receipt Splitter concept](https://philliponofua.vercel.app/receipt-splitter.html) remains available separately as work in exploration.
@@ -60,46 +60,51 @@ The [Receipt Splitter concept](https://philliponofua.vercel.app/receipt-splitter
 ## Portfolio features
 
 - Dark-only, responsive editorial layout with clear navigation
-- **Off the clock:** an interactive 3D comic collection with a movable lid, glossy sleeves, separate backing boards, verified rear artwork, close-up rotation, and a gentle hover/glow
 - Letter-by-letter headline animation, product previews, and prominent résumé access
 - Quick links to web, desktop, mobile, and 3D projects, plus grouped language skills
-- Animation pause control, reduced-motion support, and a readable fallback without JavaScript
-- Two detailed projects using real product captures, plus a live interactive 3D collection
+- Homepage animation pause control and keyboard and reduced-motion support for the 3D collection
 - Restaurant Guide design gallery and a compact row of smaller builds
 - Dedicated case-study pages with project-specific metadata and social previews
 - Product-first Student Market case study with expandable technical notes
 - Student Market workflow galleries with thumbnails, image zoom, and full-size viewing
 - Overlay Studio screenshots and a recorded product demo near the top of its case study
-- Semantic HTML, skip links on the refreshed pages, visible keyboard focus, descriptive alternative text, and reduced-motion support
+- Semantic HTML, skip links on the refreshed pages, visible keyboard focus, and descriptive alternative text
 - Downloadable résumé, direct contact links, privacy policy, and terms of use
 
-## Built with
-
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- HTML Dialog API
-- Self-hosted Three.js for the Off the clock collection
-- Vercel
-
-There is no package installation or build step. All required fonts, images, logos, scripts, and media are committed with the site.
-
 ## Run locally
+
+Use Node.js 22.12 or later with npm.
 
 ```bash
 git clone https://github.com/EdoiseO/phillip_onofua.git
 cd phillip_onofua
-python3 -m http.server 8000
+npm ci
+npm run dev
 ```
 
-Open [http://localhost:8000](http://localhost:8000).
+Open the URL Vite prints, usually [http://localhost:5173](http://localhost:5173).
+
+Build and test the production output locally with these commands.
+
+```bash
+npm run build
+npm test
+npm run preview
+```
+
+The preview serves `dist/` with the security headers from `vercel.json`. Run the build before the tests so they also check the generated HTML.
 
 ## Repository structure
 
 ```text
 .
-├── index.html                         # Portfolio homepage
-├── off-the-clock/                     # Self-contained 3D comic collection
+├── src/
+│   ├── pages/                         # React pages and page-specific components
+│   ├── components/                    # Shared React layouts
+│   ├── render-static.jsx              # Build-time page rendering
+│   └── off-the-clock-entry.jsx        # Browser entry for the 3D collection
+├── index.html                         # Homepage HTML template
+├── off-the-clock/                     # Collection HTML, Three.js scene, and assets
 ├── student-market.html                # Student Market engineering case study
 ├── overlay-studio.html                # Overlay Studio product case study
 ├── receipt-splitter.html              # Work-in-progress product plan
@@ -119,37 +124,18 @@ Open [http://localhost:8000](http://localhost:8000).
 │   ├── tech-logos/                    # Self-hosted technology brand marks
 │   ├── portfolio-preview.jpg          # README and social preview image
 │   └── phillip-onofua-resume.pdf      # Downloadable résumé
-└── README.md
+├── tests/                             # Browser regressions for the 3D collection
+├── vite.config.js                     # Site build and preview configuration
+└── vercel.json                        # Deployment, headers, and redirects
 ```
 
 ## Deployment
 
-Vercel deploys the production site from the `main` branch.
-
-Vite builds the site into `dist/`. The HTML pages keep their own entry points
-and `public/` keeps shared assets at their original URLs. Off the clock renders
-its page and controls with React and mounts the vendored Three.js scene through
-a ref. Its import map keeps Three.js shared between the box and Compacts.
-
-Privacy, Terms, Receipt Splitter and Overlay Studio render from React components
-in `src/pages/`. Vite inserts the rendered HTML at build time so these pages
-can load and work without a client JavaScript bundle.
-
-```sh
-npm ci
-npm run build
-npm run preview
-```
-
-Use `npm run dev` while editing the Vite pages. Use the built preview to check
-the deployed output and its security headers.
+Vercel runs `npm run build` and deploys `dist/` from the `main` branch. The build preserves the separate page URLs and serves `public/assets/` at `/assets/`. Vercel redirects `/off-the-clock` to `/off-the-clock/` so the scene’s relative asset URLs resolve correctly.
 
 ### Browser security
 
 `vercel.json` applies a Content Security Policy, MIME-sniffing and framing protection, a referrer policy, and restrictions on unused browser permissions to every route. Vercel supplies HSTS. Scripts, styles, fonts, media, and connections are same-origin; image textures may also use data/blob URLs. The sole inline script is the hash-approved Three.js import map. If that map changes, update its SHA-256 in the policy. No `unsafe-inline` or `unsafe-eval` exception is required. Browser styling uses CSSOM properties rather than inline style blocks.
-
-Run `npm test` to check the headers, HTML scripts, and Off the clock scene.
-After a build, the security test also checks the HTML in `dist/`.
 
 The October 22, 2026 advisory check found no GitHub advisory matches for the vendored Three.js `0.186.0` (r186). [CVE-2020-28496](https://github.com/advisories/GHSA-fq6p-x6j3-cmmq) affects versions below `0.125.0`; [CVE-2022-0177](https://github.com/advisories/GHSA-7vvq-7r29-5vg3) is withdrawn and listed versions below `0.137.0`. This is a point-in-time advisory check, not a guarantee against undisclosed vulnerabilities. The vendored files are not covered by npm audit; recheck advisories when updating them.
 
@@ -162,9 +148,11 @@ Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simp
 
 ## Off the clock
 
-The collection at `/off-the-clock/` is imported from the approved Short Box prototype, commit `241a5afaba0734fc72a39c3aa32fdd413fb31f9e`. Its 24 editions, cover sources, physical model, sleeve interactions, and reduced-motion support are preserved. The page and all textures, fonts, and Three.js modules are served from this repository; the homepage does not load the 3D assets.
+The scene grew out of the Short Box prototype. The box starts with 30 entries, including two Ben 10 mystery bags. Compacts has a separate shelf for *Static: Season One* and *Green Arrow: Year One*.
 
-Collection metadata is a saved snapshot. It includes no inventory order details or prices. Rear imagery is verified for 22 of 24 entries (21 actual comic backs and one mystery-bag wrapper); Ben 10 #2 Cover F packaging and incoming Absolute Green Arrow #6 remain clearly marked unavailable. Artwork remains credited to its original sources in `off-the-clock/comics.js`; the Three.js license is included in `off-the-clock/vendor/THREE-LICENSE.txt`.
+The homepage can prefetch the files needed to show the box on a suitable connection. The box appears before comic artwork starts downloading, and the paperback scene and textures load when visitors select Compacts. Both scenes share the same copy of Three.js through the import map.
+
+Collection metadata and artwork credits are in [`off-the-clock/comics.js`](off-the-clock/comics.js). The vendored library includes the [Three.js license](off-the-clock/vendor/THREE-LICENSE.txt).
 
 ## How I built this
 

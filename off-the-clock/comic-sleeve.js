@@ -1,6 +1,6 @@
 // A thin polypropylene sleeve around the backing board from the reviewed
 // comic-set asset. Its front lip and flap span the mouth when sealed.
-export const BOARD_Z=-.0185;
+const BOARD_Z=-.0185;
 export const FLAP_OPEN=Math.PI/3; // Measured from upright toward the front: 30° above horizontal.
 const HALF_WIDTH=.905,TOP=1.407,BOTTOM=-1.394,FRONT=.0155,BACK=-.024;
 const BRIDGE=FRONT-BACK+.002,TAIL=.323;
