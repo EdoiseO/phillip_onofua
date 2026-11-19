@@ -1112,31 +1112,13 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/1761704/midnight-fantastic-four-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-fantastic-four-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.179,
-        0.057
-      ],
-      [
-        0.799,
-        0.057
-      ],
-      [
-        0.766,
-        0.953
-      ],
-      [
-        0.216,
-        0.935
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-fantastic-four-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541e91e28d3f3517a5407/l_6ad541ea9709887265e72810.jpg",
     "backSourcePage": "https://poshmark.com/listing/Midnight-Fantastic-Four-1-Regular-Cover-Benjamin-Percy-1st-Print-2026-NM-6ad541e91e28d3f3517a5407",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
   },
   {
     "id": "midnight-fantastic-four-2-cover-a",
