@@ -57,6 +57,7 @@ function printMaterial() {
 export function createComicInterior(comic, fetchArt, notify) {
   const scene = new THREE.Scene(), camera = new THREE.OrthographicCamera(-1,1,1,-1,.01,20);
   camera.position.z = 8;
+  const packetHome = new THREE.Vector3();
   const book = new THREE.Group(), sheet = new THREE.Group(), rightWing = new THREE.Group();
   scene.add(book,sheet);
   const leftLeaf = new THREE.Group();
@@ -71,7 +72,7 @@ export function createComicInterior(comic, fetchArt, notify) {
   const cover = new THREE.Mesh(coverGeometry,paperMaterial(0xffffff,THREE.BackSide));
   leftLeaf.add(cover);
   for (const [leaf,parent] of [[left,leftLeaf],[right,book]]) {
-    const stock = new THREE.Mesh(leaf.geometry,paperMaterial(0xcac6bb,THREE.DoubleSide));
+    const stock = new THREE.Mesh(leaf.geometry,paperMaterial(0xcac6bb,THREE.FrontSide));
     stock.position.set(Math.sign(leaf.geometry.attributes.position.getX(1))*.002,-.004,-.006);
     parent.add(stock);
   }
@@ -98,9 +99,15 @@ export function createComicInterior(comic, fetchArt, notify) {
   const folded = new THREE.Mesh(new THREE.PlaneGeometry(tileWidth,tileHeight),foldedMaterial);
   folded.position.set(-tileWidth/2,tileHeight/2,.001);
   sheet.add(folded);
+  // A sliver of the folded sheet catches light along its cut edges.
+  const packetEdge=new THREE.Mesh(folded.geometry,new THREE.MeshBasicMaterial({color:0xd7d2c6,toneMapped:false}));
+  packetEdge.position.copy(folded.position);
+  packetEdge.position.x+=.003; packetEdge.position.y-=.004; packetEdge.position.z=-.009;
+  sheet.add(packetEdge);
 
   let alive=true, changed=true, phase='seated', elapsed=0, direction=0, lastTime=0;
-  let entryStart=performance.now(), entering=true, fullTexture, intent=0;
+  const entryStart=performance.now();
+  let entering=true, fullTexture, intent=0;
   function state(value) { phase=value; changed=true; notify(value); }
   function mapTo(surface,url) {
     return fetchArt(url).then(texture=>{
@@ -152,14 +159,14 @@ export function createComicInterior(comic, fetchArt, notify) {
         direction=0; state(elapsed?'open':'seated');
       }
     }
-    const entry=reduced?1:eased((now-entryStart)/360);
+    const entry=reduced||!entering?1:eased((now-entryStart)/360);
     entering=entry<1;
     leftLeaf.rotation.y=(1-entry)*(Math.PI-.04);
     const lift=eased(elapsed/240), across=eased((elapsed-240)/310), down=eased((elapsed-550)/370);
     const aspect=width/height, phone=width<650;
     camera.left=-aspect; camera.right=aspect; camera.updateProjectionMatrix();
     const bookStart=Math.min(1.73,aspect*1.85/(2*PAGE_WIDTH));
-    const bookHeight=bookStart*mix(1,phone?.64:.56,lift);
+    const bookHeight=bookStart*mix(1,phone ? .64 : .56,lift);
     book.scale.setScalar(bookHeight);
     book.rotation.set(-.065,-.045,.012);
     book.position.set(phone?0:-aspect*.61*lift,phone?(-1-bookHeight*.64)*lift:-.23*lift,0);
@@ -167,12 +174,23 @@ export function createComicInterior(comic, fetchArt, notify) {
     const size=mix(bookStart*.76,openWidth,lift);
     const endX=phone?0:aspect*.20;
     sheet.scale.setScalar(size);
+    // Seat the packet in the tilted page's local plane. A fixed world Z
+    // would bury it beneath the fore-edge at the larger desktop book size.
+    packetHome.set(.33+.76*.25,-.06-.76*ratio*.25,.027)
+      .multiplyScalar(bookStart).applyEuler(book.rotation);
     sheet.position.set(
-      mix(bookStart*.33+size*.25,endX+(1-across)*openWidth*.22,lift),
-      mix(-bookStart*.06-size*ratio*.25,-(1-down)*openWidth*ratio*.13,lift),
-      mix(.065,1.65,lift)
+      mix(packetHome.x,endX+(1-across)*openWidth*.22,lift),
+      mix(packetHome.y,-(1-down)*openWidth*ratio*.13,lift),
+      mix(packetHome.z,1.65,lift)
     );
-    sheet.rotation.set(mix(-.065,0,lift),mix(-.045,0,lift),mix(.012,0,lift));
+    // Let the held panel tilt against each moving hinge. Both faces are
+    // visible through the middle of the fold, then the print rests square.
+    sheet.rotation.set(
+      mix(-.065,0,lift)-.49*Math.sin(Math.PI*down),
+      mix(-.045,0,lift)-.59*Math.sin(Math.PI*across),
+      mix(.012,0,lift)
+    );
+    packetEdge.visible=across<.01;
     // The right stack folds behind the left, and the lower pair behind the upper.
     // Offset the hinge pins by a paper thickness to keep coplanar layers apart.
     rightWing.rotation.y=(1-across)*Math.PI;

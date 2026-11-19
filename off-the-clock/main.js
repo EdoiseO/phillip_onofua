@@ -225,7 +225,7 @@ export function mountOffTheClock(stage, pageRoot) {
     $('gesture-hint').innerHTML=opened?'<span class="mouse-icon" aria-hidden="true"></span>Scroll to browse <span class="hint-dot">·</span> Click the raised cover to look closer':'<span class="mouse-icon" aria-hidden="true"></span>Click the box to open <span class="hint-dot">·</span> Drag to turn';
     stage.dataset.state=inspecting?'inspecting':opened?'open':'closed';stage.dataset.activeIndex=String(index);stage.dataset.sleeve=unwrapped?'removed':'on';
     if(inspecting){
-      for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(inspectionView===view));
+      for(const view of ['front','comic','back'])$('view-'+view).setAttribute('aria-pressed',String(!posterWanted&&inspectionView===view));
       const bag=!!comic.blindBag,hasBack=bag?!!comic.bagBack:!!comic.backCover;$('view-comic').hidden=bag;
       const phase=packPhase(),busy=phase==='opening',row=phase==='row',filed=phase==='filed';
       dialog.dataset.pack=phase??'';
@@ -245,7 +245,8 @@ export function mountOffTheClock(stage, pageRoot) {
       const posterButton=$('view-poster'), interiorButton=$('open-interior');
       posterButton.hidden=!comic.poster; posterButton.textContent=posterWanted?'Put away':'Poster';
       posterButton.setAttribute('aria-pressed',String(posterWanted));
-      interiorButton.hidden=!comic.pages?.length||posterWanted;
+      interiorButton.hidden=!comic.pages?.length;
+      interiorButton.disabled=reading&&posterWanted;
       interiorButton.textContent=reading?'Close comic':'Open comic';
       interiorButton.setAttribute('aria-expanded',String(reading));
       $('preview-credit').hidden=!reading;
