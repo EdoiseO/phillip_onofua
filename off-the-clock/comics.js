@@ -1141,6 +1141,7 @@ export const comics = [
     "sourcePage": "https://knowherecomics.com/products/75960621680200211",
     "coverWidth": 1400,
     "coverHeight": 2125,
+    "leagueURL": "https://leagueofcomicgeeks.com/comic/1931163/midnight-fantastic-four-2",
     "backVerified": true,
     "backStatus": "verified",
     "backCover": "./assets/backs/midnight-fantastic-four-2-cover-a.jpg",
