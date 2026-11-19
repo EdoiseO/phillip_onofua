@@ -25,9 +25,6 @@ export function InspectionDialog() {
         <button id="view-poster" hidden>Poster</button>
       </div>
       <p className="back-image-note" id="back-image-note" hidden></p>
-      <p className="back-image-note" id="preview-credit" hidden>
-        Preview pages 1–6, 18 · <a id="preview-source" target="_blank" rel="noreferrer">Dynamite preview</a>
-      </p>
       <div className="inspection-stage" id="inspection-stage">
         <ol className="pull-list" id="pull-list" aria-label="What I pulled" hidden></ol>
       </div>

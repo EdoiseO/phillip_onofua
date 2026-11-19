@@ -36,19 +36,33 @@ function printMaterial() {
   return new THREE.ShaderMaterial({
     side:THREE.DoubleSide,
     uniforms:{art:{value:null}},
-    vertexShader:`varying vec2 sheetUv; varying vec3 facing;
-      void main(){ sheetUv=uv; facing=normalMatrix*normal;
-        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-    fragmentShader:`uniform sampler2D art; varying vec2 sheetUv; varying vec3 facing;
+    vertexShader:`varying vec2 sheetUv; varying vec3 facing; varying vec3 eyePosition;
+      void main(){
+        sheetUv=uv; facing=normalMatrix*normal;
+        vec4 p=modelViewMatrix*vec4(position,1.);
+        eyePosition=p.xyz; gl_Position=projectionMatrix*p;
+      }`,
+    fragmentShader:`uniform sampler2D art; varying vec2 sheetUv; varying vec3 facing; varying vec3 eyePosition;
       float ridge(float a){
         return .10*exp(-abs(a-.0018)*280.)-.14*exp(-abs(a+.002)*240.);
       }
       void main(){
-        vec3 ink=gl_FrontFacing?texture2D(art,sheetUv).rgb:vec3(.74,.72,.66);
         vec3 n=normalize(gl_FrontFacing?facing:-facing);
-        float light=.76+.24*abs(dot(n,normalize(vec3(-.24,.34,1.))));
+        float light=.79+.21*max(dot(n,normalize(vec3(-.24,.34,1.))),0.);
         float crease=ridge(sheetUv.x-.5)+ridge(sheetUv.y-.5);
-        gl_FragColor=vec4(ink*(light+crease)+.13*max(crease,0.),1.);
+        vec3 paper=vec3(.89,.87,.82)*(light+.32*crease);
+        if(gl_FrontFacing){
+          vec3 ink=texture2D(art,sheetUv).rgb;
+          // Reflect a long softbox in the coated side only. Its position relative
+          // to each fragment moves the reflection continuously across the folds.
+          vec3 reflection=reflect(vec3(0.,0.,-1.),n);
+          vec3 lamp=normalize(vec3(1.2,.9,-3.)-eyePosition);
+          float offset=dot(reflection-lamp,normalize(vec3(1.,.35,0.)));
+          float gloss=(.12*exp(-48.*offset*offset)+.08*exp(-540.*offset*offset))
+                    *smoothstep(.05,.6,reflection.z);
+          paper=ink*(light+crease)+vec3(.94,.97,1.)*gloss;
+        }
+        gl_FragColor=vec4(paper,1.);
         #include <colorspace_fragment>
       }`,
   });
@@ -62,10 +76,10 @@ export function createComicInterior(comic, fetchArt, notify) {
   scene.add(book,sheet);
   const leftLeaf = new THREE.Group();
   book.add(leftLeaf);
-  const left = new THREE.Mesh(page(-1),paperMaterial(0xf5f1e6));
+  const left = new THREE.Mesh(page(-1),paperMaterial(0xffffff));
   const right = new THREE.Mesh(page(1),paperMaterial(0xffffff));
   leftLeaf.add(left); book.add(right);
-  // The reverse of the swinging inside cover shows the actual edition.
+  // The outside of the turning leaf carries this edition's front cover.
   const coverGeometry = left.geometry.clone();
   const coverUv = coverGeometry.attributes.uv;
   for (let i=0; i<coverUv.count; i++) coverUv.setX(i,1-coverUv.getX(i));
@@ -95,20 +109,18 @@ export function createComicInterior(comic, fetchArt, notify) {
       (row ? bottom : column).add(mesh);
     }
   }
-  const foldedMaterial = new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false});
-  const folded = new THREE.Mesh(new THREE.PlaneGeometry(tileWidth,tileHeight),foldedMaterial);
-  folded.position.set(-tileWidth/2,tileHeight/2,.001);
-  sheet.add(folded);
   // A sliver of the folded sheet catches light along its cut edges.
-  const packetEdge=new THREE.Mesh(folded.geometry,new THREE.MeshBasicMaterial({color:0xd7d2c6,toneMapped:false}));
-  packetEdge.position.copy(folded.position);
-  packetEdge.position.x+=.003; packetEdge.position.y-=.004; packetEdge.position.z=-.009;
+  const packetEdge=new THREE.Mesh(new THREE.PlaneGeometry(tileWidth,tileHeight),new THREE.MeshBasicMaterial({color:0xd7d2c6,toneMapped:false}));
+  packetEdge.position.set(-tileWidth/2+.003,tileHeight/2-.004,-.009);
   sheet.add(packetEdge);
 
   let alive=true, changed=true, phase='seated', elapsed=0, direction=0, lastTime=0;
-  const entryStart=performance.now();
-  let entering=true, fullTexture, intent=0;
-  function state(value) { phase=value; changed=true; notify(value); }
+  let entryStart, entering=false, fullTexture, intent=0;
+  let pitch=0, yaw=0;
+  function state(value) {
+    if(value==='seated'){pitch=0; yaw=0;}
+    phase=value; changed=true; notify(value);
+  }
   function mapTo(surface,url) {
     return fetchArt(url).then(texture=>{
       if (!alive || !texture) return false;
@@ -116,13 +128,15 @@ export function createComicInterior(comic, fetchArt, notify) {
       return true;
     });
   }
-  mapTo(cover.material,comic.cover);
-  mapTo(foldedMaterial,poster.foldedImage);
-  mapTo(right.material,comic.pages[0].image).then(loaded=>{
-    if (!alive) return;
-    if (!loaded) { notify('page-error'); return; }
-    // Only the immediately following spread is warmed, once page 1 is ready.
-    for (const page of comic.pages.slice(1,3)) fetchArt(page.image);
+  const spread=Promise.all([
+    mapTo(left.material,comic.pages[0].image),
+    mapTo(right.material,comic.pages[1].image),
+    mapTo(cover.material,comic.cover),
+  ]).then(([leftReady,rightReady,coverReady])=>{
+    if (!alive) return false;
+    if (!leftReady || !rightReady) { notify('page-error'); return false; }
+    entryStart=performance.now(); entering=coverReady; changed=true;
+    return true;
   });
 
   function travel(sign,reduced) {
@@ -137,8 +151,9 @@ export function createComicInterior(comic, fetchArt, notify) {
     const request=++intent;
     if (!fullTexture) {
       state('loading');
-      const texture=await fetchArt(poster.image);
+      const [ready,texture]=await Promise.all([spread,fetchArt(poster.image)]);
       if (!alive || request!==intent) return;
+      if (!ready) { state('seated'); notify('page-error'); return; }
       if (!texture) { state('seated'); notify('poster-error'); return; }
       fullTexture=texture; ink.uniforms.art.value=texture;
     }
@@ -186,29 +201,35 @@ export function createComicInterior(comic, fetchArt, notify) {
     // Let the held panel tilt against each moving hinge. Both faces are
     // visible through the middle of the fold, then the print rests square.
     sheet.rotation.set(
-      mix(-.065,0,lift)-.49*Math.sin(Math.PI*down),
-      mix(-.045,0,lift)-.59*Math.sin(Math.PI*across),
+      mix(-.065,0,lift)+.38*Math.sin(Math.PI*down)+pitch*down,
+      mix(-.045,0,lift)-.59*Math.sin(Math.PI*across)+yaw*down,
       mix(.012,0,lift)
     );
     packetEdge.visible=across<.01;
-    // The right stack folds behind the left, and the lower pair behind the upper.
-    // Offset the hinge pins by a paper thickness to keep coplanar layers apart.
+    // The lower panels fold face-to-face over the print. This leaves two
+    // matte outer backs while the doubled right half opens across. The tiny
+    // offsets give each folded layer its own depth at the ends of travel.
     rightWing.rotation.y=(1-across)*Math.PI;
     rightWing.position.z=-.004*(1-across);
     for (const hinge of lower) {
-      hinge.rotation.x=(1-down)*Math.PI;
-      hinge.position.z=-.001*(1-down);
+      hinge.rotation.x=-(1-down)*Math.PI;
+      hinge.position.z=.002*(1-down);
     }
-    ink.visible=!!fullTexture;
-    folded.visible=!fullTexture;
     sheet.visible=entry>.98;
     renderer.render(scene,camera);
   }
 
   return {
     get phase(){return phase;},
-    get needsPaint(){return changed||entering||direction!==0;},
+    get ready(){return entryStart!==undefined;},
+    get needsPaint(){return this.ready&&(changed||entering||direction!==0);},
     render,reveal,stow,
+    tilt(dx,dy){
+      if(phase!=='open')return;
+      yaw=THREE.MathUtils.clamp(yaw+dx*.005,-.38,.38);
+      pitch=THREE.MathUtils.clamp(pitch+dy*.005,-.28,.28);
+      changed=true;
+    },
     dispose(){
       alive=false; intent++;
       const owned=new Set();

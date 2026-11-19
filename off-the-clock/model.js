@@ -615,7 +615,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     wasSettled=settled;
     if(dirty||interior?.needsPaint||!settled||floatStrength>.0001||stickersMoving){
       if(viewportWidth!==renderWidth||viewportHeight!==renderHeight){renderer.setSize(viewportWidth,viewportHeight,false);renderWidth=viewportWidth;renderHeight=viewportHeight;}
-      if(interior) {
+      if(interior?.ready) {
         interior.render(renderer,viewportWidth,viewportHeight,now,reduced);
         dirty=false;
       }else{

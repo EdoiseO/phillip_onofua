@@ -1,6 +1,6 @@
-import {comics as catalogue} from './comics.js?v=40.0';
+import {comics as catalogue} from './comics.js?v=40.1';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.4';
-import {createBox} from './model.js?v=47.5';
+import {createBox} from './model.js?v=47.6';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.12';
 import {createInspectionFadeFrames, INSPECTION_OPEN_MS} from './inspection-motion.js?v=1.1';
 import {createStickerStudio} from './sticker-studio.js?v=30.2';
@@ -65,7 +65,7 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.33');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.34');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;
@@ -96,16 +96,16 @@ export function mountOffTheClock(stage, pageRoot) {
   let reader=null, reading=false, readerRequest=0, readerModule, posterWanted=false;
   function closeReader(){
     readerRequest++;
+    if(pointer?.poster)cancelPointer();
     reading=false; posterWanted=false; reader=null;
     box?.closeInterior();
     if(inspecting)stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic into its sleeve. Escape returns to the box.');
     delete dialog.dataset.poster;
-    $('preview-credit').hidden=true;
   }
   function readerState(phase){
     if(!reading)return;
     if(phase==='page-error'||phase==='poster-error'){
-      const message=phase==='page-error'?'Preview page unavailable. Close and reopen the comic to retry.':'Poster unavailable. Press Poster to retry.';
+      const message=phase==='page-error'?'Interior pages unavailable. Close and reopen the comic to retry.':'Poster unavailable. Press Poster to retry.';
       $('inspection-instructions').textContent=message;announce(message);return;
     }
     dialog.dataset.poster=phase;
@@ -122,15 +122,15 @@ export function mountOffTheClock(stage, pageRoot) {
     unwrapped=true; inspectionView='comic'; box.unwrap(true); box.inspectView('comic');
     render();
     try{
-      readerModule??=import('./comic-interior.js?v=1.0');
+      readerModule??=import('./comic-interior.js?v=1.1');
       const {createComicInterior}=await readerModule;
       if(request!==readerRequest||signal.aborted)return;
       reader=box.readInterior(createComicInterior,readerState);
       if(posterWanted)void reader.reveal(reduced);
-      else announce('Inside front cover on the left. Preview page 1 and a folded poster on the right.');
+      else announce('Page 2, the Hi-YAAAHHH splash, is on the left. Page 3, Death Valley, and the folded poster are on the right.');
     }catch{
       if(request!==readerRequest||signal.aborted)return;
-      readerModule=null;closeReader();render();announce('The preview could not open. Please try again.');
+      readerModule=null;closeReader();render();announce('The comic could not open. Please try again.');
     }
   }
   function togglePoster(){
@@ -249,13 +249,11 @@ export function mountOffTheClock(stage, pageRoot) {
       interiorButton.disabled=reading&&posterWanted;
       interiorButton.textContent=reading?'Close comic':'Open comic';
       interiorButton.setAttribute('aria-expanded',String(reading));
-      $('preview-credit').hidden=!reading;
       if(reading){
-        $('preview-source').href=comic.pagesSourcePage;
         $('back-image-note').hidden=true; button.hidden=true;
-        $('sleeve-status').textContent=posterWanted?'FOLD-OUT POSTER':'PAGE 1';
-        stage.setAttribute('aria-label',posterWanted?'Ben 10 pull-out poster. Escape puts it away.':'Open Ben 10 comic. Plain inside cover at left, preview page 1 and a folded poster at right.');
-        $('inspection-instructions').textContent=posterWanted?'Put away folds the poster back into the comic.':'The poster is folded inside the first spread.';
+        $('sleeve-status').textContent=posterWanted?'FOLD-OUT POSTER':'OPEN COMIC';
+        stage.setAttribute('aria-label',posterWanted?'Ben 10 pull-out poster. Escape puts it away.':'Open Ben 10 comic. Page 2 at left, page 3 and a folded poster at right.');
+        $('inspection-instructions').textContent=posterWanted?'Drag to catch the shine. Put away folds the poster back into the comic.':'The folded poster rests on the right-hand page.';
         return;
       }
       $('inspection-instructions').textContent=bag?(row?`${mobileCollection.matches?'Tap':'Point at'} a cover to tilt it, or use the arrow keys. Add the pulls to browse them.`:filed?'Drag to turn the torn wrapper. Your pulls are in the box.':busy?'Watch the three pulls come out.':'Drag right to left along the dotted line, or tap the bag to tear it.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
@@ -439,7 +437,13 @@ export function mountOffTheClock(stage, pageRoot) {
     if(e.key.toLowerCase()==='r'){box?.reset();lidSide=1;lidTilt=0;render();}
   });
   listen(stage,'pointerdown',e=>{
-    if(reading||e.target.closest('button')||e.button>0||pointer||!e.isPrimary||packPhase()==='opening')return;
+    if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary||packPhase()==='opening')return;
+    if(reading){
+      if(reader?.phase!=='open')return;
+      pointer={id:e.pointerId,poster:true,lastX:e.clientX,lastY:e.clientY};
+      stage.setPointerCapture(e.pointerId);
+      return;
+    }
     const hit=box?.hit(e.clientX,e.clientY);
     const line=guideLine();
     // The hit area runs just above and below the projected tear line. A
@@ -463,6 +467,11 @@ export function mountOffTheClock(stage, pageRoot) {
       return;
     }
     if(!pointer||pointer.id!==e.pointerId)return;
+    if(pointer.poster){
+      reader?.tilt(e.clientX-pointer.lastX,e.clientY-pointer.lastY);
+      pointer.lastX=e.clientX;pointer.lastY=e.clientY;
+      return;
+    }
     if(pointer.tear){
       const [a,b]=pointer.tear;
       pointer.progress=tearProgress(a,b,e.clientX-pointer.x,e.clientY-pointer.y);
@@ -481,6 +490,7 @@ export function mountOffTheClock(stage, pageRoot) {
   listen(stage,'pointerup',e=>{
     if(!pointer||pointer.id!==e.pointerId)return;
     const gesture=pointer;pointer=null;box?.hold(false);if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);
+    if(gesture.poster)return;
     if(gesture.tear){
       if(gesture.moved<7||gesture.progress>=TEAR_THRESHOLD)toggleSleeve();else box.cancelPackTear();
       return;
