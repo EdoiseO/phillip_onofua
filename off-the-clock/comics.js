@@ -1174,31 +1174,13 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/3951157/midnight-spider-man-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-spider-man-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.214,
-        0.09
-      ],
-      [
-        0.805,
-        0.087
-      ],
-      [
-        0.769,
-        0.941
-      ],
-      [
-        0.244,
-        0.923
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-spider-man-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541f278e01dce9911aded/l_6ad541f341ae66661604720d.jpg",
     "backSourcePage": "https://poshmark.com/listing/Set-of-3-Marvel-Midnight-XMen-SpiderMan-Fantastic-Four-1-NM-Main-Cover-A-6ad541f278e01dce9911aded",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
   },
   {
     "id": "midnight-spider-man-1-cover-h",
