@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {compacts} from './comics.js?v=39.6';
+import {compacts} from './comics.js?v=40.1';
 import {COMPACT_RETURN_MS, createSpineShelfReturn, startCompactReturn, startCompactPickup, compactUiOpacity, frameCompactBounds, createCompactSceneFade, prioritizeCompactBook, interpolateCompactBook, shouldReturnFromCompactTap} from './compact-return.js?v=1.14';
 import {createStageReturnFrames, createPageReturnFrames} from './return-motion.js?v=1.12';
 import {createPaperback} from './paperback.js?v=2.4';

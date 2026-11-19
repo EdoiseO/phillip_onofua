@@ -1,4 +1,13 @@
 // Collection metadata only; no order details or prices. New series from All Comics Inventory, read October 20, 2026.
+const ben10PreviewGallery = 'https://ben10.fandom.com/wiki/Ben_10_(Vol._1)_Issue_6/Gallery#Pages';
+const ben10InteriorSpread = [
+  [2, 'Preview_Page_2'], [3, 'Preview_Page'],
+].map(([number, file]) => ({
+  number,
+  image: `./assets/pages/ben10-6/page-${String(number).padStart(2, '0')}.jpg`,
+  source: `https://ben10.fandom.com/wiki/Special:FilePath/Ben_10_Issue_6_${file}.png`,
+}));
+
 export const comics = [
   {
     "id": "ben10-0",
@@ -710,6 +719,8 @@ export const comics = [
     "backStatus": "shared-standard-back",
     "backVerified": false,
     "collectionStatus": "Owned",
+    "pages": ben10InteriorSpread,
+    "pagesSourcePage": ben10PreviewGallery,
     "poster": {
       "image": "./assets/posters/ben10-6-poster.jpg",
       "width": 1262,
@@ -738,6 +749,8 @@ export const comics = [
     "backStatus": "shared-standard-back",
     "backVerified": false,
     "collectionStatus": "Owned",
+    "pages": ben10InteriorSpread,
+    "pagesSourcePage": ben10PreviewGallery,
     "poster": {
       "image": "./assets/posters/ben10-6-poster.jpg",
       "width": 1262,

@@ -96,3 +96,8 @@ body[data-reduced-motion=true] .experience{--collection-fade-duration:0ms;--lid-
 @media(prefers-reduced-motion:reduce){.collection-fade{transition:none!important}}
 
 .inspection[data-opening=true],.inspection[data-opening=true]::backdrop{background:transparent}
+
+.inspection-actions{display:flex;align-items:center;justify-content:center;gap:16px}
+#open-interior{white-space:nowrap;color:#c6d8ef}
+#open-interior:disabled{visibility:hidden}
+@media(max-width:650px){.inspection-actions:has(#open-interior:not([hidden])) .sleeve-button{min-width:0}}

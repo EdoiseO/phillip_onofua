@@ -365,11 +365,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
     resolve(completed);
   }
   const fieldOfView=(width,height)=>mobileView.matches||width/height<.83?40:33;
+  let interior;
+  cleanups.push(()=>interior?.dispose());
   function update(now){
     frame=requestAnimationFrame(update);const elapsed=Math.max(0,(now-last)/1000),dt=Math.min(elapsed,.035);last=now;
     if(document.hidden||!visible)return;
     const stickersMoving=stickerSystem.tick(dt,reduced);
-    if(shouldSkipSceneFrame(Boolean(openingState||returnState||packFiling),dirty,wasSettled,floatStrength,stickersMoving))return;
+    if(shouldSkipSceneFrame(Boolean(openingState||returnState||packFiling),dirty||interior?.needsPaint,wasSettled,floatStrength,stickersMoving))return;
     const position=returnState?advanceReturnMotion(returnState.motion,reduced?10:Math.min(elapsed,.1)):null;
     const opening=openingState?sampleInspectionOpen(reduced?Infinity:now-openingState.started):null;
     if(position){
@@ -611,9 +613,14 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
       dirty=true;
     }
     wasSettled=settled;
-    if(dirty||!settled||floatStrength>.0001||stickersMoving){
+    if(dirty||interior?.needsPaint||!settled||floatStrength>.0001||stickersMoving){
       if(viewportWidth!==renderWidth||viewportHeight!==renderHeight){renderer.setSize(viewportWidth,viewportHeight,false);renderWidth=viewportWidth;renderHeight=viewportHeight;}
-      renderer.render(scene,camera);dirty=false;
+      if(interior?.ready) {
+        interior.render(renderer,viewportWidth,viewportHeight,now,reduced);
+        dirty=false;
+      }else{
+        renderer.render(scene,camera);dirty=false;
+      }
       if(!firstRender){
         firstRender=true;
         artworkGate.rendered();
@@ -628,7 +635,7 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   const art=new Map(),backsStarted=new Set(),pendingBacks=new Set();
   const fetchArt=url=>{
     if(!url)return Promise.resolve(null);
-    if(!art.has(url))art.set(url,loadColor(url).catch(error=>{console.warn('Artwork unavailable',url,error);return null;}));
+    if(!art.has(url))art.set(url,loadColor(url).catch(error=>{art.delete(url);console.warn('Artwork unavailable',url,error);return null;}));
     return art.get(url);
   };
   const applyArt=fn=>value=>{if(!isDisposed()){fn(value);dirty=true;}};
@@ -675,6 +682,13 @@ async function buildBox(stage, comics, { signal, cleanups, dispose, isDisposed }
   }
   return {
     firstPaint,
+    readInterior(create, notify){
+      interior?.dispose();
+      interior=create(comics[selected],fetchArt,notify);
+      dirty=true;
+      return interior;
+    },
+    closeInterior(){interior?.dispose();interior=null;dirty=true;},
     setLid(side,tilt=0){wantedLidSide=clamp(side,-1,1);wantedLidTilt=clamp(tilt,-.16,.24);dirty=true;},
     setOpen(value){opened=value;dirty=true;stage.dataset.state=value?'open':'closed';},
     select(index){if(index!==selected)cards[index].blind?.crinkle();cards[index].seatAfterFiling=false;selected=index;loadBack(index);dirty=true;stage.dataset.activeIndex=String(index);},

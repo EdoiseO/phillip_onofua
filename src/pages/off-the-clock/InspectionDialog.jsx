@@ -22,6 +22,7 @@ export function InspectionDialog() {
         <button id="view-front">Front</button>
         <button id="view-comic">Inspect comic</button>
         <button id="view-back">Back</button>
+        <button id="view-poster" hidden>Poster</button>
       </div>
       <p className="back-image-note" id="back-image-note" hidden></p>
       <div className="inspection-stage" id="inspection-stage">
@@ -30,10 +31,13 @@ export function InspectionDialog() {
       <p className="sr-only" aria-live="polite" id="inspection-announcement"></p>
       <footer className="inspection-footer">
         <p id="inspection-instructions">Drag to turn the comic. Click it to open the sleeve.</p>
-        <button className="primary sleeve-button" id="sleeve-button">
-          {'Slide out of sleeve '}
-          <span aria-hidden="true">↑</span>
-        </button>
+        <div className="inspection-actions">
+          <button className="primary sleeve-button" id="sleeve-button">
+            {'Slide out of sleeve '}
+            <span aria-hidden="true">↑</span>
+          </button>
+          <button className="back-button" id="open-interior" hidden>Open comic</button>
+        </div>
         <span className="sleeve-status" id="sleeve-status">
           BAGGED &amp; BOARDED
         </span>
