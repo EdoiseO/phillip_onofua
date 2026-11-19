@@ -690,6 +690,34 @@ export const comics = [
     "backVerified": false
   },
   {
+    "id": "ben10-23",
+    "title": "Ben 10 #6",
+    "issue": "6",
+    "variant": "Cover A - Robert Carey",
+    "cover": "./assets/covers/ben10-6-cover-a-poster.jpg",
+    "description": "Cover A, illustrated by Robert Carey. This edition includes the fold-out poster.",
+    "blindBag": false,
+    "source": "https://ben10.fandom.com/wiki/Special:FilePath/Ben_10_Issue_6_Carey_Poster.png",
+    "sourcePage": "https://ben10.fandom.com/wiki/Ben_10_(Vol._1)_Issue_6/Gallery",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "series": "Ben 10",
+    "publisher": "Dynamite",
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-social-back-vivid.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false,
+    "collectionStatus": "Owned",
+    "poster": {
+      "image": "./assets/posters/ben10-6-poster.jpg",
+      "width": 1262,
+      "height": 1600,
+      "folds": 2
+    }
+  },
+  {
     "id": "ben10-22",
     "title": "Ben 10: Creator Files #1",
     "issue": "1",
