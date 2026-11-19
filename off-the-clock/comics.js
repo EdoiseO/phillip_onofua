@@ -690,6 +690,62 @@ export const comics = [
     "backVerified": false
   },
   {
+    "id": "ben10-23",
+    "title": "Ben 10 #6",
+    "issue": "6",
+    "variant": "Cover A - Robert Carey",
+    "cover": "./assets/covers/ben10-6-cover-a-poster.jpg",
+    "description": "Cover A, illustrated by Robert Carey. This edition includes the fold-out poster.",
+    "blindBag": false,
+    "source": "https://ben10.fandom.com/wiki/Special:FilePath/Ben_10_Issue_6_Carey_Poster.png",
+    "sourcePage": "https://ben10.fandom.com/wiki/Ben_10_(Vol._1)_Issue_6/Gallery",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "series": "Ben 10",
+    "publisher": "Dynamite",
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-social-back-vivid.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false,
+    "collectionStatus": "Owned",
+    "poster": {
+      "image": "./assets/posters/ben10-6-poster.jpg",
+      "width": 1262,
+      "height": 1600,
+      "folds": 2
+    }
+  },
+  {
+    "id": "ben10-24",
+    "title": "Ben 10 #6",
+    "issue": "6",
+    "variant": "Cover E - Eric Canete",
+    "cover": "./assets/covers/ben10-6-cover-e-poster.jpg",
+    "description": "Cover E, illustrated by Eric Canete. This edition includes the fold-out poster.",
+    "blindBag": false,
+    "source": "https://ben10.fandom.com/wiki/Special:FilePath/Ben_10_Issue_6_Canete_Poster.png",
+    "sourcePage": "https://ben10.fandom.com/wiki/Ben_10_(Vol._1)_Issue_6/Gallery",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "series": "Ben 10",
+    "publisher": "Dynamite",
+    "year": 2026,
+    "backCover": "./assets/backs/pulls/ben10-social-back-vivid.jpg",
+    "backAssetType": "shared-dynamite-back",
+    "backFrom": "Ben 10 #2 Cover X",
+    "backStatus": "shared-standard-back",
+    "backVerified": false,
+    "collectionStatus": "Owned",
+    "poster": {
+      "image": "./assets/posters/ben10-6-poster.jpg",
+      "width": 1262,
+      "height": 1600,
+      "folds": 2
+    }
+  },
+  {
     "id": "ben10-22",
     "title": "Ben 10: Creator Files #1",
     "issue": "1",
@@ -964,18 +1020,24 @@ export const comics = [
     "variant": "Cover A — Rafael Albuquerque",
     "publisher": "DC",
     "year": 2026,
-    "collectionStatus": "Incoming",
+    "collectionStatus": "Owned",
     "quantity": 1,
     "cover": "./assets/covers/absolute-green-arrow-6-cover-a.jpg",
-    "description": "Cover A by Rafael Albuquerque, from the 2026 Absolute Green Arrow series. On its way to the collection.",
+    "description": "Cover A by Rafael Albuquerque, from the 2026 Absolute Green Arrow series.",
     "blindBag": false,
     "source": "https://static.dc.com/dc/files/default_images/16b4a716-f38e-488f-bd2c-8649353d1f4c/5ec8805d-e2d7-4261-8cbe-33cf1646815f/0.jpg",
     "sourcePage": "https://www.dc.com/comics/absolute-green-arrow-2026/absolute-green-arrow-2026-6",
     "coverWidth": 1073,
     "coverHeight": 1650,
     "leagueURL": "https://leagueofcomicgeeks.com/comic/5288957/absolute-green-arrow-6",
-    "backVerified": false,
-    "backStatus": "unreleased-no-verified-rear"
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/absolute-green-arrow-6-cover-a.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/840112350172",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backSource": "https://i.ebayimg.com/images/g/nXAAAeSwPkhq1vDb/s-l1600.jpg"
   },
   {
     "id": "miles-morales-spider-man-1-cover-a",
@@ -1050,31 +1112,44 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/1761704/midnight-fantastic-four-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-fantastic-four-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.179,
-        0.057
-      ],
-      [
-        0.799,
-        0.057
-      ],
-      [
-        0.766,
-        0.953
-      ],
-      [
-        0.216,
-        0.935
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-fantastic-four-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541e91e28d3f3517a5407/l_6ad541ea9709887265e72810.jpg",
     "backSourcePage": "https://poshmark.com/listing/Midnight-Fantastic-Four-1-Regular-Cover-Benjamin-Percy-1st-Print-2026-NM-6ad541e91e28d3f3517a5407",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
+  },
+  {
+    "id": "midnight-fantastic-four-2-cover-a",
+    "series": "Midnight Fantastic Four",
+    "title": "Midnight Fantastic Four #2",
+    "displayTitle": [
+      "Midnight",
+      "Fantastic Four"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Kev Walker",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-fantastic-four-2-cover-a.jpg",
+    "description": "Cover A by Kev Walker, from the 2026 Midnight Fantastic Four series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621680200211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621680200211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "leagueURL": "https://leagueofcomicgeeks.com/comic/1931163/midnight-fantastic-four-2",
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-fantastic-four-2-cover-a.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/198806557674",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backSource": "https://i.ebayimg.com/images/g/v~gAAeSwtURq~ljJ/s-l1600.jpg"
   },
   {
     "id": "midnight-spider-man-1-cover-a",
@@ -1100,31 +1175,13 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/3951157/midnight-spider-man-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-spider-man-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.214,
-        0.09
-      ],
-      [
-        0.805,
-        0.087
-      ],
-      [
-        0.769,
-        0.941
-      ],
-      [
-        0.244,
-        0.923
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-spider-man-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541f278e01dce9911aded/l_6ad541f341ae66661604720d.jpg",
     "backSourcePage": "https://poshmark.com/listing/Set-of-3-Marvel-Midnight-XMen-SpiderMan-Fantastic-Four-1-NM-Main-Cover-A-6ad541f278e01dce9911aded",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
   },
   {
     "id": "midnight-spider-man-1-cover-h",
@@ -1151,31 +1208,44 @@ export const comics = [
     "backVerified": true,
     "backStatus": "verified",
     "variantNote": "Inventory and League of Comic Geeks label this Cover H; the retailer labels the same Eric Canete artwork and UPC as Cover F.",
-    "backCover": "./assets/backs/midnight-spider-man-1-cover-h.jpg",
-    "backQuad": [
-      [
-        0.145625,
-        0.021875
-      ],
-      [
-        0.86125,
-        0.030625
-      ],
-      [
-        0.7875,
-        0.9825
-      ],
-      [
-        0.21,
-        0.976875
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-spider-man-1-cover-h.jpg?v=2",
     "backSource": "https://u-mercari-images.mercdn.net/photos/m29059972743_6.jpg",
     "backSourcePage": "https://www.mercari.com/us/item/m29059972743/",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1600,
-    "backImageHeight": 1600,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
+  },
+  {
+    "id": "midnight-spider-man-2-cover-a",
+    "series": "Midnight Spider-Man",
+    "title": "Midnight Spider-Man #2",
+    "displayTitle": [
+      "Midnight",
+      "Spider-Man"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Steve Beach",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-spider-man-2-cover-a.jpg",
+    "description": "Cover A by Steve Beach, from the 2026 Midnight Spider-Man series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621681900211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621681900211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "leagueURL": "https://leagueofcomicgeeks.com/comic/5013472/midnight-spider-man-2",
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-spider-man-2-cover-a.jpg",
+    "backSource": "https://i.ebayimg.com/images/g/tPsAAeSwTCJq~eu9/s-l1600.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/198805829853",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125
   },
   {
     "id": "midnight-x-men-1-cover-a",
@@ -1201,31 +1271,44 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/2126165/midnight-x-men-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-x-men-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.216,
-        0.064
-      ],
-      [
-        0.833,
-        0.06
-      ],
-      [
-        0.812,
-        0.963
-      ],
-      [
-        0.251,
-        0.95
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-x-men-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541f7352b3a739c4e9dd6/l_6ad541f8c6a0b3c7ddc9331e.jpg",
     "backSourcePage": "https://poshmark.com/listing/Midnight-XMen-1-Dike-Ruan-CVR-A-2026-NM-6ad541f7352b3a739c4e9dd6",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
+  },
+  {
+    "id": "midnight-x-men-2-cover-a",
+    "series": "Midnight X-Men",
+    "title": "Midnight X-Men #2",
+    "displayTitle": [
+      "Midnight",
+      "X-Men"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Dike Ruan",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-x-men-2-cover-a.jpg",
+    "description": "Cover A by Dike Ruan, from the 2026 Midnight X-Men series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621668000211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621668000211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "leagueURL": "https://leagueofcomicgeeks.com/comic/8419032/midnight-x-men-2",
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-x-men-2-cover-a.jpg",
+    "backSource": "https://i.ebayimg.com/images/g/d5sAAeSwaSxq~lGM/s-l1600.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/128203903182",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125
   }
 ];
 

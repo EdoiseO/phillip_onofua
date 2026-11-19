@@ -148,7 +148,7 @@ Technology brand marks are sourced from [Devicon](https://devicon.dev) and [Simp
 
 ## Off the clock
 
-The scene grew out of the Short Box prototype. The box starts with 30 entries, including two Ben 10 mystery bags. Compacts has a separate shelf for *Static: Season One* and *Green Arrow: Year One*.
+The scene grew out of the Short Box prototype. The box starts with 35 entries, including two Ben 10 mystery bags. Compacts has a separate shelf for *Static: Season One* and *Green Arrow: Year One*.
 
 The homepage can prefetch the files needed to show the box on a suitable connection. The box appears before comic artwork starts downloading, and the paperback scene and textures load when visitors select Compacts. Both scenes share the same copy of Three.js through the import map.
 
