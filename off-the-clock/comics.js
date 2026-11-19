@@ -1,4 +1,14 @@
 // Collection metadata only; no order details or prices. New series from All Comics Inventory, read October 20, 2026.
+const ben10PreviewGallery = 'https://ben10.fandom.com/wiki/Ben_10_(Vol._1)_Issue_6/Gallery#Pages';
+const ben10PreviewPages = [
+  [1, 'Preview_Page_1'], [2, 'Preview_Page_2'], [3, 'Preview_Page'],
+  [4, 'Preview_Page_4'], [5, 'Preview_Page_5'], [6, 'Preview_Page_6'], [18, 'Preview_X'],
+].map(([number, file]) => ({
+  number,
+  image: `./assets/pages/ben10-6/page-${String(number).padStart(2, '0')}.jpg`,
+  source: `https://ben10.fandom.com/wiki/Special:FilePath/Ben_10_Issue_6_${file}.png`,
+}));
+
 export const comics = [
   {
     "id": "ben10-0",
@@ -710,8 +720,11 @@ export const comics = [
     "backStatus": "shared-standard-back",
     "backVerified": false,
     "collectionStatus": "Owned",
+    "pages": ben10PreviewPages,
+    "pagesSourcePage": ben10PreviewGallery,
     "poster": {
       "image": "./assets/posters/ben10-6-poster.jpg",
+      "foldedImage": "./assets/posters/ben10-6-quarter.jpg",
       "width": 1262,
       "height": 1600,
       "folds": 2
@@ -738,8 +751,11 @@ export const comics = [
     "backStatus": "shared-standard-back",
     "backVerified": false,
     "collectionStatus": "Owned",
+    "pages": ben10PreviewPages,
+    "pagesSourcePage": ben10PreviewGallery,
     "poster": {
       "image": "./assets/posters/ben10-6-poster.jpg",
+      "foldedImage": "./assets/posters/ben10-6-quarter.jpg",
       "width": 1262,
       "height": 1600,
       "folds": 2
