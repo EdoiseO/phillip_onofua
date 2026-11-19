@@ -1207,31 +1207,13 @@ export const comics = [
     "backVerified": true,
     "backStatus": "verified",
     "variantNote": "Inventory and League of Comic Geeks label this Cover H; the retailer labels the same Eric Canete artwork and UPC as Cover F.",
-    "backCover": "./assets/backs/midnight-spider-man-1-cover-h.jpg",
-    "backQuad": [
-      [
-        0.145625,
-        0.021875
-      ],
-      [
-        0.86125,
-        0.030625
-      ],
-      [
-        0.7875,
-        0.9825
-      ],
-      [
-        0.21,
-        0.976875
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-spider-man-1-cover-h.jpg?v=2",
     "backSource": "https://u-mercari-images.mercdn.net/photos/m29059972743_6.jpg",
     "backSourcePage": "https://www.mercari.com/us/item/m29059972743/",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1600,
-    "backImageHeight": 1600,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
   },
   {
     "id": "midnight-spider-man-2-cover-a",
