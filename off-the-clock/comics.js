@@ -1133,6 +1133,36 @@ export const comics = [
     "backQualityNote": "Seller photograph; some reflections remain."
   },
   {
+    "id": "midnight-fantastic-four-2-cover-a",
+    "series": "Midnight Fantastic Four",
+    "title": "Midnight Fantastic Four #2",
+    "displayTitle": [
+      "Midnight",
+      "Fantastic Four"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Kev Walker",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-fantastic-four-2-cover-a.jpg",
+    "description": "Cover A by Kev Walker, from the 2026 Midnight Fantastic Four series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621680200211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621680200211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-fantastic-four-2-cover-a.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/198806557674",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backSource": "https://i.ebayimg.com/images/g/v~gAAeSwtURq~ljJ/s-l1600.jpg"
+  },
+  {
     "id": "midnight-spider-man-1-cover-a",
     "series": "Midnight Spider-Man",
     "title": "Midnight Spider-Man #1",
