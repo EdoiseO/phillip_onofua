@@ -1341,6 +1341,35 @@ export const comics = [
     "backImageWidth": 1000,
     "backImageHeight": 1000,
     "backQualityNote": "Seller photograph; some reflections remain."
+  },
+  {
+    "id": "midnight-x-men-2-cover-a",
+    "series": "Midnight X-Men",
+    "title": "Midnight X-Men #2",
+    "displayTitle": [
+      "Midnight",
+      "X-Men"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Dike Ruan",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-x-men-2-cover-a.jpg",
+    "description": "Cover A by Dike Ruan, from the 2026 Midnight X-Men series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621668000211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621668000211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-x-men-2-cover-a.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/128203903182",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125
   }
 ];
 
