@@ -1,6 +1,6 @@
-import {comics as catalogue} from './comics.js?v=39.6';
+import {comics as catalogue} from './comics.js?v=40.0';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.4';
-import {createBox} from './model.js?v=47.4';
+import {createBox} from './model.js?v=47.5';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.12';
 import {createInspectionFadeFrames, INSPECTION_OPEN_MS} from './inspection-motion.js?v=1.1';
 import {createStickerStudio} from './sticker-studio.js?v=30.2';
@@ -65,7 +65,7 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.32');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.33');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;
@@ -93,6 +93,53 @@ export function mountOffTheClock(stage, pageRoot) {
   const guide=document.createElement('div');guide.className='pack-tear-guide';guide.hidden=true;
   guide.setAttribute('aria-hidden','true');
   const guideLabel=document.createElement('span');guideLabel.textContent='TEAR HERE';guide.append(guideLabel);stage.append(guide);
+  let reader=null, reading=false, readerRequest=0, readerModule, posterWanted=false;
+  function closeReader(){
+    readerRequest++;
+    reading=false; posterWanted=false; reader=null;
+    box?.closeInterior();
+    if(inspecting)stage.setAttribute('aria-label','Comic close-up. Drag or use arrow keys to rotate. Enter or Space slides the comic into its sleeve. Escape returns to the box.');
+    delete dialog.dataset.poster;
+    $('preview-credit').hidden=true;
+  }
+  function readerState(phase){
+    if(!reading)return;
+    if(phase==='page-error'||phase==='poster-error'){
+      const message=phase==='page-error'?'Preview page unavailable. Close and reopen the comic to retry.':'Poster unavailable. Press Poster to retry.';
+      $('inspection-instructions').textContent=message;announce(message);return;
+    }
+    dialog.dataset.poster=phase;
+    if(phase==='seated'&&posterWanted===false)$('view-poster').focus({preventScroll:true});
+    if(phase==='seated')posterWanted=false;
+    render();
+    if(phase==='open')announce('Full Ben 10 poster. Choose Put away or press Escape to fold it back into the comic.');
+  }
+  async function readComic(showPoster=false){
+    if(!inspecting||!comics[index].pages?.length)return;
+    if(reading)return;
+    const request=++readerRequest;
+    reading=true; posterWanted=showPoster; dialog.dataset.poster='seated';
+    unwrapped=true; inspectionView='comic'; box.unwrap(true); box.inspectView('comic');
+    render();
+    try{
+      readerModule??=import('./comic-interior.js?v=1.0');
+      const {createComicInterior}=await readerModule;
+      if(request!==readerRequest||signal.aborted)return;
+      reader=box.readInterior(createComicInterior,readerState);
+      if(posterWanted)void reader.reveal(reduced);
+      else announce('Inside front cover on the left. Preview page 1 and a folded poster on the right.');
+    }catch{
+      if(request!==readerRequest||signal.aborted)return;
+      readerModule=null;closeReader();render();announce('The preview could not open. Please try again.');
+    }
+  }
+  function togglePoster(){
+    if(!reading){void readComic(true);return;}
+    posterWanted=!posterWanted;
+    if(posterWanted)void reader?.reveal(reduced);
+    else reader?.stow(reduced);
+    render();
+  }
   const packPhase=()=>inspecting?box?.packPhase():undefined;
   function guideLine(){
     if(inspectionView!=='front'||packPhase()!=='sealed')return null;
@@ -195,6 +242,21 @@ export function mountOffTheClock(stage, pageRoot) {
       button.innerHTML=bag?(row?'Add to my box <span aria-hidden="true">↓</span>':busy?'Opening the bag…':'Tear the bag <span aria-hidden="true">↯</span>'):unwrapped?'Slide back into sleeve <span aria-hidden="true">↓</span>':'Slide out of sleeve <span aria-hidden="true">↑</span>';
       if(bag)button.removeAttribute('aria-pressed');else button.setAttribute('aria-pressed',String(unwrapped));
       $('sleeve-status').textContent=bag?(row?'BAGGED & BOARDED':filed?'OPENED · KEEPSAKE':busy?'OPENING':'SEALED'):unwrapped?'OUT OF THE SLEEVE':'IN THE SLEEVE';
+      const posterButton=$('view-poster'), interiorButton=$('open-interior');
+      posterButton.hidden=!comic.poster; posterButton.textContent=posterWanted?'Put away':'Poster';
+      posterButton.setAttribute('aria-pressed',String(posterWanted));
+      interiorButton.hidden=!comic.pages?.length||posterWanted;
+      interiorButton.textContent=reading?'Close comic':'Open comic';
+      interiorButton.setAttribute('aria-expanded',String(reading));
+      $('preview-credit').hidden=!reading;
+      if(reading){
+        $('preview-source').href=comic.pagesSourcePage;
+        $('back-image-note').hidden=true; button.hidden=true;
+        $('sleeve-status').textContent=posterWanted?'FOLD-OUT POSTER':'PAGE 1';
+        stage.setAttribute('aria-label',posterWanted?'Ben 10 pull-out poster. Escape puts it away.':'Open Ben 10 comic. Plain inside cover at left, preview page 1 and a folded poster at right.');
+        $('inspection-instructions').textContent=posterWanted?'Put away folds the poster back into the comic.':'The poster is folded inside the first spread.';
+        return;
+      }
       $('inspection-instructions').textContent=bag?(row?`${mobileCollection.matches?'Tap':'Point at'} a cover to tilt it, or use the arrow keys. Add the pulls to browse them.`:filed?'Drag to turn the torn wrapper. Your pulls are in the box.':busy?'Watch the three pulls come out.':'Drag right to left along the dotted line, or tap the bag to tear it.'):unwrapped?'Drag to catch the shine. Click empty space to return to the box.':'Drag to turn. Click the comic to unbag it, or empty space to return to the box.';
     }
   }
@@ -257,6 +319,7 @@ export function mountOffTheClock(stage, pageRoot) {
   }
   function leaveInspection(fileRequested=false){
     if(!inspecting||packPhase()==='opening')return;
+    if(reading)closeReader();
     const filing=packPhase()==='row'&&fileRequested?box.filePack():null;
     if(pointer)cancelPointer();
     clearTimeout(clickTimer);inspecting=false;unwrapped=false;pointer=null;
@@ -327,8 +390,18 @@ export function mountOffTheClock(stage, pageRoot) {
   }
   function updateMotion(){box?.reduce(reduced);document.body.dataset.reducedMotion=String(reduced);$('motion-toggle').setAttribute('aria-pressed',String(reduced));$('motion-toggle').textContent=reduced?'Motion reduced':'Motion on';}
   listen($('inspect-button'),'click',()=>enterInspection());listen($('return-button'),'click',()=>leaveInspection());listen($('sleeve-button'),'click',toggleSleeve);
-  for(const view of ['front','comic','back'])listen($('view-'+view),'click',()=>{if(packPhase()==='opening'||packPhase()==='row')return;inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?((comics[index].blindBag?comics[index].bagBack:comics[index].backCover)?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
-  listen(dialog,'cancel',e=>{e.preventDefault();leaveInspection();});
+  listen($('open-interior'),'click',()=>{
+    if(!reading){void readComic();return;}
+    closeReader();render();
+  });
+  listen($('view-poster'),'click',togglePoster);
+  listen(dialog,'keydown',e=>{
+    if(reading&&posterWanted&&e.key==='Escape'){
+      e.preventDefault();e.stopPropagation();togglePoster();
+    }
+  },{capture:true});
+  for(const view of ['front','comic','back'])listen($('view-'+view),'click',()=>{if(packPhase()==='opening'||packPhase()==='row')return;if(reading)closeReader();inspectionView=view;if(view!=='front'&&!unwrapped&&!comics[index].blindBag){unwrapped=true;box?.unwrap(true);}box?.inspectView(view);render();announce(view==='comic'?'Comic out of its sleeve. Front cover close-up. Drag to rotate.':view==='back'?((comics[index].blindBag?comics[index].bagBack:comics[index].backCover)?backImageLabel(comics[index])+'.':'Back-cover image not available for this edition.'):'Front cover.');});
+  listen(dialog,'cancel',e=>{e.preventDefault();if(reading&&posterWanted)togglePoster();else leaveInspection();});
   listen($('previous'),'click',()=>step(-1));listen($('next'),'click',()=>step(1));
   listen($('motion-toggle'),'click',()=>{reduced=!reduced;updateMotion();});
   listen(media,'change',e=>{reduced=e.matches;updateMotion();});
@@ -341,7 +414,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if(Math.abs(wheelSum)>42){step(Math.sign(wheelSum));lastWheel=now;wheelSum=0;}
   },{passive:false});
   listen(stage,'keydown',e=>{
-    if(e.target!==stage)return;
+    if(e.target!==stage||reading)return;
     if(['ArrowRight','ArrowDown','ArrowLeft','ArrowUp','Enter',' ','Escape','Home','End','i','I','r','R'].includes(e.key))e.preventDefault();
     if(inspecting){
       const phase=packPhase();
@@ -365,7 +438,7 @@ export function mountOffTheClock(stage, pageRoot) {
     if(e.key.toLowerCase()==='r'){box?.reset();lidSide=1;lidTilt=0;render();}
   });
   listen(stage,'pointerdown',e=>{
-    if(e.target.closest('button')||e.button>0||pointer||!e.isPrimary||packPhase()==='opening')return;
+    if(reading||e.target.closest('button')||e.button>0||pointer||!e.isPrimary||packPhase()==='opening')return;
     const hit=box?.hit(e.clientX,e.clientY);
     const line=guideLine();
     // The hit area runs just above and below the projected tear line. A
@@ -495,6 +568,7 @@ export function mountOffTheClock(stage, pageRoot) {
 
   function dispose() {
     if (signal.aborted) return;
+    if(reading)closeReader();
     compacts?.dispose();
     setCollection('comics');
     studio?.dispose();
