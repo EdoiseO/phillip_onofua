@@ -13,39 +13,68 @@ async page => {
         document.addEventListener('securitypolicyviolation',e=>console.error('CSP: '+e.violatedDirective));
       });
       await target.clock.install();
-      // Compare the actual canvas to the fetched print: a state label alone cannot
-      // detect an invisible, cropped or reversed poster. Average ink over a grid
-      // so device antialiasing and the two narrow crease highlights are tolerated.
-      async function checkPrint(response, folded){
+      // Sample the actual canvas. Compare aligned ink samples when the sheet is
+      // tilted so a change in its silhouette alone cannot pass the gloss test.
+      async function sample(view, response, yaw=0){
         const screen=(await stage.screenshot()).toString('base64');
-        const original=(await response.body()).toString('base64');
-        const difference=await target.evaluate(async ({screen,original,touch,folded})=>{
+        const original=response && (await response.body()).toString('base64');
+        return target.evaluate(async ({screen,original,view,yaw,touch})=>{
           async function decode(mime,data){
-            const im=new Image();im.src='data:'+mime+';base64,'+data;await im.decode();return im;
+            const image=new Image();image.src='data:'+mime+';base64,'+data;
+            await image.decode();return image;
           }
-          const [shot,print]=await Promise.all([decode('image/png',screen),decode('image/jpeg',original)]);
-          const bookHeight=Math.min(1.73,shot.width/shot.height*1.85/1.31)*shot.height/2;
-          const w=folded ? .38*bookHeight : Math.min(shot.width*.91,shot.height*.89*print.width/print.height),h=w*print.height/print.width;
-          const x=folded?shot.width/2+.33*bookHeight-w/2:(touch ? .5 : .60)*shot.width-w/2;
-          const y=(shot.height-h)/2+(folded ? .06*bookHeight : 0);
+          const shot=await decode('image/png',screen),{width:sw,height:sh}=shot;
+          const book=Math.min(1.73,sw/sh*1.85/1.31)*sh/2;
+          const w=Math.min(sw*.91,sh*.89*1262/1600),h=w*1600/1262;
+          const cx=sw*(touch?.5:.60), cy=sh/2;
           const canvas=document.createElement('canvas');canvas.width=24;canvas.height=32;
           const ctx=canvas.getContext('2d',{willReadFrequently:true});
           ctx.imageSmoothingQuality='high';
-          function sample(image,rect){
-            ctx.drawImage(image,...rect,0,0,24,32);
-            return ctx.getImageData(0,0,24,32).data;
+          function grid(image,rect,projection){
+            ctx.save();
+            if(projection){
+              ctx.setTransform(projection.inverse());
+              ctx.drawImage(image,0,0);
+            }else ctx.drawImage(image,...rect,0,0,24,32);
+            ctx.restore();
+            return Array.from(ctx.getImageData(0,0,24,32).data).filter((_,i)=>i%4!==3);
           }
-          const pixels=sample(shot,[x,y,w,h]),reference=sample(print,[0,0,print.width,print.height]);
-          let error=0;
-          for(let i=0;i<pixels.length;i++)if(i%4!==3)error+=Math.abs(pixels[i]-reference[i]);
-          if(touch&&!folded){
-            const margin=sample(shot,[0,y+h+2,shot.width,shot.height-y-h-2]);
-            if(margin.some((v,i)=>i%4!==3&&v>90))throw Error('The comic is still visible below the phone poster');
+          let rect, projection, source=[0,0,1,1];
+          if(view==='seated') rect=[sw/2+.22*book,cy-.06*book,.21*book,.24*book];
+          else if(view==='across') rect=[cx-.43*w,cy-.28*h,.86*w,.32*h];
+          else if(view==='left'||view==='right'){
+            source=[.12,.07,.76,.19];
+            // Project the same upper strip of each page through the book's
+            // gentle resting tilt. A few pixels of skew shift the lettering.
+            const cz=Math.cos(.012),sz=Math.sin(.012),ax=-.065,ay=-.045;
+            function point(u,v){
+              const x=((view==='left'?-1:0)+u)*.655,y=.5-v;
+              const rx=x*cz-y*sz, ry=x*sz+y*cz;
+              return [sw/2+rx*Math.cos(ay)*book,cy-(ry*Math.cos(ax)+rx*Math.sin(ay)*Math.sin(ax))*book];
+            }
+            const tl=point(source[0],source[1]),tr=point(source[0]+source[2],source[1]),bl=point(source[0],source[1]+source[3]);
+            projection=new DOMMatrix([(tr[0]-tl[0])/24,(tr[1]-tl[1])/24,(bl[0]-tl[0])/32,(bl[1]-tl[1])/32,...tl]);
+          }else{
+            const width=w*Math.cos(yaw);
+            rect=[cx-width/2,cy-h/2,width,h];
+            if(touch && grid(shot,[0,cy+h/2+2,sw,sh-cy-h/2-2]).some(channel=>channel>90))
+              throw Error('The comic overlaps the phone poster');
           }
-          return error/(24*32*3);
-        },{screen,original,touch,folded});
-        if(difference>24)throw Error((folded?'Folded':'Full')+' poster differs from its source by '+difference);
-        return difference;
+          const pixels=grid(shot,rect,projection);
+          if(!original)return pixels;
+          const ink=await decode('image/jpeg',original);
+          const ref=grid(ink,source.map((v,i)=>v*(i%2?ink.height:ink.width)));
+          return pixels.reduce((sum,n,i)=>sum+Math.abs(n-ref[i]),0)/pixels.length;
+        },{screen,original,view,yaw,touch});
+      }
+      async function checkPaper(view){
+        const pixels=await sample(view);
+        let matte=0;
+        for(let i=0;i<pixels.length;i+=3){
+          const [r,g,b]=pixels.slice(i,i+3);
+          if(b>207 && r>=g-1 && g>=b-1 && r-b<19)matte++;
+        }
+        if(matte/(pixels.length/3)<.98)throw Error(view+' shows ink or background through the folded paper');
       }
       await target.bringToFront(); await target.goto(url);
       const stage=target.locator('#stage[data-box-painted=true]'), poster=target.locator('#view-poster');
@@ -53,7 +82,7 @@ async page => {
       const counts=()=>({
         pages:requests.filter(p=>p.includes('/assets/pages/')).map(p=>p.split('/').at(-1)),
         full:requests.filter(p=>p.endsWith('/posters/ben10-6-poster.jpg')).length,
-        quarter:requests.filter(p=>p.endsWith('/posters/ben10-6-quarter.jpg')).length,
+        posters:requests.filter(p=>p.includes('/assets/posters/')).length,
       });
       await stage.waitFor();
       await stage.press('Enter'); await stage.press('i');
@@ -68,26 +97,31 @@ async page => {
       };
       await select(touch?'E':'A');
       const box=counts();
-      if(box.pages.length||box.full||box.quarter)throw Error('Preview art was fetched before the interior opened');
-      const quarterResponse=target.waitForResponse(r=>r.url().endsWith('/posters/ben10-6-quarter.jpg')&&r.ok());
-      await Promise.all([
-        ...['page-02.jpg','page-03.jpg','ben10-6-quarter.jpg'].map(name=>target.waitForResponse(r=>r.url().endsWith('/'+name)&&r.ok())),
-        click('#open-interior'),
-      ]);
-      await target.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      if(box.pages.length||box.posters)throw Error('Preview art was fetched before the interior opened');
+      const leftPage=target.waitForResponse(r=>r.url().endsWith('/page-02.jpg')&&r.ok());
+      const rightPage=target.waitForResponse(r=>r.url().endsWith('/page-03.jpg')&&r.ok());
+      await Promise.all([leftPage,rightPage,click('#open-interior')]);
       const spread=counts();
-      if(spread.pages.sort().join(',')!=='page-01.jpg,page-02.jpg,page-03.jpg'||spread.full||spread.quarter!==1)throw Error('Unexpected spread requests '+JSON.stringify(spread));
+      if(spread.pages.sort().join(',')!=='page-02.jpg,page-03.jpg'||spread.posters)throw Error('Unexpected spread requests '+JSON.stringify(spread));
       await target.emulateMedia({reducedMotion:'no-preference'});
       await target.clock.pauseAt(new Date(await target.evaluate(()=>Date.now()+400)));
-      const seatedDifference=await checkPrint(await quarterResponse,true);
+      const leaves=await Promise.all([sample('left',await leftPage),sample('right',await rightPage)]);
+      if(leaves.some(d=>d>22))throw Error('Printed pages 2|3 do not match the spread: '+leaves);
+      await checkPaper('seated');
       const fullResponse=target.waitForResponse(r=>r.url().endsWith('/posters/ben10-6-poster.jpg')&&r.ok());
       await poster.dispatchEvent('click');
       await target.locator('#inspection[data-poster=opening]').waitFor();
-      await target.clock.runFor(960);
+      await target.clock.runFor(550);
+      await checkPaper('across');
+      await target.clock.runFor(410);
       if(await target.locator('#inspection').getAttribute('data-poster')!=='open'||await poster.textContent()!=='Put away')throw Error('Poster did not reach its reading pose');
-      const difference=await checkPrint(await fullResponse,false);
+      const difference=await sample('open',await fullResponse);
+      if(difference>24)throw Error('Open poster differs from its print by '+difference);
       if(touch)await target.keyboard.press('Escape');else await poster.dispatchEvent('click');
-      await target.clock.runFor(960);
+      await target.clock.runFor(380);
+      await checkPaper('across');
+      await target.clock.runFor(580);
+      await checkPaper('seated');
       if(await target.locator('#inspection').getAttribute('data-poster')!=='seated'||!(await poster.evaluate(n=>document.activeElement===n)))throw Error('Poster did not return home with focus');
       await target.clock.resume();
       await target.emulateMedia({reducedMotion:'reduce'});
@@ -97,13 +131,31 @@ async page => {
       await select(touch?'A':'E');
       await click('#view-poster');
       await target.locator('#inspection[data-poster=open]').waitFor();
+      const rest=await sample('open');
+      const rect=await stage.boundingBox(),x=rect.x+rect.width*.5,y=rect.y+rect.height*.5,dx=40;
+      if(touch){
+        const session=await context.newCDPSession(target);
+        try{
+          for(const [type,touchPoints] of [['touchStart',[{x,y}]],['touchMove',[{x:x+dx,y}]],['touchEnd',[]]])
+            await session.send('Input.dispatchTouchEvent',{type,touchPoints});
+        }finally{await session.detach();}
+      }else{
+        await target.mouse.move(x,y);await target.mouse.down();
+        await target.mouse.move(x+dx,y,{steps:4});await target.mouse.up();
+      }
+      await target.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+      const tilted=await sample('open',null,dx*.005);
+      const columns=Array(24).fill(0);
+      for(let i=0;i<rest.length;i++)columns[Math.floor(i/3)%24]+=(tilted[i]-rest[i])/(32*3);
+      const sweep=Math.max(...columns)-Math.min(...columns);
+      if(sweep<9)throw Error('Dragging produced no moving gloss band: '+sweep);
       await click('#view-poster');
       if(await target.locator('#inspection').getAttribute('data-poster')!=='seated')throw Error('Reduced motion did not stow immediately');
       await click('#return-button');
       await target.locator('#stage[data-state=open]:not([data-returning=true])').waitFor();
       const final=counts();
-      if(final.full!==1||final.quarter!==1||final.pages.length!==3||errors.length)throw Error(JSON.stringify({counts:final,errors}));
-      results.push({width,height,box,spread,final,seatedDifference,difference});
+      if(final.full!==1||final.posters!==1||final.pages.length!==2||errors.length)throw Error(JSON.stringify({counts:final,errors}));
+      results.push({width,height,box,spread,final,leaves,difference,sweep});
     }finally{await context.close();}
   }
   return results;
