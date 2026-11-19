@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 
 const PAGE_WIDTH = .655;
-const DURATION = 920;
+const OPEN_MS = 1800;
+const STOW_MS = 1500;
 const SEATED_ROLL = THREE.MathUtils.degToRad(-3.75);
 const OPEN_ROLL = THREE.MathUtils.degToRad(-1);
 const SEATED_WIDTH = .76;
@@ -11,6 +12,12 @@ const mix = THREE.MathUtils.lerp;
 function eased(value) {
   const t = THREE.MathUtils.clamp(value, 0, 1);
   return t < .5 ? 4*t**3 : 1 - (-2*t+2)**3/2;
+}
+
+// A gently front-weighted cosine leaves more time for the paper to settle.
+function paperPhase(time, start, end) {
+  const t = THREE.MathUtils.clamp((time-start)/(end-start), 0, 1);
+  return (1-Math.cos(Math.PI*(t+.2*t*(1-t))))/2;
 }
 
 function page(side) {
@@ -35,14 +42,26 @@ function paperMaterial(color, side=THREE.FrontSide) {
 
 // Atlas coordinates are continuous across the two hinges. The pair of narrow
 // highlights either side of each crease survives even in the flat reading pose.
-function printMaterial() {
+function printMaterial(heightToWidth) {
   return new THREE.ShaderMaterial({
     side:THREE.DoubleSide,
-    uniforms:{art:{value:null}},
-    vertexShader:`varying vec2 sheetUv; varying vec3 facing; varying vec3 eyePosition;
+    uniforms:{
+      art:{value:null}, bend:{value:new THREE.Vector2()}, inverseHeight:{value:1/heightToWidth},
+    },
+    vertexShader:`uniform vec2 bend; uniform float inverseHeight;
+      varying vec2 sheetUv; varying vec3 facing; varying vec3 eyePosition;
       void main(){
-        sheetUv=uv; facing=normalMatrix*normal;
+        sheetUv=uv;
         vec4 p=modelViewMatrix*vec4(position,1.);
+        vec3 tangentX=modelViewMatrix[0].xyz, tangentY=modelViewMatrix[1].xyz;
+        vec3 sag=vec3(0.,-1.,-.55)*length(tangentX);
+        // Only free edges bow. Both layers of the doubled wing get the same
+        // deflection in view space, even though their normals face opposite ways.
+        vec2 arm=max(vec2(2.*uv.x-1.,1.-2.*uv.y),0.);
+        p.xyz+=sag*dot(bend,arm*arm);
+        tangentX+=sag*(4.*bend.x*arm.x);
+        tangentY-=sag*(4.*bend.y*arm.y*inverseHeight);
+        facing=cross(tangentX,tangentY);
         eyePosition=p.xyz; gl_Position=projectionMatrix*p;
       }`,
     fragmentShader:`uniform sampler2D art; varying vec2 sheetUv; varying vec3 facing; varying vec3 eyePosition;
@@ -103,14 +122,14 @@ export function createComicInterior(comic, fetchArt, notify) {
     .multiplyScalar(SEATED_WIDTH)
     .applyAxisAngle(new THREE.Vector3(0,0,1), SEATED_ROLL)
     .add(new THREE.Vector3(.35, -.045, .027));
-  const ink = printMaterial(), lower = [];
+  const ink = printMaterial(ratio), lower = [];
   sheet.add(rightWing);
   for (let col=0; col<2; col++) {
     const column = col ? rightWing : sheet;
     const bottom = new THREE.Group();
     column.add(bottom); lower.push(bottom);
     for (let row=0; row<2; row++) {
-      const tile = new THREE.PlaneGeometry(tileWidth,tileHeight);
+      const tile = new THREE.PlaneGeometry(tileWidth,tileHeight,12,12);
       const uv = tile.attributes.uv;
       for (let i=0;i<uv.count;i++) uv.setXY(i,(uv.getX(i)+col)/2,(uv.getY(i)+1-row)/2);
       tile.translate((col-.5)*tileWidth,(.5-row)*tileHeight,0);
@@ -152,7 +171,7 @@ export function createComicInterior(comic, fetchArt, notify) {
     direction=sign;
     lastTime=performance.now();
     if (reduced) {
-      elapsed=sign>0?DURATION:0; direction=0;
+      elapsed=sign>0?OPEN_MS:0; direction=0;
       state(sign>0?'open':'seated');
     } else state(sign>0?'opening':'closing');
   }
@@ -177,16 +196,25 @@ export function createComicInterior(comic, fetchArt, notify) {
   function render(renderer,width,height,now,reduced) {
     changed=false;
     if (direction) {
-      elapsed=reduced?(direction>0?DURATION:0):THREE.MathUtils.clamp(elapsed+direction*Math.max(0,now-lastTime),0,DURATION);
+      // Keep one pose clock when the visitor reverses a fold mid-swing.
+      const rate=direction>0 ? 1 : -OPEN_MS/STOW_MS;
+      const endpoint=direction>0 ? OPEN_MS : 0;
+      elapsed=reduced ? endpoint : THREE.MathUtils.clamp(elapsed+rate*Math.max(0,now-lastTime),0,OPEN_MS);
       lastTime=now;
-      if ((direction>0 && elapsed===DURATION)||(direction<0 && elapsed===0)) {
+      if (elapsed===endpoint) {
         direction=0; state(elapsed?'open':'seated');
       }
     }
     const entry=reduced||!entering?1:eased((now-entryStart)/360);
     entering=entry<1;
     leftLeaf.rotation.y=(1-entry)*(Math.PI-.04);
-    const lift=eased(elapsed/240), across=eased((elapsed-240)/310), down=eased((elapsed-550)/370);
+    // The packet is nearly clear by 450 ms. Its lift eases through the first
+    // crease, and the lower fold starts while the across fold is settling.
+    const lift=paperPhase(elapsed,0,570);
+    const across=paperPhase(elapsed,480,1180);
+    const down=paperPhase(elapsed,1080,OPEN_MS);
+    const acrossSwing=Math.sin(Math.PI*across), downSwing=Math.sin(Math.PI*down);
+    ink.uniforms.bend.value.set(.014*acrossSwing,.018*downSwing);
     const aspect=width/height, phone=width<650;
     camera.left=-aspect; camera.right=aspect; camera.updateProjectionMatrix();
     const bookStart=Math.min(1.73,aspect*1.85/(2*PAGE_WIDTH));
@@ -208,9 +236,9 @@ export function createComicInterior(comic, fetchArt, notify) {
     );
     // The in-plane tilt relaxes over the whole gesture, in either direction.
     sheet.rotation.set(
-      mix(-.065,0,lift)+.38*Math.sin(Math.PI*down)+pitch*down,
-      mix(-.045,0,lift)-.59*Math.sin(Math.PI*across)+yaw*down,
-      book.rotation.z*(1-lift) + mix(SEATED_ROLL,OPEN_ROLL,eased(elapsed/DURATION))
+      mix(-.065,0,lift)+.38*downSwing+pitch*down,
+      mix(-.045,0,lift)-.59*acrossSwing+yaw*down,
+      book.rotation.z*(1-lift) + mix(SEATED_ROLL,OPEN_ROLL,paperPhase(elapsed,0,OPEN_MS))
     );
     packetEdge.visible=across<.01;
     // The lower panels fold face-to-face over the print. This leaves two

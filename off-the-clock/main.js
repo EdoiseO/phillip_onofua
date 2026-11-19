@@ -122,7 +122,7 @@ export function mountOffTheClock(stage, pageRoot) {
     unwrapped=true; inspectionView='comic'; box.unwrap(true); box.inspectView('comic');
     render();
     try{
-      readerModule??=import('./comic-interior.js?v=1.2');
+      readerModule??=import('./comic-interior.js?v=1.3');
       const {createComicInterior}=await readerModule;
       if(request!==readerRequest||signal.aborted)return;
       reader=box.readInterior(createComicInterior,readerState);
