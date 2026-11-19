@@ -1264,6 +1264,35 @@ export const comics = [
     "backQualityNote": "Seller photograph; some reflections remain."
   },
   {
+    "id": "midnight-spider-man-2-cover-a",
+    "series": "Midnight Spider-Man",
+    "title": "Midnight Spider-Man #2",
+    "displayTitle": [
+      "Midnight",
+      "Spider-Man"
+    ],
+    "issue": "2",
+    "variant": "Cover A — Steve Beach",
+    "publisher": "Marvel",
+    "year": 2026,
+    "collectionStatus": "Owned",
+    "quantity": 1,
+    "cover": "./assets/covers/midnight-spider-man-2-cover-a.jpg",
+    "description": "Cover A by Steve Beach, from the 2026 Midnight Spider-Man series.",
+    "blindBag": false,
+    "source": "https://cdn.shopify.com/s/files/1/0265/1262/1667/files/75960621681900211.jpg",
+    "sourcePage": "https://knowherecomics.com/products/75960621681900211",
+    "coverWidth": 1400,
+    "coverHeight": 2125,
+    "backVerified": true,
+    "backStatus": "verified",
+    "backCover": "./assets/backs/midnight-spider-man-2-cover-a.jpg",
+    "backSourcePage": "https://www.ebay.com/itm/198805829853",
+    "backAssetType": "comic-back-cover",
+    "backImageWidth": 1400,
+    "backImageHeight": 2125
+  },
+  {
     "id": "midnight-x-men-1-cover-a",
     "series": "Midnight X-Men",
     "title": "Midnight X-Men #1",
