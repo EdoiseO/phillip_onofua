@@ -1,4 +1,4 @@
-import {comics as catalogue} from './comics.js?v=39.5';
+import {comics as catalogue} from './comics.js?v=39.6';
 import {TEAR_THRESHOLD,tearProgress} from './pack-motion.js?v=1.4';
 import {createBox} from './model.js?v=47.4';
 import {createStageReturnFrames,createPageReturnFrames,RETURN_DURATION_MS} from './return-motion.js?v=1.12';
@@ -65,7 +65,7 @@ export function mountOffTheClock(stage, pageRoot) {
         compactModule??=(async()=>{
           if(!await box.firstPaint||signal.aborted)return;
           await loadCompactsStyle();
-          if(!signal.aborted)return import('./compacts-display.js?v=2.31');
+          if(!signal.aborted)return import('./compacts-display.js?v=2.32');
         })();
         const module=await compactModule;
         if(!module||signal.aborted||change!==collectionChange)return;
