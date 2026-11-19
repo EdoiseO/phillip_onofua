@@ -1268,31 +1268,13 @@ export const comics = [
     "leagueURL": "https://leagueofcomicgeeks.com/comic/2126165/midnight-x-men-1",
     "backVerified": true,
     "backStatus": "verified",
-    "backCover": "./assets/backs/midnight-x-men-1-cover-a.jpg",
-    "backQuad": [
-      [
-        0.216,
-        0.064
-      ],
-      [
-        0.833,
-        0.06
-      ],
-      [
-        0.812,
-        0.963
-      ],
-      [
-        0.251,
-        0.95
-      ]
-    ],
+    "backCover": "./assets/backs/midnight-x-men-1-cover-a.jpg?v=2",
     "backSource": "https://di2ponv0v5otw.cloudfront.net/posts/2026/10/18/6ad541f7352b3a739c4e9dd6/l_6ad541f8c6a0b3c7ddc9331e.jpg",
     "backSourcePage": "https://poshmark.com/listing/Midnight-XMen-1-Dike-Ruan-CVR-A-2026-NM-6ad541f7352b3a739c4e9dd6",
     "backAssetType": "comic-back-cover",
-    "backImageWidth": 1000,
-    "backImageHeight": 1000,
-    "backQualityNote": "Seller photograph; some reflections remain."
+    "backImageWidth": 1400,
+    "backImageHeight": 2125,
+    "backQualityNote": "Seller photo, flattened and tone-matched to the front."
   },
   {
     "id": "midnight-x-men-2-cover-a",
