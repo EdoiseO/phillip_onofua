@@ -55,9 +55,11 @@ async page => {
             const tl=point(source[0],source[1]),tr=point(source[0]+source[2],source[1]),bl=point(source[0],source[1]+source[3]);
             projection=new DOMMatrix([(tr[0]-tl[0])/24,(tr[1]-tl[1])/24,(bl[0]-tl[0])/32,(bl[1]-tl[1])/32,...tl]);
           }else{
-            const width=w*Math.cos(yaw);
-            rect=[cx-width/2,cy-h/2,width,h];
-            if(touch && grid(shot,[0,cy+h/2+2,sw,sh-cy-h/2-2]).some(channel=>channel>90))
+            const rollDegrees=1, roll=rollDegrees*Math.PI/180;
+            projection=new DOMMatrix().translate(cx,cy).scale(Math.cos(yaw),1)
+              .rotate(rollDegrees).scale(w/24,h/32).translate(-12,-16);
+            const bottom=cy+(h*Math.cos(roll)+w*Math.sin(roll))/2;
+            if(touch && grid(shot,[0,bottom+2,sw,sh-bottom-2]).some(channel=>channel>90))
               throw Error('The comic overlaps the phone poster');
           }
           const pixels=grid(shot,rect,projection);

@@ -4,6 +4,9 @@ import * as THREE from 'three';
 
 const PAGE_WIDTH = .655;
 const DURATION = 920;
+const SEATED_ROLL = THREE.MathUtils.degToRad(-3.75);
+const OPEN_ROLL = THREE.MathUtils.degToRad(-1);
+const SEATED_WIDTH = .76;
 const mix = THREE.MathUtils.lerp;
 function eased(value) {
   const t = THREE.MathUtils.clamp(value, 0, 1);
@@ -94,6 +97,12 @@ export function createComicInterior(comic, fetchArt, notify) {
   const {poster} = comic;
   const ratio = poster.height/poster.width;
   const tileWidth=.5, tileHeight=ratio/2;
+  // The folded packet's centre sits slightly toward the fore-edge. Its origin
+  // is a hinge at the corner, so rotate the centre-to-hinge offset in page space.
+  const seatedHinge = new THREE.Vector3(tileWidth/2, -tileHeight/2, 0)
+    .multiplyScalar(SEATED_WIDTH)
+    .applyAxisAngle(new THREE.Vector3(0,0,1), SEATED_ROLL)
+    .add(new THREE.Vector3(.35, -.045, .027));
   const ink = printMaterial(), lower = [];
   sheet.add(rightWing);
   for (let col=0; col<2; col++) {
@@ -186,24 +195,22 @@ export function createComicInterior(comic, fetchArt, notify) {
     book.rotation.set(-.065,-.045,.012);
     book.position.set(phone?0:-aspect*.61*lift,phone?(-1-bookHeight*.64)*lift:-.23*lift,0);
     const openWidth=Math.min(1.78/ratio,aspect*1.82);
-    const size=mix(bookStart*.76,openWidth,lift);
+    const size=mix(bookStart*SEATED_WIDTH,openWidth,lift);
     const endX=phone?0:aspect*.20;
     sheet.scale.setScalar(size);
     // Seat the packet in the tilted page's local plane. A fixed world Z
     // would bury it beneath the fore-edge at the larger desktop book size.
-    packetHome.set(.33+.76*.25,-.06-.76*ratio*.25,.027)
-      .multiplyScalar(bookStart).applyEuler(book.rotation);
+    packetHome.copy(seatedHinge).multiplyScalar(bookStart).applyEuler(book.rotation);
     sheet.position.set(
       mix(packetHome.x,endX+(1-across)*openWidth*.22,lift),
       mix(packetHome.y,-(1-down)*openWidth*ratio*.13,lift),
       mix(packetHome.z,1.65,lift)
     );
-    // Let the held panel tilt against each moving hinge. Both faces are
-    // visible through the middle of the fold, then the print rests square.
+    // The in-plane tilt relaxes over the whole gesture, in either direction.
     sheet.rotation.set(
       mix(-.065,0,lift)+.38*Math.sin(Math.PI*down)+pitch*down,
       mix(-.045,0,lift)-.59*Math.sin(Math.PI*across)+yaw*down,
-      mix(.012,0,lift)
+      book.rotation.z*(1-lift) + mix(SEATED_ROLL,OPEN_ROLL,eased(elapsed/DURATION))
     );
     packetEdge.visible=across<.01;
     // The lower panels fold face-to-face over the print. This leaves two
